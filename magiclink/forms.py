@@ -1,0 +1,77 @@
+from django import forms
+from django.contrib.auth import get_user_model
+
+from . import settings
+
+User = get_user_model()
+
+
+class LoginForm(forms.Form):
+    email = forms.EmailField()
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        users = User.objects.filter(email=email)
+        if not users:
+            raise forms.ValidationError(
+                'We could not find a user with that email address'
+            )
+
+        if settings.EMAIL_IGNORE_CASE:
+            email = email.lower()
+
+        return email
+
+
+class SignupFormEmailOnly(forms.Form):
+    form_name = forms.CharField(
+        initial='SignupFormEmailOnly', widget=forms.HiddenInput()
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email'})
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        users = User.objects.filter(email=email)
+        if users:
+            raise forms.ValidationError(
+                'This email address already is already linked to an account'
+            )
+        if settings.EMAIL_IGNORE_CASE:
+            email = email.lower()
+
+        return email
+
+
+class SignupForm(SignupFormEmailOnly):
+    form_name = forms.CharField(
+        initial='SignupForm', widget=forms.HiddenInput()
+    )
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your name'})
+    )
+
+
+class SignupFormWithUsername(SignupFormEmailOnly):
+    form_name = forms.CharField(
+        initial='SignupFormWithUsername', widget=forms.HiddenInput()
+    )
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your username'})
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        users = User.objects.filter(username=username)
+        if users:
+            raise forms.ValidationError(
+                'This email address already is already linked to an account'
+            )
+        return username
+
+
+class SignupFormFull(SignupForm, SignupFormWithUsername):
+    form_name = forms.CharField(
+        initial='SignupFormFull', widget=forms.HiddenInput()
+    )

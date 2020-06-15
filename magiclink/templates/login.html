@@ -1,0 +1,6 @@
+<h1>Login via email</h1>
+<form action="{% url 'magiclink:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post">
+    {% csrf_token %}
+    {{ login_form }}
+    <button type="submit">Send login email</button>
+</form>

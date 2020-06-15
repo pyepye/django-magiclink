@@ -1,0 +1,8 @@
+Click to confirm and sign in. This link will expire in 5 minutes
+
+{{ magiclink }}
+
+Please do not forward this message to anyone else, if you do they will be able to access your account
+
+If you did not request this link, you can safely ignore this email.
+

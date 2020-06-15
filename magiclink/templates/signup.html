@@ -1,0 +1,7 @@
+<h1>Create an account</h1>
+<form action="{% url 'magiclink:signup' %}" method="post">
+    {% csrf_token %}
+    {{ signup_form }}
+    <button type="submit">Signup</button>
+</form>
+<p>Already have an account? <a href="{% url 'magiclink:login' %}">Log in here</a></p>
