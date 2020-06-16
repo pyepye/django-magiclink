@@ -12,6 +12,14 @@ def test_token_length(settings):
         reload(settings)
 
 
+def test_token_length_warning(settings):
+    settings.MAGICLINK_TOKEN_LENGTH = 1
+
+    with pytest.warns(RuntimeWarning):
+        from magiclink import settings
+        reload(settings)
+
+
 def test_email_verify(settings):
     settings.MAGICLINK_EMAIL_VERIFY = 'Test'
 
