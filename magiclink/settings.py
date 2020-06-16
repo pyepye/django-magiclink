@@ -20,7 +20,7 @@ if not isinstance(EMAIL_VERIFY, bool):
     raise ImproperlyConfigured('"MAGICLINK_EMAIL_VERIFY" must be a boolean')
 
 try:
-    # In second
+    # In seconds
     AUTH_TIMEOUT = int(getattr(settings, 'MAGICLINK_AUTH_TIMEOUT', 300))
 except ValueError:
     raise ImproperlyConfigured('"MAGICLINK_AUTH_TIMEOUT" must be an integer')
