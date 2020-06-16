@@ -5,30 +5,12 @@ Passwordless Authentication for Django with Magic Links.
 
 This package was created with a focus on [ease of setup](#steps-to-impliment) and [security](#secruity). The idea is to use sane defaults to quickly create secure single use token authentication for Django.
 
-https://auth0.com/docs/connections/passwordless/guides/email-magic-link
-
 
 ## Install
 
 ```bash
 pip install django-magiclink
 ```
-
-
-## Secruity
-
-Using magic links can be dangerous as poorly implimented login links can be brute forced and emails can be forwared by accident. There are several security measures used to mitigate these risks:
-
-* The one-time password issued will be valid for 5 minutes before it expires
-* The users ID is specified along side login tokens to stop URLs being brute forced
-* Each login token will be at least 20 digits?
-* The initial request and its response must take place from the same IP address
-* The initial request and its response must take place in the same browser
-* Each one-time link can only be used once
-* Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
-
-*Note: Each of the above settings can be overridden*
-
 
 
 ## Setup
@@ -48,7 +30,11 @@ The setup of the app is simple but has a few steps and a few templates that need
 
 Add to the `urlpatterns` in `urls.py`:
 ```python
-path('auth/', include('magiclink.urls', namespace='magiclink')),
+urlpatterns = [
+    ...
+    path('auth/', include('magiclink.urls', namespace='magiclink')),
+    ...
+]
 ```
 
 Add `magiclink` to your `INSTALLED_APPS`:
@@ -60,7 +46,7 @@ INSTALLED_APPS = (
 ```
 *Note: If you want to override HTML templates make sure the magiclink app is put **after** the app which overrides the template*
 
-```
+```python
 AUTHENTICATION_BACKENDS = (
     'magiclink.backends.MagicLinkBackend',
     ...
@@ -74,10 +60,6 @@ See [additional configuration settings](#configuration-settings) for all of the 
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
-
-MAGICLINK_LOGIN_REDIRECT = '/'
-MAGICLINK_SIGNUP_REDIRECT = '/'
-MAGICLINK_LOGOUT_REDIRECT = '/'
 ```
 
 
@@ -85,7 +67,7 @@ MAGICLINK_LOGOUT_REDIRECT = '/'
 
 Each login page will look different so you can override our default login page by creating a template with the name`login.html`. When overriding this template please ensure the following content is included:
 
-```
+```html
 <form action="{% url 'magiclink:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post">
     {% csrf_token %}
     {{ login_form }}
@@ -113,7 +95,7 @@ The login email which includes the magic link needs to be configured. By default
 
 This `MAGICLINK_EMAIL_STYLES` setting should be a dict with the following key values:
 
-```
+```python
 MAGICLINK_EMAIL_STYLES = {
     'logo_url': 'https://example.com/logo.png',  # Full URL. This should be either a jpeg or png due to email clients
     'background-colour': '#ffffff',   # Emails background colour
@@ -125,18 +107,18 @@ MAGICLINK_EMAIL_STYLES = {
 
 If this email template is not to your liking you can override the email template by creating your own templates (one for text and one for html) with the names `login_email.txt` and `login_email.html`. If you override these templates the following context variables are available:
 
-```html
 * `{{ subject }}` - The subject of the email "Your login magic link"
 * `{{ magiclink }}` - The magic link URL
 * `{{ user }}` - The full user object
-```
+
+
 #### Signup page
 
 If you want users to have to signup before being able to login you will want to override the signup page template. This is needed when `MAGICLINK_REQUIRE_SIGNUP = True`. On successfull signup the user will be sent a login email, an optional welcome email can be sent as well.
 
 When overriding this template please ensure the following content is included:
 
-```
+```html
 <form action="{% url 'magiclink:signup' %}" method="post">
     {% csrf_token %}
     {{ SignupForm }}
@@ -152,30 +134,21 @@ There are actually several forms avalible in the context on this page depending 
 * `SignupFormFull` - Includes `username`, `name` and `email` fields
 
 
-
-
-
-
-
 Like the login for the signup flow can be overridden if you require more information from the user on signup. See the login/setup docs for more details
 ToDo: Include docs on how to use post_save signal to send Welcome email?
 
 
 #### Configuration settings
 
-
-##### MAGICLINK_REQUIRE_SIGNUP
-
-Only allow users to login that have signed up first (i.e. don't create a new account on login).
+Below are the different settings that can be overridden. To do so place the setting into you `settings.py`
 
 ```python
+# Only allow users to login that have signed up first (i.e. don't create a
+# new account on login).
 MAGICLINK_REQUIRE_SIGNUP = True
-```
 
-
-##### MAGICLINK_EMAIL_STYLES
-Ensure the branding of the login email is correct. This setting is not needed if you override the `login_email.html` template
-```python
+# Ensure the branding of the login email is correct. This setting is not needed
+# if you override the `login_email.html` template
 MAGICLINK_EMAIL_STYLES = {
     'logo_url': '',
     'background-colour': '#ffffff',
@@ -183,87 +156,57 @@ MAGICLINK_EMAIL_STYLES = {
     'button-background-color': '#0078be',
     'button-text-color': '#ffffff',
 }
-```
 
-
-##### MAGICLINK_AUTH_TIMEOUT
-How long a magic link is valid for before returning an error
-```python
+# How long a magic link is valid for before returning an error
 MAGICLINK_AUTH_TIMEOUT = 300  # In second - Default is 5 minutes
-```
 
-
-##### MAGICLINK_EMAIL_IGNORE_CASE
-Email address are not case sensetive. If this setting is set to True all emails addresses will be set to lowercase before any checks are run against it
-```python
+# Email address are not case sensetive. If this setting is set to True all
+# emails addresses will be set to lowercase before any checks are run against it
 MAGICLINK_IGNORE_EMAIL_CASE = True
-```
 
-
-##### MAGICLINK_ALLOW_SUPERUSER_LOGIN
-Allow superusers to login via a magic link
-```python
+# Allow superusers to login via a magic link
 MAGICLINK_ALLOW_SUPERUSER_LOGIN = True
-```
 
-
-##### MAGICLINK_ALLOW_STAFF_LOGIN
-Allow staff users to login via a magic link
-```python
+# Allow staff users to login via a magic link
 MAGICLINK_ALLOW_STAFF_LOGIN = True
-```
 
-
-##### MAGICLINK_TOKEN_LENGTH
-Override the default magic link length. Setting this to 0 will use `itsdangerous` to create tokens instead of forcing a set length.
-*Warning: Overriding this setting has secuirty implications, shorter tokens are much more susceptible to brute force attacks*
-```python
+# Override the default magic link length
+# Warning: Overriding this setting has secuirty implications, shorter tokens
+# are much more susceptible to brute force attacks*
 MAGICLINK_TOKEN_LENGTH = 0
-```
 
+# Require the user email to be inclued in the verification link
+# Warning: If this is set to false tokens are more vulnerable to brute force
+MAGICLINK_VERIFY_WITH_EMAIL = True
 
-##### MAGICLINK_EMAIL_VERIFY
-Should the user need to be passed through
-*Warning: If this is set to false tokens are more vulnerable to brute force attacks as an attacker does not need to be aware of the user a login link was created for*
-```python
-MAGICLINK_INCLUDE_USER = True
-```
-
-
-##### MAGICLINK_REQUIRE_BROWSER
-Ensure the user who clicked magic link used the same browser as the initial login request.
-*Note: This can cause issues on devices where the default browser is different to the browser being used by the user such as on iOS)*
-```python
+# Ensure the user who clicked magic link used the same browser as the
+# initial login request.
+# Note: This can cause issues on devices where the default browser is
+# different to the browser being used by the user such as on iOS)*
 MAGICLINK_REQUIRE_BROWSER = True
-```
 
-
-##### MAGICLINK_REQUIRE_SAME_IP
-Ensure the user who clicked magic link has the same IP address as the initial login request.
-*Note: This can cause issues where the user requests a token on one device but attempts to finish the login on another*
-```python
+# Ensure the user who clicked magic link has the same IP address as the
+# initial login request.
 MAGICLINK_REQUIRE_SAME_IP = True
-```
 
-##### MAGICLINK_TOKEN_USES
-The number of times a login token can be used before being disabled
-```python
+# The number of times a login token can be used before being disabled
 MAGICLINK_TOKEN_USES = 1
-```
 
-
-##### MAGICLINK_WELCOME_EMAIL_TEMPLATE_NAME
-Both `<MAGICLINK_WELCOME_EMAIL_TEMPLATE_NAME>.txt` and `<MAGICLINK_WELCOME_EMAIL>.html` must exist
-```python
-MAGICLINK_WELCOME_EMAIL_TEMPLATE_NAME = ''
-```
-
-
-##### MAGICLINK_REQUEST_LIMIT
-How often in seconds a user can request a new login token
-```python
+# How often in seconds a user can request a new login token
 MAGICLINK_TOKEN_USES = 30
 ```
 
 
+## Secruity
 
+Using magic links can be dangerous as poorly implimented login links can be brute forced and emails can be forwared by accident. There are several security measures used to mitigate these risks:
+
+* The one-time password issued will be valid for 5 minutes before it expires
+* The users ID is specified along side login tokens to stop URLs being brute forced
+* Each login token will be at least 20 digits?
+* The initial request and its response must take place from the same IP address
+* The initial request and its response must take place in the same browser
+* Each one-time link can only be used once
+* Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
+
+*Note: Each of the above settings can be overridden*
