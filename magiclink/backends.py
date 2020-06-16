@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import BaseBackend
 from django.utils import timezone
 
 from . import settings
@@ -8,7 +9,7 @@ from .utils import get_client_ip
 User = get_user_model()
 
 
-class MagicLinkBackend:
+class MagicLinkBackend(BaseBackend):
 
     def authenticate(self, request, token=None, email=None):
         if settings.EMAIL_VERIFY and not email:

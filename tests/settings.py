@@ -3,6 +3,8 @@ import os
 SECRET_KEY = 'magiclink-test'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+ALLOWED_HOSTS = '*'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -61,7 +63,7 @@ MAGICLINK_REQUIRE_SIGNUP = True
 MAGICLINK_EMAIL_IGNORE_CASE = True
 MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
 MAGICLINK_ALLOW_STAFF_LOGIN = False
-MAGICLINK_EMAIL_WITH_TOKEN = True
+MAGICLINK_VERIFY_WITH_EMAIL = True
 MAGICLINK_REQUIRE_BROWSER = True
 MAGICLINK_REQUIRE_SAME_IP = True
 MAGICLINK_EMAIL_STYLES = {

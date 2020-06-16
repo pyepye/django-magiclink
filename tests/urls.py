@@ -1,12 +1,10 @@
-from django.http.response import HttpResponse
+
 from django.urls import include, path
 
-
-def empty_view(request):
-    return HttpResponse()
-
+from .views import RequiresLoginView, empty_view
 
 urlpatterns = [
-    path('', empty_view, name='test_home'),
+    path('empty', empty_view, name='empty'),
+    path('needs-login/', RequiresLoginView.as_view(), name='needs_login'),
     path('auth/', include('magiclink.urls', namespace='magiclink')),
 ]

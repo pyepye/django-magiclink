@@ -126,6 +126,6 @@ class Signup(TemplateView):
 
 class Logout(RedirectView):
 
-    def get_redirect_url(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         logout(self.request)
-        return django_settings.LOGOUT_REDIRECT_URL
+        return HttpResponseRedirect(django_settings.LOGOUT_REDIRECT_URL)
