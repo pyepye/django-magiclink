@@ -51,9 +51,9 @@ ALLOW_STAFF_LOGIN = getattr(settings, 'MAGICLINK_ALLOW_STAFF_LOGIN', True)
 if not isinstance(ALLOW_STAFF_LOGIN, bool):
     raise ImproperlyConfigured('"MAGICLINK_ALLOW_STAFF_LOGIN" must be a boolean')  # NOQA: E501
 
-INCLUDE_USER = getattr(settings, 'MAGICLINK_INCLUDE_USER', True)
-if not isinstance(INCLUDE_USER, bool):
-    raise ImproperlyConfigured('"MAGICLINK_INCLUDE_USER" must be a boolean')
+VERIFY_WITH_EMAIL = getattr(settings, 'MAGICLINK_VERIFY_WITH_EMAIL', True)
+if not isinstance(VERIFY_WITH_EMAIL, bool):
+    raise ImproperlyConfigured('"MAGICLINK_VERIFY_WITH_EMAIL" must be a boolean')  # NOQA: E501
 
 REQUIRE_BROWSER = getattr(settings, 'MAGICLINK_REQUIRE_BROWSER', True)
 if not isinstance(REQUIRE_BROWSER, bool):

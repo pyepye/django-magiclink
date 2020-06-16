@@ -76,8 +76,8 @@ def test_allow_staff_login(settings):
         reload(settings)
 
 
-def test_include_user(settings):
-    settings.MAGICLINK_INCLUDE_USER = 'Test'
+def test_email_with_token(settings):
+    settings.MAGICLINK_VERIFY_WITH_EMAIL = 'Test'
 
     with pytest.raises(ImproperlyConfigured):
         from magiclink import settings
