@@ -58,6 +58,9 @@ class LoginVerify(RedirectView):
 
     def get(self, request, *args, **kwargs):
         token = request.GET.get('token')
+        if not token:
+            raise Http404()
+
         email = request.GET.get('email')
         user = authenticate(request, token=token, email=email)
         if not user:
