@@ -11,14 +11,15 @@ class LoginForm(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data['email']
-        users = User.objects.filter(email=email)
-        if not users:
-            raise forms.ValidationError(
-                'We could not find a user with that email address'
-            )
 
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
+
+        if settings.REQUIRE_SIGNUP:
+            users = User.objects.filter(email=email)
+            if not users:
+                error = 'We could not find a user with that email address'
+                raise forms.ValidationError(error)
 
         return email
 

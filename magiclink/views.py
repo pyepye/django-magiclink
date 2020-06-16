@@ -12,7 +12,7 @@ from .forms import (
     LoginForm, SignupForm, SignupFormEmailOnly, SignupFormFull,
     SignupFormWithUsername
 )
-from .helpers import create_magiclink, create_user
+from .helpers import create_magiclink, get_or_create_user
 from .models import MagicLink
 
 User = get_user_model()
@@ -36,10 +36,10 @@ class Login(TemplateView):
             return self.render_to_response(context)
 
         email = form.cleaned_data['email']
-        next_url = request.GET.get('next', '')
-
         if not settings.REQUIRE_SIGNUP:
-            create_user(email)
+            get_or_create_user(email)
+
+        next_url = request.GET.get('next', '')
 
         magic_link = create_magiclink(email, request, redirect_url=next_url)
         magic_link.send(request)
@@ -84,17 +84,17 @@ class Signup(TemplateView):
     def post(self, request, *args, **kwargs):
         logout(request)
         context = self.get_context_data(**kwargs)
-
+        form_name = request.POST.get('form_name')
         from_list = [
             'SignupForm, SignupFormEmailOnly', 'SignupFormWithUsername',
             'SignupFormFull',
         ]
-        forms = __import__('.forms', fromlist=from_list)
-        Form = getattr(forms, request.POST.get('form_name'))
+        forms = __import__('magiclink.forms', fromlist=from_list)
+        Form = getattr(forms, form_name)
 
         form = Form(request.POST)
         if not form.is_valid():
-            context['form'] = form
+            context[form_name] = form
             return self.render_to_response(context)
 
         email = form.cleaned_data['email']
@@ -105,7 +105,7 @@ class Signup(TemplateView):
             first_name = full_name
             last_name = ''
 
-        create_user(
+        get_or_create_user(
             email=email,
             username=form.cleaned_data.get('username', ''),
             first_name=first_name,

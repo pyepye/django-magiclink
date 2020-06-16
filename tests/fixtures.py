@@ -1,14 +1,14 @@
 import pytest
 from django.contrib.auth import get_user_model
 
-from magiclink.helpers import create_magiclink, create_user
+from magiclink.helpers import create_magiclink, get_or_create_user
 
 User = get_user_model()
 
 
 @pytest.fixture()
 def user():
-    user = create_user(email='test@example.com')
+    user = get_or_create_user(email='test@example.com')
     return user
 
 

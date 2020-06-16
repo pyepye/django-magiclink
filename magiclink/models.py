@@ -1,5 +1,6 @@
 from urllib.parse import urlencode, urljoin
 
+from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
@@ -40,7 +41,7 @@ class MagicLink(models.Model):
         self.save()
 
     def get_magic_link_url(self, request):
-        url_path = reverse("magiclink:verify_email")
+        url_path = reverse("magiclink:login_verify")
 
         params = {'token': self.token}
         if settings.INCLUDE_USER:
@@ -67,6 +68,6 @@ class MagicLink(models.Model):
             subject=settings.EMAIL_SUBJECT,
             message=plain,
             recipient_list=[user.email],
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=djsettings.DEFAULT_FROM_EMAIL,
             html_message=html,
         )

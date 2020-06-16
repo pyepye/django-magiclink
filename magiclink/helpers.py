@@ -3,9 +3,9 @@ from uuid import uuid4
 
 from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
+from django.db.utils import IntegrityError
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.db.utils import IntegrityError
 
 from . import settings
 from .models import MagicLink
@@ -30,10 +30,18 @@ def create_magiclink(email, request, redirect_url=''):
         cookie_value=str(uuid4()),
         ip_address=get_client_ip(request),
     )
+    request.COOKIES['magiclink'] = magic_link.cookie_value
     return magic_link
 
 
-def create_user(email, username='', first_name='', last_name=''):
+def get_or_create_user(email, username='', first_name='', last_name=''):
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        pass
+    else:
+        return user
+
     user_fields = [field.name for field in User._meta.get_fields()]
 
     if settings.EMAIL_IGNORE_CASE:

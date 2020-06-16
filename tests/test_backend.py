@@ -1,12 +1,13 @@
 from datetime import timedelta
+
 import pytest
 from django.http import HttpRequest
 from django.utils import timezone
 
-from magiclink.backends import MagicLinkBackend
 from magiclink import settings
+from magiclink.backends import MagicLinkBackend
 
-from .fixtures import user, magic_link  # NOQA: F401
+from .fixtures import magic_link, user  # NOQA: F401
 
 
 @pytest.mark.django_db
