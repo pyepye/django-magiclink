@@ -25,7 +25,7 @@ class MagicLinkBackend:
 
         magiclink = magiclink.first()
 
-        if magiclink.expiry < timezone.now():
+        if timezone.now() > magiclink.expiry:
             magiclink.disable()
             return
 

@@ -61,14 +61,14 @@ def create_user(email, username='', first_name='', last_name=''):
     else:
         user = User.objects.create(email=email)
 
-    if 'first_name' in user_fields:
+    if 'first_name' in user_fields and first_name:
         user.first_name = first_name
-    if 'last_name' in user_fields:
+    if 'last_name' in user_fields and last_name:
         user.last_name = last_name
     if 'full_name' in user_fields:
-        user.full_name = f'{first_name} {last_name}'
+        user.full_name = f'{first_name} {last_name}'.strip()
     if 'name' in user_fields:
-        user.name = f'{first_name} {last_name}'
+        user.name = f'{first_name} {last_name}'.strip()
     user.save()
 
     return user
