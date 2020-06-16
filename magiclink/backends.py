@@ -25,8 +25,7 @@ class MagicLinkBackend:
 
         magiclink = magiclink.first()
 
-        # ToDo: Check expiry
-        if magiclink.expiry_time > timezone.now():
+        if magiclink.expiry < timezone.now():
             magiclink.disable()
             return
 
@@ -36,7 +35,7 @@ class MagicLinkBackend:
                 return
 
         if settings.REQUIRE_BROWSER:
-            if magiclink.cookie != request.COOKIES.get('magiclink'):
+            if magiclink.cookie_value != request.COOKIES.get('magiclink'):
                 magiclink.disable()
                 return
 
@@ -44,10 +43,7 @@ class MagicLinkBackend:
             magiclink.disable()
             return
 
-        if not settings.REQUIRE_SIGNUP:
-            user = self.get_or_create_user(self, email)
-        else:
-            user = User.objects.get(email=magiclink.email)
+        user = User.objects.get(email=magiclink.email)
 
         if not settings.ALLOW_SUPERUSER_LOGIN and user.is_superuser:
             magiclink.disable()
@@ -59,18 +55,6 @@ class MagicLinkBackend:
 
         magiclink.used()
 
-        return user
-
-    def get_or_create_user(self, email):
-        fields = [field.name for field in User._meta.get_fields()]
-        if 'username' in fields:
-            # The model contains a username, so we should try to fill it in.
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={'username': 'u' + generate_token()[:8]}
-            )
-        else:
-            user, created = User.objects.get_or_create(email=email)
         return user
 
     def get_user(self, user_id):

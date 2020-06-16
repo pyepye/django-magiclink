@@ -114,7 +114,11 @@ class Signup(TemplateView):
         next_url = request.GET.get('next', settings.SIGNUP_REDIRECT)
         magic_link = create_magiclink(email, request, redirect_url=next_url)
         magic_link.send(request)
-        return HttpResponseRedirect(reverse('magiclink:login_sent'))
+
+        sent_url = reverse('magiclink:login_sent')
+        if settings.LOGIN_SENT_REDIRECT:
+            sent_url = settings.LOGIN_SENT_REDIRECT
+        return HttpResponseRedirect(sent_url)
 
 
 class Logout(RedirectView):

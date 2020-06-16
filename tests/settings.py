@@ -11,35 +11,59 @@ DATABASES = {
 }
 
 ROOT_URLCONF = 'tests.urls'
+
 INSTALLED_APPS = [
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
     'tests',
     'magiclink',
 ]
 
-MIDDLEWARE = (
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-)
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
 
-AUTHENTICATION_BACKENDS = (
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+AUTHENTICATION_BACKENDS = [
     'magiclink.backends.MagicLinkBackend',
     'django.contrib.auth.backends.ModelBackend',
-)
+]
 
 MAGICLINK_TOKEN_LENGTH = 50
 MAGICLINK_AUTH_TIMEOUT = 300
 MAGICLINK_TOKEN_USES = 1
 MAGICLINK_REQUIRE_SIGNUP = True
 MAGICLINK_EMAIL_IGNORE_CASE = True
-MAGICLINK_ALLOW_SUPERUSER_LOGIN = True
-MAGICLINK_ALLOW_STAFF_LOGIN = True
+MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
+MAGICLINK_ALLOW_STAFF_LOGIN = False
 MAGICLINK_INCLUDE_USER = True
-MAGICLINK_REQUIRE_BROWSER = True
+MAGICLINK_REQUIRE_BROWSER = False
 MAGICLINK_REQUIRE_SAME_IP = True
-# MAGICLINK_WELCOME_EMAIL_TEMPLATE_NAME = 'welcome.html'
 MAGICLINK_EMAIL_STYLES = {
     'logo_url': '',
     'background_color': '#ffffff',

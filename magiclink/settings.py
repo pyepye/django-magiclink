@@ -15,6 +15,10 @@ else:
                    'sussptable to brute force attacks')
         warnings.warn(warning, RuntimeWarning)
 
+EMAIL_VERIFY = getattr(settings, 'MAGICLINK_EMAIL_VERIFY', True)
+if not isinstance(EMAIL_VERIFY, bool):
+    raise ImproperlyConfigured('"MAGICLINK_EMAIL_VERIFY" must be a boolean')
+
 try:
     # In second
     AUTH_TIMEOUT = int(getattr(settings, 'MAGICLINK_AUTH_TIMEOUT', 300))
@@ -32,10 +36,10 @@ if not isinstance(EMAIL_IGNORE_CASE, bool):
 
 REQUIRE_SIGNUP = getattr(settings, 'MAGICLINK_REQUIRE_SIGNUP', True)
 if not isinstance(REQUIRE_SIGNUP, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SIGNUP" must be a boolean')  # NOQA: E501
+    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SIGNUP" must be a boolean')
 SIGNUP_REDIRECT = getattr(settings, 'MAGICLINK_SIGNUP_REDIRECT', '')
 
-EMAIL_AS_USERNAME = getattr(settings, 'MAGICLINK_EMAIL_AS_USERNAME', True)  # NOQA: E501
+EMAIL_AS_USERNAME = getattr(settings, 'MAGICLINK_EMAIL_AS_USERNAME', True)
 if not isinstance(EMAIL_AS_USERNAME, bool):
     raise ImproperlyConfigured('"MAGICLINK_EMAIL_AS_USERNAME" must be a boolean')  # NOQA: E501
 
@@ -43,28 +47,28 @@ ALLOW_SUPERUSER_LOGIN = getattr(settings, 'MAGICLINK_ALLOW_SUPERUSER_LOGIN', Tru
 if not isinstance(ALLOW_SUPERUSER_LOGIN, bool):
     raise ImproperlyConfigured('"MAGICLINK_ALLOW_SUPERUSER_LOGIN" must be a boolean')  # NOQA: E501
 
-ALLOW_STAFF_LOGIN = getattr(settings, 'MAGICLINK_ALLOW_STAFF_LOGIN', True)  # NOQA: E501
+ALLOW_STAFF_LOGIN = getattr(settings, 'MAGICLINK_ALLOW_STAFF_LOGIN', True)
 if not isinstance(ALLOW_STAFF_LOGIN, bool):
     raise ImproperlyConfigured('"MAGICLINK_ALLOW_STAFF_LOGIN" must be a boolean')  # NOQA: E501
 
-INCLUDE_USER = getattr(settings, 'MAGICLINK_INCLUDE_USER', True)  # NOQA: E501
+INCLUDE_USER = getattr(settings, 'MAGICLINK_INCLUDE_USER', True)
 if not isinstance(INCLUDE_USER, bool):
-    raise ImproperlyConfigured('"MAGICLINK_INCLUDE_USER" must be a boolean')  # NOQA: E501
+    raise ImproperlyConfigured('"MAGICLINK_INCLUDE_USER" must be a boolean')
 
-REQUIRE_BROWSER = getattr(settings, 'MAGICLINK_REQUIRE_BROWSER', True)  # NOQA: E501
+REQUIRE_BROWSER = getattr(settings, 'MAGICLINK_REQUIRE_BROWSER', True)
 if not isinstance(REQUIRE_BROWSER, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_BROWSER" must be a boolean')  # NOQA: E501
+    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_BROWSER" must be a boolean')
 
-REQUIRE_SAME_IP = getattr(settings, 'MAGICLINK_REQUIRE_SAME_IP', True)  # NOQA: E501
+REQUIRE_SAME_IP = getattr(settings, 'MAGICLINK_REQUIRE_SAME_IP', True)
 if not isinstance(REQUIRE_SAME_IP, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SAME_IP" must be a boolean')  # NOQA: E501
+    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SAME_IP" must be a boolean')
 
-WELCOME_EMAIL_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_WELCOME_EMAIL_TEMPLATE_NAME', '')  # NOQA: E501
-if WELCOME_EMAIL_TEMPLATE_NAME:
+SIGNUP_EMAIL_TEMPLATE = getattr(settings, 'MAGICLINK_SIGNUP_EMAIL_TEMPLATE', '')  # NOQA: E501
+if SIGNUP_EMAIL_TEMPLATE:
     try:
-        get_template(WELCOME_EMAIL_TEMPLATE_NAME)
+        get_template(SIGNUP_EMAIL_TEMPLATE)
     except TemplateDoesNotExist:
-        error = 'Can\'t find a template which matches MAGICLINK_WELCOME_EMAIL_TEMPLATE_NAME template "{WELCOME_EMAIL_TEMPLATE_NAME}"'  # NOQA: E501
+        error = f'Can\'t find a template which matches MAGICLINK_SIGNUP_EMAIL_TEMPLATE template "{SIGNUP_EMAIL_TEMPLATE}"'  # NOQA: E501
         raise ImproperlyConfigured(error)
 
 

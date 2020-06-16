@@ -1,6 +1,7 @@
 from datetime import timedelta
 from uuid import uuid4
 
+from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -18,7 +19,7 @@ def create_magiclink(email, request, redirect_url=''):
         email = email.lower()
 
     if not redirect_url:
-        redirect_url = settings.LOGIN_REDIRECT_URL
+        redirect_url = djsettings.LOGIN_REDIRECT_URL
 
     expiry = timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT)
     magic_link = MagicLink.objects.create(

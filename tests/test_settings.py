@@ -12,6 +12,14 @@ def test_token_length(settings):
         reload(settings)
 
 
+def test_email_verify(settings):
+    settings.MAGICLINK_EMAIL_VERIFY = 'Test'
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+        reload(settings)
+
+
 def test_auth_timeout(settings):
     settings.MAGICLINK_AUTH_TIMEOUT = 'Test'
 
