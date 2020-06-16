@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from magiclink import settings
 from magiclink.backends import MagicLinkBackend
+from magiclink.models import MagicLink
 
 from .fixtures import magic_link, user  # NOQA: F401
 
@@ -29,6 +30,9 @@ def test_auth_backend(user, magic_link):  # NOQA: F811
         request=request, token=ml.token, email=user.email
     )
     assert user
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
 
 
 @pytest.mark.django_db
@@ -95,6 +99,9 @@ def test_auth_backend_expired(user, magic_link):  # NOQA: F811
         request=request, token=ml.token, email=user.email
     )
     assert user is None
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
 
 
 @pytest.mark.django_db
@@ -108,6 +115,9 @@ def test_auth_backend_wrong_ip(user, magic_link):  # NOQA: F811
         request=request, token=ml.token, email=user.email
     )
     assert user is None
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
 
 
 @pytest.mark.django_db
@@ -119,6 +129,9 @@ def test_auth_backend_different_browser(user, magic_link):  # NOQA: F811
         request=request, token=ml.token, email=user.email
     )
     assert user is None
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
 
 
 @pytest.mark.django_db
@@ -132,6 +145,9 @@ def test_auth_backend_used_times(user, magic_link):  # NOQA: F811
         request=request, token=ml.token, email=user.email
     )
     assert user is None
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == settings.TOKEN_USES + 1
+    assert ml.disabled is True
 
 
 @pytest.mark.django_db
@@ -145,6 +161,9 @@ def test_auth_backend_superuser(user, magic_link):  # NOQA: F811
         request=request, token=ml.token, email=user.email
     )
     assert user is None
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
 
 
 @pytest.mark.django_db
@@ -158,3 +177,6 @@ def test_auth_backend_staff(user, magic_link):  # NOQA: F811
         request=request, token=ml.token, email=user.email
     )
     assert user is None
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
