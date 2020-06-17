@@ -13,6 +13,8 @@ from .fixtures import magic_link, user  # NOQA: F401
 
 User = get_user_model()
 
+# ToDo: Test setting cookie in Login and Signup views
+
 
 def test_login_page_get(client):
     url = reverse('magiclink:login')
