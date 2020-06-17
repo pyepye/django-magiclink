@@ -1,6 +1,6 @@
-from magiclink.utils import get_client_ip
-
 from django.http import HttpRequest
+
+from magiclink.utils import get_client_ip
 
 
 def test_get_client_ip_http_x_forwarded_for():

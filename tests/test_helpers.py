@@ -1,14 +1,18 @@
-from importlib import reload
 from datetime import timedelta
+from importlib import reload
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.utils import timezone
 
-from magiclink.helpers import create_magiclink
 from magiclink import settings as mlsettings
+from magiclink.helpers import create_magiclink, get_or_create_user
 
 from .fixtures import user  # NOQA: F401
+from .models import CustomUserEmailOnly, CustomUserFullName, CustomUserName
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -57,3 +61,95 @@ def test_create_magiclink_email_ignore_case_off(settings, freezer):
     request = HttpRequest()
     magic_link = create_magiclink(email, request)
     assert magic_link.email == email
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_exists(user):  # NOQA: F811
+    usr = get_or_create_user(email=user.email)
+    assert usr == user
+    assert User.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_exists_ignore_case(settings, user):  # NOQA: F811
+    settings.MAGICLINK_EMAIL_IGNORE_CASE = True
+    from magiclink import settings
+    reload(settings)
+
+    usr = get_or_create_user(email=user.email.upper())
+    assert usr == user
+    assert User.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_email_as_username(settings):
+    email = 'test@example.com'
+    usr = get_or_create_user(email=email)
+    assert usr.email == email
+    assert usr.username == email
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_random_username(settings):
+    settings.MAGICLINK_EMAIL_AS_USERNAME = False
+    from magiclink import settings
+    reload(settings)
+
+    email = 'test@example.com'
+    usr = get_or_create_user(email=email)
+    assert usr.email == email
+    assert usr.username != email
+    assert len(usr.username) == 10
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_first_name(settings):
+    first_name = 'fname'
+    usr = get_or_create_user(email='test@example.com', first_name=first_name)
+    assert usr.first_name == first_name
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_last_name(settings):
+    last_name = 'lname'
+    usr = get_or_create_user(email='test@example.com', last_name=last_name)
+    assert usr.last_name == last_name
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_no_username(mocker, settings):
+    gum = mocker.patch('magiclink.helpers.get_user_model')
+    gum.return_value = CustomUserEmailOnly
+
+    from magiclink.helpers import get_or_create_user
+    email = 'test@example.com'
+    usr = get_or_create_user(email=email)
+    assert usr.email == email
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_full_name(mocker, settings):
+    gum = mocker.patch('magiclink.helpers.get_user_model')
+    gum.return_value = CustomUserFullName
+
+    from magiclink.helpers import get_or_create_user
+    email = 'test@example.com'
+    first = 'fname'
+    last = 'lname'
+    usr = get_or_create_user(email=email, first_name=first, last_name=last)
+    assert usr.email == email
+    assert usr.full_name == f'{first} {last}'
+
+
+@pytest.mark.django_db
+def test_get_or_create_user_name(mocker, settings):
+    gum = mocker.patch('magiclink.helpers.get_user_model')
+    gum.return_value = CustomUserName
+
+    from magiclink.helpers import get_or_create_user
+    email = 'test@example.com'
+    first = 'fname'
+    last = 'lname'
+    usr = get_or_create_user(email=email, first_name=first, last_name=last)
+    assert usr.email == email
+    assert usr.name == f'{first} {last}'

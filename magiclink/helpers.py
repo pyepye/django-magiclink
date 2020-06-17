@@ -11,8 +11,6 @@ from . import settings
 from .models import MagicLink
 from .utils import get_client_ip
 
-User = get_user_model()
-
 
 def create_magiclink(email, request, redirect_url=''):
     if settings.EMAIL_IGNORE_CASE:
@@ -30,11 +28,15 @@ def create_magiclink(email, request, redirect_url=''):
         cookie_value=str(uuid4()),
         ip_address=get_client_ip(request),
     )
-    request.COOKIES['magiclink'] = magic_link.cookie_value
     return magic_link
 
 
 def get_or_create_user(email, username='', first_name='', last_name=''):
+    User = get_user_model()
+
+    if settings.EMAIL_IGNORE_CASE:
+        email = email.lower()
+
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
@@ -43,9 +45,6 @@ def get_or_create_user(email, username='', first_name='', last_name=''):
         return user
 
     user_fields = [field.name for field in User._meta.get_fields()]
-
-    if settings.EMAIL_IGNORE_CASE:
-        email = email.lower()
 
     if not username and settings.EMAIL_AS_USERNAME:
         username = email
@@ -64,7 +63,7 @@ def get_or_create_user(email, username='', first_name='', last_name=''):
                 user = User.objects.create(
                     email=email, username=get_random_string(length=10),
                 )
-            except IntegrityError:
+            except IntegrityError:  # pragma: no cover
                 pass
     else:
         user = User.objects.create(email=email)

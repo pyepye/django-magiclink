@@ -34,6 +34,10 @@ class SignupFormEmailOnly(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data['email']
+
+        if settings.EMAIL_IGNORE_CASE:
+            email = email.lower()
+
         users = User.objects.filter(email=email)
         if users:
             raise forms.ValidationError(
