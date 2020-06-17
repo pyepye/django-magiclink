@@ -46,7 +46,7 @@ def test_signup_post(mocker, client, settings):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_signup_form_missing_name(mocker, client, settings):  # NOQA: F811
+def test_login_signup_form_missing_name(mocker, client, settings):  # NOQA: F811, E501
     url = reverse('magiclink:signup')
     data = {
         'form_name': 'SignupForm',

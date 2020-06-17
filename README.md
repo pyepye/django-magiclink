@@ -1,4 +1,4 @@
-# Django Magic Link
+# Django MagicLink
 
 
 Passwordless Authentication for Django with Magic Links.
@@ -20,8 +20,8 @@ The setup of the app is simple but has a few steps and a few templates that need
 1. [Install the app](#install)
 1. [Configure the app](#configuration) - There are a large number of [additional configuration settings](#configuration-settings)
 1. [Set up the login page](#login-page) by overriding the login page HTML (or create a custom login view)
-1. [Override the login sent page HTML](#login-sent)
-1. Set email logo and colours or fully override the full email HTML. It is also possible to override the text email as well
+1. [Override the login sent page HTML](#login-sent-page)
+1. [Set up the magic link email](#magic-link-email) by setting the email logo and colours. It's also possible to override the email templates
 1. [Create a signup page](#signup-page) (optional) depending on your settings configuration
 
 

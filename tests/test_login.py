@@ -134,7 +134,7 @@ def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_verify_authentication_fail(client, settings, user, magic_link):  # NOQA: F811
+def test_login_verify_authentication_fail(client, settings, user, magic_link):  # NOQA: F811, E501
     url = reverse('magiclink:login_verify')
     request = HttpRequest()
     ml = magic_link(request)
@@ -148,7 +148,6 @@ def test_login_verify_authentication_fail(client, settings, user, magic_link):  
     client.cookies = SimpleCookie({'magiclink': ml.cookie_value})
     response = client.get(url)
     assert response.status_code == 404
-
 
 
 @pytest.mark.django_db
