@@ -35,6 +35,9 @@ def test_login_post(mocker, client, user, settings):  # NOQA: F811
     assert usr
     magiclink = MagicLink.objects.get(email=user.email)
     assert magiclink
+    if settings.MAGICLINK_REQUIRE_BROWSER:
+        assert response.cookies['magiclink'].value == magiclink.cookie_value
+
 
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,

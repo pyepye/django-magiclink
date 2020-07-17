@@ -46,7 +46,10 @@ class Login(TemplateView):
         magic_link.send(request)
 
         sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
-        return HttpResponseRedirect(sent_url)
+        response = HttpResponseRedirect(sent_url)
+        if settings.REQUIRE_BROWSER:
+            response.cookies['magiclink'] = magic_link.cookie_value
+        return response
 
 
 class LoginSent(TemplateView):
@@ -68,7 +71,6 @@ class LoginVerify(RedirectView):
         login(request, user)
 
         magic_link = MagicLink.objects.get(token=token)
-
         return HttpResponseRedirect(magic_link.redirect_url)
 
 
@@ -118,7 +120,10 @@ class Signup(TemplateView):
         magic_link.send(request)
 
         sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
-        return HttpResponseRedirect(sent_url)
+        response = HttpResponseRedirect(sent_url)
+        if settings.REQUIRE_BROWSER:
+            response.cookies['magiclink'] = magic_link.cookie_value
+        return response
 
 
 class Logout(RedirectView):
