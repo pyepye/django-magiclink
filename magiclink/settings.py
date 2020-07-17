@@ -83,6 +83,6 @@ EMAIL_STYLES = getattr(settings, 'MAGICLINK_EMAIL_STYLES', EMAIL_STYLES)
 if EMAIL_STYLES and not isinstance(EMAIL_STYLES, dict):
     raise ImproperlyConfigured('"MAGICLINK_EMAIL_STYLES" must be a dict')
 
-LOGIN_SENT_REDIRECT = getattr(settings, 'MAGICLINK_LOGIN_SENT_REDIRECT', '/auth/login/sent/')   # NOQA: E501
+LOGIN_SENT_REDIRECT = getattr(settings, 'MAGICLINK_LOGIN_SENT_REDIRECT', None)
 
 EMAIL_SUBJECT = getattr(settings, 'MAGICLINK_EMAIL_SUBJECT', 'Your login magic link')   # NOQA: E501

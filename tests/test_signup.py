@@ -19,6 +19,7 @@ def test_signup_get(client):
 
 @pytest.mark.django_db
 def test_signup_post(mocker, client, settings):  # NOQA: F811
+    from magiclink import settings as mlsettings
     send_mail = mocker.patch('magiclink.models.send_mail')
 
     url = reverse('magiclink:signup')
@@ -30,12 +31,13 @@ def test_signup_post(mocker, client, settings):  # NOQA: F811
     }
     response = client.post(url, data)
     assert response.status_code == 302
+    assert response.url == mlsettings.LOGIN_SENT_REDIRECT
+
     usr = User.objects.get(email=email)
     assert usr
     magic_link = MagicLink.objects.get(email=email)
     assert magic_link
 
-    from magiclink import settings as mlsettings
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
         message=mocker.ANY,

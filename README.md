@@ -233,9 +233,7 @@ Using magic links can be dangerous as poorly implemented login links can be brut
     * SignupFormFull
 * Add type hinting with mypy / django-stubs
 * Create docs and setup Read the Docs
-* Ensure
 * Test `VERIFY_WITH_EMAIL = False`
 * Implement `MAGICLINK_TOKEN_TIME_LIMIT`
 * Test emails or context for emails
-* Check all redirects in tests e.g. MAGICLINK_LOGIN_SENT_REDIRECT
 * Add Travis for tests
