@@ -41,7 +41,7 @@ class SignupFormEmailOnly(forms.Form):
         users = User.objects.filter(email=email)
         if users:
             raise forms.ValidationError(
-                'This email address already is already linked to an account'
+                'Email address is already linked to an account'
             )
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
@@ -71,7 +71,7 @@ class SignupFormWithUsername(SignupFormEmailOnly):
         users = User.objects.filter(username=username)
         if users:
             raise forms.ValidationError(
-                'This email address already is already linked to an account'
+                'username is already linked to an account'
             )
         return username
 

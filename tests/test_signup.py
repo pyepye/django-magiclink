@@ -93,3 +93,105 @@ def test_login_signup_form_missing_name(mocker, client, settings):  # NOQA: F811
     assert response.status_code == 200
     error = ['This field is required.']
     assert response.context_data['SignupForm'].errors['name'] == error
+
+
+@pytest.mark.django_db
+def test_signup_form_user_exists(mocker, client):
+    email = 'test@example.com'
+    User.objects.create(email=email)
+    url = reverse('magiclink:signup')
+
+    data = {
+        'form_name': 'SignupForm',
+        'email': email,
+        'name': 'testname',
+    }
+    response = client.post(url, data)
+    assert response.status_code == 200
+    error = ['Email address is already linked to an account']
+    response.context_data['SignupForm'].errors['email'] == error
+
+
+@pytest.mark.django_db
+def test_signup_form_email_only(mocker, client):
+    url = reverse('magiclink:signup')
+    email = 'test@example.com'
+    data = {
+        'form_name': 'SignupFormEmailOnly',
+        'email': email,
+    }
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+
+
+@pytest.mark.django_db
+def test_signup_form_with_username(mocker, client):
+    url = reverse('magiclink:signup')
+    email = 'test@example.com'
+    username = 'usrname'
+    data = {
+        'form_name': 'SignupFormWithUsername',
+        'email': email,
+        'username': username,
+    }
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+    usr = User.objects.get(email=email)
+    assert usr.username == username
+
+
+@pytest.mark.django_db
+def test_signup_form_with_username_taken(mocker, client):
+    username = 'usrname'
+    email = 'test@example.com'
+    User.objects.create(username=username, email=email)
+    url = reverse('magiclink:signup')
+    data = {
+        'form_name': 'SignupFormWithUsername',
+        'email': email,
+        'username': username,
+    }
+    response = client.post(url, data)
+    assert response.status_code == 200
+    error = ['username is already linked to an account']
+    response.context_data['SignupFormWithUsername'].errors['username'] == error
+
+
+@pytest.mark.django_db
+def test_signup_form_with_username_required(mocker, client):
+    username = 'usrname'
+    email = 'test@example.com'
+    User.objects.create(username=username, email=email)
+    url = reverse('magiclink:signup')
+    data = {
+        'form_name': 'SignupFormWithUsername',
+        'email': email,
+    }
+    response = client.post(url, data)
+    assert response.status_code == 200
+    error = ['This field is required.']
+    response.context_data['SignupFormWithUsername'].errors['username'] == error
+
+
+@pytest.mark.django_db
+def test_signup_form_full(mocker, client):
+    url = reverse('magiclink:signup')
+    email = 'test@example.com'
+    username = 'usrname'
+    first_name = 'fname'
+    last_name = 'lname'
+    data = {
+        'form_name': 'SignupFormFull',
+        'email': email,
+        'username': username,
+        'name': f'{first_name} {last_name}'
+    }
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+    usr = User.objects.get(email=email)
+    assert usr.username == username
+    assert usr.first_name == first_name
+    assert usr.last_name == last_name

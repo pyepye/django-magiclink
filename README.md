@@ -226,12 +226,6 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 
 ## ToDo
-
-* Test SignupFormEmailOnly ValidationError
-* Test different Signup forms
-    * SignupFormEmailOnly
-    * SignupFormWithUsername
-    * SignupFormFull
 * Add type hinting with mypy / django-stubs
 * Create docs and setup Read the Docs
 * Test `VERIFY_WITH_EMAIL = False`
