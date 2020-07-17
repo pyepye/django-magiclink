@@ -139,7 +139,7 @@ If this email template is not to your liking you can override the email template
 
 #### Signup page
 
-If you want users to have to signup before being able to log in you will want to override the signup page template. This is needed when `MAGICLINK_REQUIRE_SIGNUP = True`. On successful signup the user will be sent a login email, an optional welcome email can be sent as well.
+If you want users to have to signup before being able to log in you will want to override the signup page template. This is needed when `MAGICLINK_REQUIRE_SIGNUP = True`. On successful signup the user will be sent a login email.
 
 When overriding this template please ensure the following content is included:
 

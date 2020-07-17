@@ -10,7 +10,11 @@ LOGIN_SENT_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_SENT_TEMPLATE_NAME
 
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.
-REQUIRE_SIGNUP = True
+REQUIRE_SIGNUP = getattr(settings, 'MAGICLINK_REQUIRE_SIGNUP', True)
+if not isinstance(REQUIRE_SIGNUP, bool):
+    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SIGNUP" must be a boolean')
+SIGNUP_LOGIN_REDIRECT = getattr(settings, 'MAGICLINK_SIGNUP_LOGIN_REDIRECT', '')   # NOQA: E501
+
 SIGNUP_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_SIGNUP_TEMPLATE_NAME', 'magiclink/signup.html')   # NOQA: E501
 
 try:
@@ -37,11 +41,6 @@ except ValueError:
 EMAIL_IGNORE_CASE = getattr(settings, 'MAGICLINK_EMAIL_IGNORE_CASE', True)
 if not isinstance(EMAIL_IGNORE_CASE, bool):
     raise ImproperlyConfigured('"MAGICLINK_EMAIL_IGNORE_CASE" must be a boolean')  # NOQA: E501
-
-REQUIRE_SIGNUP = getattr(settings, 'MAGICLINK_REQUIRE_SIGNUP', True)
-if not isinstance(REQUIRE_SIGNUP, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SIGNUP" must be a boolean')
-SIGNUP_LOGIN_REDIRECT = getattr(settings, 'MAGICLINK_SIGNUP_LOGIN_REDIRECT', '')   # NOQA: E501
 
 EMAIL_AS_USERNAME = getattr(settings, 'MAGICLINK_EMAIL_AS_USERNAME', True)
 if not isinstance(EMAIL_AS_USERNAME, bool):
