@@ -25,6 +25,15 @@ The setup of the app is simple but has a few steps and a few templates that need
 1. [Create a signup page](#signup-page) (optional) depending on your settings configuration
 
 
+### Basic login flow
+
+1. User signs up via the sign up page (This can be skipped if `MAGICLINK_REQUIRE_SIGNUP = False`)
+1. User enters their email on the login page to request a magic link
+1. Magic link is sent to users email address
+1. User is redirected to a login sent page
+1. User clicks on the magic link in their email
+1. User is logged in
+
 
 #### Configuration
 
@@ -53,6 +62,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 ```
+*Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS*
 
 See [additional configuration settings](#configuration-settings) for all of the different avalible settings. The most important setting for the signup / login flow is if signup is required before a login link can be requested. If this is set to False a new user will be created the first time a new email address is used to request a login link
 
@@ -128,10 +138,10 @@ When overriding this template please ensure the following content is included:
 ```
 
 There are actually several forms avalible in the context on this page depending on what information you want to collect.
-* `SignupFormEmailOnly` - Only includes a `email` field
-* `SignupForm` - Includes `name` and `email` fields
-* `SignupFormWithUsername` - Includes `Username` and `email` fields
-* `SignupFormFull` - Includes `username`, `name` and `email` fields
+* **SignupFormEmailOnly** - Only includes a `email` field
+* **SignupForm** - Includes `name` and `email` fields
+* **SignupFormWithUsername** - Includes `Username` and `email` fields
+* **SignupFormFull** - Includes `username`, `name` and `email` fields
 
 
 Like the login for the signup flow can be overridden if you require more information from the user on signup. See the login/setup docs for more details
@@ -193,7 +203,7 @@ MAGICLINK_REQUIRE_SAME_IP = True
 MAGICLINK_TOKEN_USES = 1
 
 # How often in seconds a user can request a new login token
-MAGICLINK_TOKEN_USES = 30
+MAGICLINK_TOKEN_TIME_LIMIT = 30
 ```
 
 
@@ -210,3 +220,21 @@ Using magic links can be dangerous as poorly implimented login links can be brut
 * Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
 
 *Note: Each of the above settings can be overridden*
+
+
+## ToDo
+
+* Setting cookie in Login and Signup views (and test)
+* Full end to end test - Signup, login, logout
+* Test SignupFormEmailOnly ValidationError
+* Test different Signup forms
+    * SignupFormEmailOnly
+    * SignupFormWithUsername
+    * SignupFormFull
+* Add Type hinting with mypy / django-stubs
+* Create docs and setup Read the Docs
+* Ensure
+* Test `VERIFY_WITH_EMAIL = False`
+* Impliment `MAGICLINK_TOKEN_TIME_LIMIT`
+* Test emails or context for emails
+* Check all redirects in tests e.g. MAGICLINK_LOGIN_SENT_REDIRECT
