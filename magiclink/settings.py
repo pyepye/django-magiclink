@@ -5,6 +5,14 @@ from django.core.exceptions import ImproperlyConfigured
 
 LOGIN_SENT_REDIRECT = getattr(settings, 'MAGICLINK_LOGIN_SENT_REDIRECT', 'magiclink:login_sent')   # NOQA: E501
 
+LOGIN_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_TEMPLATE_NAME', 'magiclink/login.html')   # NOQA: E501
+LOGIN_SENT_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_SENT_TEMPLATE_NAME', 'magiclink/login_sent.html')   # NOQA: E501
+
+# If this setting is set to False a user account will be created the first time
+# a user requests a login link.
+REQUIRE_SIGNUP = True
+SIGNUP_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_SIGNUP_TEMPLATE_NAME', 'magiclink/signup.html')   # NOQA: E501
+
 try:
     TOKEN_LENGTH = int(getattr(settings, 'MAGICLINK_TOKEN_LENGTH', 50))
 except ValueError:
@@ -76,3 +84,5 @@ if EMAIL_STYLES and not isinstance(EMAIL_STYLES, dict):
     raise ImproperlyConfigured('"MAGICLINK_EMAIL_STYLES" must be a dict')
 
 EMAIL_SUBJECT = getattr(settings, 'MAGICLINK_EMAIL_SUBJECT', 'Your login magic link')   # NOQA: E501
+EMAIL_TEMPLATE_NAME_TEXT = getattr(settings, 'MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT', 'magiclink/login_email.txt')   # NOQA: E501
+EMAIL_TEMPLATE_NAME_HTML = getattr(settings, 'MAGICLINK_EMAIL_TEMPLATE_NAME_HTML', 'magiclink/login_email.html')   # NOQA: E501

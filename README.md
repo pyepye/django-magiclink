@@ -51,9 +51,9 @@ Add `magiclink` to your `INSTALLED_APPS`:
 INSTALLED_APPS = (
     ...
     'magiclink',
+    ...
 )
 ```
-*Note: If you want to override HTML templates make sure the magiclink app is put **after** the app which overrides the template*
 
 ```python
 AUTHENTICATION_BACKENDS = (
@@ -62,15 +62,19 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 ```
-*Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS*
+*Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS* to ensure it is used
 
 ```python
 # Set Djangos login URL to the magiclink login page
 LOGIN_URL = 'magiclink:login'
 
+MAGICLINK_LOGIN_TEMPLATE_NAME = 'myapp/login.html'
+MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'myapp/login_sent.html'
+
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
+MAGICLINK_SIGNUP_TEMPLATE_NAME = 'myapp/signup.html'
 ```
 
 See [additional configuration settings](#configuration-settings) for all of the different available settings. The most important setting for the sign up/login flow is if signup is required before a login link can be requested. If this is set to False a new user will be created the first time a new email address is used to request a login link
@@ -78,7 +82,7 @@ See [additional configuration settings](#configuration-settings) for all of the 
 
 #### Login page
 
-Each login page will look different so you can override our default login page by creating a template with the name`login.html`. When overriding this template please ensure the following content is included:
+Each login page will need different HTML so you need to set the `MAGICLINK_LOGIN_TEMPLATE_NAME` setting to a template of your own. When overriding this template please ensure the following code is included:
 
 ```html
 <form action="{% url 'magiclink:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post">
@@ -93,9 +97,7 @@ See the login docs if you want to create your own login view
 
 #### Login sent page
 
-After the user has requested a magic link, they will be redirected to a success page. The HTML for this page can be overridden by creating a template with the name `login_sent.html`.
-
-It is advised you return a simple message telling the user to check their email:
+After the user has requested a magic link, they will be redirected to a success page. The HTML for this page can be overridden using the setting `MAGICLINK_LOGIN_SENT_TEMPLATE_NAME`. It is advised you return a simple message telling the user to check their email:
 ```
 <h1>Check your email</h1>
 <p>We have sent you a magic link to your email address</p>
@@ -156,6 +158,31 @@ ToDo: Include docs on how to use post_save signal to send Welcome email?
 Below are the different settings that can be overridden. To do so place the setting into you `settings.py`
 
 ```python
+
+# Override the login page template. See 'Login page' in the Setup section
+MAGICLINK_LOGIN_TEMPLATE_NAME = 'myapp/login.html'
+
+# Override the login page template. See 'Login sent page' in the Setup section
+MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'myapp/login_sent.html'
+
+# If this setting is set to False a user account will be created the first time
+# a user requests a login link.
+MAGICLINK_REQUIRE_SIGNUP = True
+# Override the login page template. See 'Login sent page' in the Setup section
+MAGICLINK_SIGNUP_TEMPLATE_NAME = 'myapp/signup.html'
+
+# Set Djangos login redirect URL to be used once the user opens the magic link
+# This will be used whenever a ?next parameter is not set on login
+LOGIN_REDIRECT_URL = '/accounts/profile/'
+
+# If a new user is created via the signup page use this setting to send them to
+# a different url than LOGIN_REDIRECT_URL when clicking the magic link
+# This will fall back to LOGIN_REDIRECT_URL
+MAGICLINK_SIGNUP_LOGIN_REDIRECT = '/welcome'
+
+# Change the url a user is redirect to after requesting a magic link
+MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
+
 # Only allow users to log in that have signed up first (i.e. don't create a
 # new account on login).
 MAGICLINK_REQUIRE_SIGNUP = True
@@ -227,6 +254,7 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 ## ToDo
 * Implement `MAGICLINK_TOKEN_TIME_LIMIT`
+* Implement `MAGICLINK_SIGNUP_LOGIN_REDIRECT`
 * Test `VERIFY_WITH_EMAIL = False`
 * Test emails or context for emails?
 * Add type hinting with mypy / django-stubs

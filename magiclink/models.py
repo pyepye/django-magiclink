@@ -62,8 +62,8 @@ class MagicLink(models.Model):
             'magiclink': self.get_magic_link_url(request),
             'style': settings.EMAIL_STYLES,
         }
-        plain = render_to_string('login_email.txt', context)
-        html = render_to_string('login_email.html', context)
+        plain = render_to_string(settings.EMAIL_TEMPLATE_NAME_TEXT, context)
+        html = render_to_string(settings.EMAIL_TEMPLATE_NAME_HTML, context)
         send_mail(
             subject=settings.EMAIL_SUBJECT,
             message=plain,

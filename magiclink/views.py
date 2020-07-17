@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 class Login(TemplateView):
-    template_name = 'login.html'
+    template_name = settings.LOGIN_TEMPLATE_NAME
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -53,7 +53,7 @@ class Login(TemplateView):
 
 
 class LoginSent(TemplateView):
-    template_name = 'login_sent.html'
+    template_name = settings.LOGIN_SENT_TEMPLATE_NAME
 
 
 class LoginVerify(RedirectView):
@@ -75,7 +75,7 @@ class LoginVerify(RedirectView):
 
 
 class Signup(TemplateView):
-    template_name = 'signup.html'
+    template_name = settings.SIGNUP_TEMPLATE_NAME
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
