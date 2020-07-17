@@ -60,6 +60,12 @@ class MagicLink(models.Model):
             'subject': settings.EMAIL_SUBJECT,
             'user': user,
             'magiclink': self.get_magic_link_url(request),
+            'expiry': self.expiry,
+            'ip_address': self.ip_address,
+            'created': self.ip_address,
+            'same_ip': settings.REQUIRE_SAME_IP,
+            'same_browser': settings.REQUIRE_SAME_BROWSER,
+            'token_uses': settings.TOKEN_USES,
             'style': settings.EMAIL_STYLES,
         }
         plain = render_to_string(settings.EMAIL_TEMPLATE_NAME_TEXT, context)

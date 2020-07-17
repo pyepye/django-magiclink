@@ -79,7 +79,7 @@ MAGICLINK_REQUIRE_SIGNUP = True
 MAGICLINK_SIGNUP_TEMPLATE_NAME = 'myapp/signup.html'
 ```
 
-See [additional configuration settings](#configuration-settings) for all of the different available settings. The most important setting for the sign up/login flow is if signup is required before a login link can be requested. If this is set to False a new user will be created the first time a new email address is used to request a login link
+See [additional configuration settings](#configuration-settings) for all of the different available settings.
 
 
 #### Login page
@@ -100,7 +100,8 @@ See the login docs if you want to create your own login view
 #### Login sent page
 
 After the user has requested a magic link, they will be redirected to a success page. The HTML for this page can be overridden using the setting `MAGICLINK_LOGIN_SENT_TEMPLATE_NAME`. It is advised you return a simple message telling the user to check their email:
-```
+
+```html
 <h1>Check your email</h1>
 <p>We have sent you a magic link to your email address</p>
 <p>Please click the link to be logged in automatically</p>
@@ -114,19 +115,26 @@ This `MAGICLINK_EMAIL_STYLES` setting should be a dict with the following key va
 
 ```python
 MAGICLINK_EMAIL_STYLES = {
-    'logo_url': 'https://example.com/logo.png',  # Full URL. This should be either a jpeg or png due to email clients
-    'background-colour': '#ffffff',   # Emails background colour
-    'main-text-color': '#000000',  # Color of the text in the email, this should be very different from the background
-    'button-background-color': '#0078be',  # Color of the text in the email, this should be very different from the background
-    'button-text-color': '#ffffff',  # Color of the button text, this should be very different from the button background
+    'logo_url': 'https://example.com/logo.png',
+    'background-colour': '#ffffff',
+    'main-text-color': '#000000',
+    'button-background-color': '#0078be',
+    'button-text-color': '#ffffff',
 }
 ```
+*Note: The logo URL must be a full URL. For email client support you should use either a jpeg or png.*
 
-If this email template is not to your liking you can override the email template by creating your own templates (one for text and one for html). To do so you need to override the `MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT` and `MAGICLINK_EMAIL_TEMPLATE_NAME_HTML` settings.  If you override these templates the following context variables are available:
+If this email template is not to your liking you can override the email templates (one for text and one for html). To do so you need to override the `MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT` and `MAGICLINK_EMAIL_TEMPLATE_NAME_HTML` settings.  If you override these templates the following context variables are available:
 
 * `{{ subject }}` - The subject of the email "Your login magic link"
 * `{{ magiclink }}` - The magic link URL
 * `{{ user }}` - The full user object
+* `{{ expiry }}` - Datetime for when the magiclink expires
+* `{{ ip_address }}` - The IP address of the person who requested the magic link
+* `{{ created }}` - Datetime of when the magic link was created
+* `{{ same_ip }}` - The value of MAGICLINK_REQUIRE_SAME_IP
+* `{{ same_browser }}` - The value of MAGICLINK_REQUIRE_SAME_BROWSER
+* `{{ token_uses }}` - The value of MAGICLINK_TOKEN_USES
 
 
 #### Signup page
@@ -157,7 +165,9 @@ ToDo: Include docs on how to use post_save signal to send Welcome email?
 
 #### Configuration settings
 
-Below are the different settings that can be overridden. To do so place the setting into you `settings.py`
+Below are the different settings that can be overridden. To do so place the setting into you `settings.py`.
+
+*Note: Each of the url / redirect settings can either be a URL or url name*
 
 ```python
 
