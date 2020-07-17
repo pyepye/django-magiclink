@@ -62,7 +62,7 @@ class MagicLink(models.Model):
             'magiclink': self.get_magic_link_url(request),
             'expiry': self.expiry,
             'ip_address': self.ip_address,
-            'created': self.ip_address,
+            'created': self.created,
             'same_ip': settings.REQUIRE_SAME_IP,
             'same_browser': settings.REQUIRE_SAME_BROWSER,
             'token_uses': settings.TOKEN_USES,

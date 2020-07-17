@@ -201,10 +201,3 @@ def test_login_verify_no_token(client):
     url = reverse('magiclink:login_verify')
     response = client.get(url)
     assert response.status_code == 404
-
-
-@pytest.mark.django_db
-def test_model_string(magic_link):  # NOQA: F811
-    request = HttpRequest()
-    ml = magic_link(request)
-    assert str(ml) == f'{ml.email} - {ml.expiry}'
