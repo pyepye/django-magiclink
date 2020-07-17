@@ -108,14 +108,6 @@ def test_require_same_ip(settings):
         reload(settings)
 
 
-def test_signup_email_template(settings):
-    settings.MAGICLINK_SIGNUP_EMAIL_TEMPLATE = 'Test'
-
-    with pytest.raises(ImproperlyConfigured):
-        from magiclink import settings
-        reload(settings)
-
-
 def test_magiclink_email_styles(settings):
     settings.MAGICLINK_EMAIL_STYLES = 'Test'
 
