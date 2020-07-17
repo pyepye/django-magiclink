@@ -1,6 +1,22 @@
-<h1>Login via email</h1>
-<form action="{% url 'magiclink:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post">
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Django MagicLink Signup - Please override this template</title>
+  <meta name="description" content="Django MagicLink">
+  <meta name="author" content="Django MagicLink">
+</head>
+
+<body>
+  <h1>Login via email</h1>
+  <form action="{% url 'magiclink:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post">
     {% csrf_token %}
     {{ login_form }}
     <button type="submit">Send login email</button>
-</form>
+  </form>
+
+  <p>If you are seeing this you have not yet overridden the 'login.html' template yet.</p>
+  <p>Please see the <a href="https://github.com/pyepye/django-magiclink">README on Github</a> for more details on setting up django-magiclink correctly</p>
+</body>
+</html>

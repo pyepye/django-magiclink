@@ -238,3 +238,4 @@ Using magic links can be dangerous as poorly implimented login links can be brut
 * Impliment `MAGICLINK_TOKEN_TIME_LIMIT`
 * Test emails or context for emails
 * Check all redirects in tests e.g. MAGICLINK_LOGIN_SENT_REDIRECT
+* Add travis for tests
