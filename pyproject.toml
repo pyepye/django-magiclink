@@ -3,13 +3,13 @@ name = "django-magiclink"
 packages = [
     {include = "magiclink"}
 ]
-version = "0.1.0"
+version = "0.1.1"
 description = "Passwordless Authentication for Django with Magic Links"
 authors = ["Matt Pye <pyematt@gmail.com>"]
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/pyepye/django-amplitude"
-homepage = "https://github.com/pyepye/django-amplitude"
+repository = "https://github.com/pyepye/django-magiclink"
+homepage = "https://github.com/pyepye/django-magiclink"
 keywords = ["magic link", "authentication", "passwordless"]
 
 [tool.poetry.dependencies]
