@@ -62,7 +62,6 @@ def test_login_post(mocker, client, user, settings):  # NOQA: F811
     if settings.MAGICLINK_REQUIRE_BROWSER:
         assert response.cookies['magiclink'].value == magiclink.cookie_value
 
-
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
         message=mocker.ANY,
@@ -155,11 +154,30 @@ def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
     client.cookies = SimpleCookie({'magiclink': ml.cookie_value})
     response = client.get(url)
     assert response.status_code == 302
-    assert response.url == settings.LOGIN_REDIRECT_URL
+    assert response.url == reverse(settings.LOGIN_REDIRECT_URL)
 
     needs_login_url = reverse('needs_login')
     needs_login_response = client.get(needs_login_url)
     assert needs_login_response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_login_verify_with_redirect(client, settings, user, magic_link):  # NOQA: F811
+    url = reverse('magiclink:login_verify')
+    request = HttpRequest()
+    request.META['SERVER_NAME'] = '127.0.0.1'
+    request.META['SERVER_PORT'] = 80
+    ml = magic_link(request)
+    ml.ip_address = '127.0.0.1'  # This is a little hacky
+    redirect_url = reverse('empty')
+    ml.redirect_url = redirect_url
+    ml.save()
+    url = ml.get_magic_link_url(request)
+
+    client.cookies = SimpleCookie({'magiclink': ml.cookie_value})
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.url == redirect_url
 
 
 @pytest.mark.django_db
