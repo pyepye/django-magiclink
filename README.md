@@ -268,7 +268,6 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 ## ToDo
 * Implement `MAGICLINK_TOKEN_TIME_LIMIT`
 * Implement `MAGICLINK_SIGNUP_LOGIN_REDIRECT`
-* Test `VERIFY_WITH_EMAIL = False`
 * Test emails or context for emails?
 * Add type hinting with mypy / django-stubs
 * Create docs and setup Read the Docs
