@@ -35,6 +35,9 @@ The setup of the app is simple but has a few steps and a few templates that need
 1. The user is logged in and redirected
 
 
+*If you want to create a different passwordless login flow see the [Manual usage](#manual-usage) section*
+
+
 #### Configuration
 
 Add to the `urlpatterns` in `urls.py`:
@@ -266,6 +269,24 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 * Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
 
 *Note: Each of the above settings can be overridden*
+
+
+## Manual usage
+
+django-magiclink uses a model to help create, send and validate magic links. A `create_magiclink` helper function can be used easily create a MagicLink using the correct settings:
+
+```python
+from magiclink.helpers import create_magiclink
+
+magiclink = create_magiclink(email, request, redirect_url='')
+
+# Generates the full magic link url and send it in a email
+magiclink.send(request)
+
+# If you want to build the magic link from the model but don't want to send
+# an email you can you can use `MagicLink.generate_url()`
+magic_link_url = magiclink.generate_url(request)
+```
 
 
 ## ToDo
