@@ -122,7 +122,7 @@ MAGICLINK_EMAIL_STYLES = {
 }
 ```
 
-If this email template is not to your liking you can override the email template by creating your own templates (one for text and one for html) with the names `login_email.txt` and `login_email.html`. If you override these templates the following context variables are available:
+If this email template is not to your liking you can override the email template by creating your own templates (one for text and one for html). To do so you need to override the `MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT` and `MAGICLINK_EMAIL_TEMPLATE_NAME_HTML` settings.  If you override these templates the following context variables are available:
 
 * `{{ subject }}` - The subject of the email "Your login magic link"
 * `{{ magiclink }}` - The magic link URL
@@ -198,6 +198,11 @@ MAGICLINK_EMAIL_STYLES = {
     'button-background-color': '#0078be',
     'button-text-color': '#ffffff',
 }
+
+# If you want to use your own email templates you can override the text and
+# html templates used with:
+MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT = 'myapp/login_email.text'
+MAGICLINK_EMAIL_TEMPLATE_NAME_HTML = 'myapp/login_email.html'
 
 # How long a magic link is valid for before returning an error
 MAGICLINK_AUTH_TIMEOUT = 300  # In second - Default is 5 minutes
