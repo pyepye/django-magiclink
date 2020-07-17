@@ -25,6 +25,7 @@ class Login(TemplateView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         context['login_form'] = LoginForm(request.POST)
+        context['require_signup'] = settings.REQUIRE_SIGNUP
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
