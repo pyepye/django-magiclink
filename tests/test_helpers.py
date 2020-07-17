@@ -2,9 +2,9 @@ from datetime import timedelta
 from importlib import reload
 
 import pytest
-from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
+from django.urls import reverse
 from django.utils import timezone
 
 from magiclink import settings as mlsettings

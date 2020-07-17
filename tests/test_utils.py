@@ -20,9 +20,9 @@ def test_get_client_ip_remote_addr():
 
 
 def test_get_url_path_with_name():
-    url_name = 'empty'
+    url_name = 'no_login'
     url = get_url_path(url_name)
-    assert url == '/empty/'
+    assert url == '/no-login/'
 
 
 def test_get_url_path_with_path():

@@ -15,7 +15,7 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_login_end_to_end(mocker, settings, client, user):
+def test_login_end_to_end(mocker, settings, client, user):  # NOQA: F811
     spy = mocker.spy(MagicLink, 'get_magic_link_url')
 
     login_url = reverse('magiclink:login')
@@ -25,12 +25,11 @@ def test_login_end_to_end(mocker, settings, client, user):
     response = client.get(verify_url, follow=True)
     assert response.status_code == 200
     assert response.request['PATH_INFO'] == reverse('needs_login')
-    assert response.context['user'] == user
 
     url = reverse('magiclink:logout')
     response = client.get(url, follow=True)
     assert response.status_code == 200
-    assert response.request['PATH_INFO'] == reverse('empty')
+    assert response.request['PATH_INFO'] == reverse('no_login')
 
     url = reverse('needs_login')
     response = client.get(url, follow=True)
@@ -162,14 +161,14 @@ def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_verify_with_redirect(client, settings, user, magic_link):  # NOQA: F811
+def test_login_verify_with_redirect(client, settings, user, magic_link):  # NOQA: F811, E501
     url = reverse('magiclink:login_verify')
     request = HttpRequest()
     request.META['SERVER_NAME'] = '127.0.0.1'
     request.META['SERVER_PORT'] = 80
     ml = magic_link(request)
     ml.ip_address = '127.0.0.1'  # This is a little hacky
-    redirect_url = reverse('empty')
+    redirect_url = reverse('no_login')
     ml.redirect_url = redirect_url
     ml.save()
     url = ml.get_magic_link_url(request)
@@ -202,7 +201,6 @@ def test_login_verify_no_token(client):
     url = reverse('magiclink:login_verify')
     response = client.get(url)
     assert response.status_code == 404
-
 
 
 @pytest.mark.django_db

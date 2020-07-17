@@ -25,14 +25,14 @@ def test_signup_end_to_end(mocker, settings, client):
     response = client.get(verify_url, follow=True)
     assert response.status_code == 200
     assert response.request['PATH_INFO'] == reverse('needs_login')
-    assert response.context['user'].email == email
-    assert response.context['user'].first_name == first_name
-    assert response.context['user'].last_name == last_name
+    user = User.objects.get(email=email)
+    assert user.first_name == first_name
+    assert user.last_name == last_name
 
     url = reverse('magiclink:logout')
     response = client.get(url, follow=True)
     assert response.status_code == 200
-    assert response.request['PATH_INFO'] == reverse('empty')
+    assert response.request['PATH_INFO'] == reverse('no_login')
 
     url = reverse('needs_login')
     response = client.get(url, follow=True)
