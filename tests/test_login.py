@@ -13,8 +13,6 @@ from .fixtures import magic_link, user  # NOQA: F401
 
 User = get_user_model()
 
-# ToDo: Test setting cookie in Login and Signup views
-
 
 def test_login_page_get(client):
     url = reverse('magiclink:login')
@@ -167,3 +165,10 @@ def test_logout(client, user):  # NOQA: F811
     needs_login_url = reverse('needs_login')
     needs_login_response = client.get(needs_login_url)
     assert needs_login_response.status_code == 302
+
+
+@pytest.mark.django_db
+def test_model_string(magic_link):  # NOQA: F811
+    request = HttpRequest()
+    ml = magic_link(request)
+    assert str(ml) == f'{ml.email} - {ml.expiry}'
