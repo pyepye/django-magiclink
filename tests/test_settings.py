@@ -93,7 +93,7 @@ def test_email_with_token(settings):
 
 
 def test_require_browser(settings):
-    settings.MAGICLINK_REQUIRE_BROWSER = 'Test'
+    settings.MAGICLINK_REQUIRE_SAME_BROWSER = 'Test'
 
     with pytest.raises(ImproperlyConfigured):
         from magiclink import settings

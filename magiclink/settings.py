@@ -55,9 +55,9 @@ VERIFY_WITH_EMAIL = getattr(settings, 'MAGICLINK_VERIFY_WITH_EMAIL', True)
 if not isinstance(VERIFY_WITH_EMAIL, bool):
     raise ImproperlyConfigured('"MAGICLINK_VERIFY_WITH_EMAIL" must be a boolean')  # NOQA: E501
 
-REQUIRE_BROWSER = getattr(settings, 'MAGICLINK_REQUIRE_BROWSER', True)
-if not isinstance(REQUIRE_BROWSER, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_BROWSER" must be a boolean')
+REQUIRE_SAME_BROWSER = getattr(settings, 'MAGICLINK_REQUIRE_SAME_BROWSER', True)
+if not isinstance(REQUIRE_SAME_BROWSER, bool):
+    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SAME_BROWSER" must be a boolean')
 
 REQUIRE_SAME_IP = getattr(settings, 'MAGICLINK_REQUIRE_SAME_IP', True)
 if not isinstance(REQUIRE_SAME_IP, bool):

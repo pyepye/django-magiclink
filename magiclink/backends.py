@@ -35,7 +35,7 @@ class MagicLinkBackend(BaseBackend):
                 magiclink.disable()
                 return
 
-        if settings.REQUIRE_BROWSER:
+        if settings.REQUIRE_SAME_BROWSER:
             if magiclink.cookie_value != request.COOKIES.get('magiclink'):
                 magiclink.disable()
                 return

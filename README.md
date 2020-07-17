@@ -196,7 +196,7 @@ MAGICLINK_VERIFY_WITH_EMAIL = True
 # initial login request.
 # Note: This can cause issues on devices where the default browser is
 # different from the browser being used by the user such as on iOS)*
-MAGICLINK_REQUIRE_BROWSER = True
+MAGICLINK_REQUIRE_SAME_BROWSER = True
 
 # Ensure the user who clicked magic link has the same IP address as the
 # initial login request.
@@ -226,9 +226,9 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 
 ## ToDo
+* Implement `MAGICLINK_TOKEN_TIME_LIMIT`
+* Test `VERIFY_WITH_EMAIL = False`
+* Test emails or context for emails?
 * Add type hinting with mypy / django-stubs
 * Create docs and setup Read the Docs
-* Test `VERIFY_WITH_EMAIL = False`
-* Implement `MAGICLINK_TOKEN_TIME_LIMIT`
-* Test emails or context for emails
 * Add Travis for tests

@@ -47,7 +47,7 @@ class Login(TemplateView):
 
         sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
         response = HttpResponseRedirect(sent_url)
-        if settings.REQUIRE_BROWSER:
+        if settings.REQUIRE_SAME_BROWSER:
             response.cookies['magiclink'] = magic_link.cookie_value
         return response
 
@@ -121,7 +121,7 @@ class Signup(TemplateView):
 
         sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
         response = HttpResponseRedirect(sent_url)
-        if settings.REQUIRE_BROWSER:
+        if settings.REQUIRE_SAME_BROWSER:
             response.cookies['magiclink'] = magic_link.cookie_value
         return response
 
