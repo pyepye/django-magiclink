@@ -64,6 +64,8 @@ AUTHENTICATION_BACKENDS = (
 ```
 *Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS* to ensure it is used
 
+
+Add the following settings to your `settings.py`
 ```python
 # Set Djangos login URL to the magiclink login page
 LOGIN_URL = 'magiclink:login'
