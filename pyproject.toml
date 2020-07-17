@@ -6,7 +6,11 @@ packages = [
 version = "0.1.0"
 description = "Passwordless Authentication for Django with Magic Links"
 authors = ["Matt Pye <pyematt@gmail.com>"]
+readme = "README.md"
 license = "MIT"
+repository = "https://github.com/pyepye/django-amplitude"
+homepage = "https://github.com/pyepye/django-amplitude"
+keywords = ["magic link", "authentication", "passwordless"]
 
 [tool.poetry.dependencies]
 python = "^3.6"

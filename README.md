@@ -3,7 +3,7 @@
 
 Passwordless Authentication for Django with Magic Links.
 
-This package was created with a focus on [ease of setup](#steps-to-impliment) and [security](#secruity). The idea is to use sane defaults to quickly create secure single use token authentication for Django.
+This package was created with a focus on [ease of setup](#steps-to-impliment) and [security](#security). The idea is to use sane defaults to quickly create secure single-use token authentication for Django.
 
 
 ## Install
@@ -27,12 +27,12 @@ The setup of the app is simple but has a few steps and a few templates that need
 
 ### Basic login flow
 
-1. User signs up via the sign up page (This can be skipped if `MAGICLINK_REQUIRE_SIGNUP = False`)
-1. User enters their email on the login page to request a magic link
-1. Magic link is sent to users email address
-1. User is redirected to a login sent page
-1. User clicks on the magic link in their email
-1. User is logged in
+1. The user signs up via the sign up page (This can be skipped if `MAGICLINK_REQUIRE_SIGNUP = False`)
+1. They enter their email on the login page to request a magic link
+1. A magic link is sent to users email address
+1. The user is redirected to a login sent page
+1. The user clicks on the magic link in their email
+1. The user is logged in and redirected
 
 
 #### Configuration
@@ -64,7 +64,7 @@ AUTHENTICATION_BACKENDS = (
 ```
 *Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS*
 
-See [additional configuration settings](#configuration-settings) for all of the different avalible settings. The most important setting for the signup / login flow is if signup is required before a login link can be requested. If this is set to False a new user will be created the first time a new email address is used to request a login link
+See [additional configuration settings](#configuration-settings) for all of the different available settings. The most important setting for the sign up/login flow is if signup is required before a login link can be requested. If this is set to False a new user will be created the first time a new email address is used to request a login link
 
 ```python
 # If this setting is set to False a user account will be created the first time
@@ -92,7 +92,7 @@ See the login docs if you want to create your own login view
 
 After the user has requested a magic link, they will be redirected to a success page. The HTML for this page can be overridden by creating a template with the name `login_sent.html`.
 
-It is advised you return a simple message telling the user to check thier email:
+It is advised you return a simple message telling the user to check their email:
 ```
 <h1>Check your email</h1>
 <p>We have sent you a magic link to your email address</p>
@@ -101,7 +101,7 @@ It is advised you return a simple message telling the user to check thier email:
 
 #### Magic link email
 
-The login email which includes the magic link needs to be configured. By default a simple HTML template is used which can be adapted to your own branding using the `MAGICLINK_EMAIL_STYLES` setting, or you can override the template (see below)
+The login email which includes the magic link needs to be configured. By default, a simple HTML template is used which can be adapted to your own branding using the `MAGICLINK_EMAIL_STYLES` setting, or you can override the template (see below)
 
 This `MAGICLINK_EMAIL_STYLES` setting should be a dict with the following key values:
 
@@ -109,9 +109,9 @@ This `MAGICLINK_EMAIL_STYLES` setting should be a dict with the following key va
 MAGICLINK_EMAIL_STYLES = {
     'logo_url': 'https://example.com/logo.png',  # Full URL. This should be either a jpeg or png due to email clients
     'background-colour': '#ffffff',   # Emails background colour
-    'main-text-color': '#000000',  # Color of the text in the email, this should be very different to the background
-    'button-background-color': '#0078be',  # Color of the text in the email, this should be very different to the background
-    'button-text-color': '#ffffff',  # Color of the button text, this should be very different to the buton background
+    'main-text-color': '#000000',  # Color of the text in the email, this should be very different from the background
+    'button-background-color': '#0078be',  # Color of the text in the email, this should be very different from the background
+    'button-text-color': '#ffffff',  # Color of the button text, this should be very different from the button background
 }
 ```
 
@@ -124,7 +124,7 @@ If this email template is not to your liking you can override the email template
 
 #### Signup page
 
-If you want users to have to signup before being able to login you will want to override the signup page template. This is needed when `MAGICLINK_REQUIRE_SIGNUP = True`. On successfull signup the user will be sent a login email, an optional welcome email can be sent as well.
+If you want users to have to signup before being able to log in you will want to override the signup page template. This is needed when `MAGICLINK_REQUIRE_SIGNUP = True`. On successful signup the user will be sent a login email, an optional welcome email can be sent as well.
 
 When overriding this template please ensure the following content is included:
 
@@ -138,13 +138,13 @@ When overriding this template please ensure the following content is included:
 ```
 
 There are actually several forms avalible in the context on this page depending on what information you want to collect.
-* **SignupFormEmailOnly** - Only includes a `email` field
+* **SignupFormEmailOnly** - Only includes an `email` field
 * **SignupForm** - Includes `name` and `email` fields
 * **SignupFormWithUsername** - Includes `Username` and `email` fields
 * **SignupFormFull** - Includes `username`, `name` and `email` fields
 
 
-Like the login for the signup flow can be overridden if you require more information from the user on signup. See the login/setup docs for more details
+Like the login for the sign up flow can be overridden if you require more information from the user on signup. See the login/setup docs for more details
 ToDo: Include docs on how to use post_save signal to send Welcome email?
 
 
@@ -153,7 +153,7 @@ ToDo: Include docs on how to use post_save signal to send Welcome email?
 Below are the different settings that can be overridden. To do so place the setting into you `settings.py`
 
 ```python
-# Only allow users to login that have signed up first (i.e. don't create a
+# Only allow users to log in that have signed up first (i.e. don't create a
 # new account on login).
 MAGICLINK_REQUIRE_SIGNUP = True
 
@@ -170,7 +170,7 @@ MAGICLINK_EMAIL_STYLES = {
 # How long a magic link is valid for before returning an error
 MAGICLINK_AUTH_TIMEOUT = 300  # In second - Default is 5 minutes
 
-# Email address are not case sensetive. If this setting is set to True all
+# Email address is not case sensitive. If this setting is set to True all
 # emails addresses will be set to lowercase before any checks are run against it
 MAGICLINK_IGNORE_EMAIL_CASE = True
 
@@ -181,18 +181,18 @@ MAGICLINK_ALLOW_SUPERUSER_LOGIN = True
 MAGICLINK_ALLOW_STAFF_LOGIN = True
 
 # Override the default magic link length
-# Warning: Overriding this setting has secuirty implications, shorter tokens
+# Warning: Overriding this setting has security implications, shorter tokens
 # are much more susceptible to brute force attacks*
 MAGICLINK_TOKEN_LENGTH = 0
 
-# Require the user email to be inclued in the verification link
+# Require the user email to be included in the verification link
 # Warning: If this is set to false tokens are more vulnerable to brute force
 MAGICLINK_VERIFY_WITH_EMAIL = True
 
 # Ensure the user who clicked magic link used the same browser as the
 # initial login request.
 # Note: This can cause issues on devices where the default browser is
-# different to the browser being used by the user such as on iOS)*
+# different from the browser being used by the user such as on iOS)*
 MAGICLINK_REQUIRE_BROWSER = True
 
 # Ensure the user who clicked magic link has the same IP address as the
@@ -207,12 +207,12 @@ MAGICLINK_TOKEN_TIME_LIMIT = 30
 ```
 
 
-## Secruity
+## Security
 
-Using magic links can be dangerous as poorly implimented login links can be brute forced and emails can be forwared by accident. There are several security measures used to mitigate these risks:
+Using magic links can be dangerous as poorly implemented login links can be brute-forced and emails can be forwarded by accident. There are several security measures used to mitigate these risks:
 
 * The one-time password issued will be valid for 5 minutes before it expires
-* The users ID is specified along side login tokens to stop URLs being brute forced
+* The user's email is specified alongside login tokens to stop URLs being brute-forced
 * Each login token will be at least 20 digits?
 * The initial request and its response must take place from the same IP address
 * The initial request and its response must take place in the same browser
@@ -231,11 +231,11 @@ Using magic links can be dangerous as poorly implimented login links can be brut
     * SignupFormEmailOnly
     * SignupFormWithUsername
     * SignupFormFull
-* Add Type hinting with mypy / django-stubs
+* Add type hinting with mypy / django-stubs
 * Create docs and setup Read the Docs
 * Ensure
 * Test `VERIFY_WITH_EMAIL = False`
-* Impliment `MAGICLINK_TOKEN_TIME_LIMIT`
+* Implement `MAGICLINK_TOKEN_TIME_LIMIT`
 * Test emails or context for emails
 * Check all redirects in tests e.g. MAGICLINK_LOGIN_SENT_REDIRECT
-* Add travis for tests
+* Add Travis for tests
