@@ -114,7 +114,7 @@ class Signup(TemplateView):
             first_name=first_name,
             last_name=last_name
         )
-        next_url = request.GET.get('next', settings.SIGNUP_REDIRECT)
+        next_url = request.GET.get('next', settings.SIGNUP_LOGIN_REDIRECT)
         magic_link = create_magiclink(email, request, redirect_url=next_url)
         magic_link.send(request)
 

@@ -37,7 +37,7 @@ if not isinstance(EMAIL_IGNORE_CASE, bool):
 REQUIRE_SIGNUP = getattr(settings, 'MAGICLINK_REQUIRE_SIGNUP', True)
 if not isinstance(REQUIRE_SIGNUP, bool):
     raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SIGNUP" must be a boolean')
-SIGNUP_REDIRECT = getattr(settings, 'MAGICLINK_SIGNUP_REDIRECT', '')
+SIGNUP_LOGIN_REDIRECT = getattr(settings, 'MAGICLINK_SIGNUP_LOGIN_REDIRECT', '')   # NOQA: E501
 
 EMAIL_AS_USERNAME = getattr(settings, 'MAGICLINK_EMAIL_AS_USERNAME', True)
 if not isinstance(EMAIL_AS_USERNAME, bool):
