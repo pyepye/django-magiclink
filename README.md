@@ -185,10 +185,6 @@ MAGICLINK_SIGNUP_LOGIN_REDIRECT = '/welcome'
 # Change the url a user is redirect to after requesting a magic link
 MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
 
-# Only allow users to log in that have signed up first (i.e. don't create a
-# new account on login).
-MAGICLINK_REQUIRE_SIGNUP = True
-
 # Ensure the branding of the login email is correct. This setting is not needed
 # if you override the `login_email.html` template
 MAGICLINK_EMAIL_STYLES = {
@@ -220,11 +216,11 @@ MAGICLINK_ALLOW_STAFF_LOGIN = True
 # Override the default magic link length
 # Warning: Overriding this setting has security implications, shorter tokens
 # are much more susceptible to brute force attacks*
-MAGICLINK_TOKEN_LENGTH = 0
+MAGICLINK_TOKEN_LENGTH = 50
 
 # Require the user email to be included in the verification link
 # Warning: If this is set to false tokens are more vulnerable to brute force
-MAGICLINK_VERIFY_WITH_EMAIL = True
+MAGICLINK_VERIFY_INCLUDE_EMAIL = True
 
 # Ensure the user who clicked magic link used the same browser as the
 # initial login request.

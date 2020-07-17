@@ -23,10 +23,6 @@ else:
                    'sussptable to brute force attacks')
         warnings.warn(warning, RuntimeWarning)
 
-EMAIL_VERIFY = getattr(settings, 'MAGICLINK_EMAIL_VERIFY', True)
-if not isinstance(EMAIL_VERIFY, bool):
-    raise ImproperlyConfigured('"MAGICLINK_EMAIL_VERIFY" must be a boolean')
-
 try:
     # In seconds
     AUTH_TIMEOUT = int(getattr(settings, 'MAGICLINK_AUTH_TIMEOUT', 300))
@@ -59,9 +55,9 @@ ALLOW_STAFF_LOGIN = getattr(settings, 'MAGICLINK_ALLOW_STAFF_LOGIN', True)
 if not isinstance(ALLOW_STAFF_LOGIN, bool):
     raise ImproperlyConfigured('"MAGICLINK_ALLOW_STAFF_LOGIN" must be a boolean')  # NOQA: E501
 
-VERIFY_WITH_EMAIL = getattr(settings, 'MAGICLINK_VERIFY_WITH_EMAIL', True)
-if not isinstance(VERIFY_WITH_EMAIL, bool):
-    raise ImproperlyConfigured('"MAGICLINK_VERIFY_WITH_EMAIL" must be a boolean')  # NOQA: E501
+VERIFY_INCLUDE_EMAIL = getattr(settings, 'MAGICLINK_VERIFY_INCLUDE_EMAIL', True)  # NOQA: E501
+if not isinstance(VERIFY_INCLUDE_EMAIL, bool):
+    raise ImproperlyConfigured('"MAGICLINK_VERIFY_INCLUDE_EMAIL" must be a boolean')  # NOQA: E501
 
 REQUIRE_SAME_BROWSER = getattr(settings, 'MAGICLINK_REQUIRE_SAME_BROWSER', True)  # NOQA: E501
 if not isinstance(REQUIRE_SAME_BROWSER, bool):

@@ -44,7 +44,7 @@ class MagicLink(models.Model):
         url_path = reverse("magiclink:login_verify")
 
         params = {'token': self.token}
-        if settings.VERIFY_WITH_EMAIL:
+        if settings.VERIFY_INCLUDE_EMAIL:
             params['email'] = self.email
         query = urlencode(params)
 

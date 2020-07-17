@@ -12,7 +12,7 @@ User = get_user_model()
 class MagicLinkBackend(BaseBackend):
 
     def authenticate(self, request, token=None, email=None):
-        if settings.EMAIL_VERIFY and not email:
+        if settings.VERIFY_INCLUDE_EMAIL and not email:
             return
 
         if settings.EMAIL_IGNORE_CASE:
