@@ -245,8 +245,11 @@ MAGICLINK_REQUIRE_SAME_IP = True
 # The number of times a login token can be used before being disabled
 MAGICLINK_TOKEN_USES = 1
 
-# How often in seconds a user can request a new login token
-MAGICLINK_TOKEN_TIME_LIMIT = 30
+# How often a user can request a new login token (basic rate limiting).
+MAGICLINK_TOKEN_REQUEST_LIMIT = 30  # In seconds
+
+# Disable all other tokens for a user when a new token is requested
+MAGICLINK_ONE_TOKEN_PER_USER = True
 ```
 
 
@@ -266,7 +269,8 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 
 ## ToDo
-* Implement `MAGICLINK_TOKEN_TIME_LIMIT`
+* Impliment `MAGICLINK_ONE_TOKEN_PER_USER`
+* Implement `MAGICLINK_TOKEN_REQUEST_LIMIT`
 * Implement `MAGICLINK_SIGNUP_LOGIN_REDIRECT`
 * Add type hinting with mypy / django-stubs
 * Create docs and setup Read the Docs
