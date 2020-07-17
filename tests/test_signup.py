@@ -31,7 +31,7 @@ def test_signup_post(mocker, client, settings):  # NOQA: F811
     }
     response = client.post(url, data)
     assert response.status_code == 302
-    assert response.url == mlsettings.LOGIN_SENT_REDIRECT
+    assert response.url == reverse('magiclink:login_sent')
 
     usr = User.objects.get(email=email)
     assert usr

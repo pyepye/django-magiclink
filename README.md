@@ -64,13 +64,16 @@ AUTHENTICATION_BACKENDS = (
 ```
 *Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS*
 
-See [additional configuration settings](#configuration-settings) for all of the different available settings. The most important setting for the sign up/login flow is if signup is required before a login link can be requested. If this is set to False a new user will be created the first time a new email address is used to request a login link
-
 ```python
+# Set Djangos login URL to the magiclink login page
+LOGIN_URL = 'magiclink:login'
+
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
 ```
+
+See [additional configuration settings](#configuration-settings) for all of the different available settings. The most important setting for the sign up/login flow is if signup is required before a login link can be requested. If this is set to False a new user will be created the first time a new email address is used to request a login link
 
 
 #### Login page

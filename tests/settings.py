@@ -55,6 +55,9 @@ AUTHENTICATION_BACKENDS = [
     'magiclink.backends.MagicLinkBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+LOGOUT_REDIRECT_URL = 'empty'
+LOGIN_URL = 'magiclink:login'
+MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
 
 MAGICLINK_TOKEN_LENGTH = 50
 MAGICLINK_AUTH_TIMEOUT = 300
@@ -74,4 +77,3 @@ MAGICLINK_EMAIL_STYLES = {
     'button_background_color': '#0078be',
     'button_text_color': '#ffffff',
 }
-MAGICLINK_LOGIN_SENT_REDIRECT = '/auth/login/sent/'

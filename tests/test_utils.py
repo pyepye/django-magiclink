@@ -1,6 +1,6 @@
 from django.http import HttpRequest
 
-from magiclink.utils import get_client_ip
+from magiclink.utils import get_client_ip, get_url_path
 
 
 def test_get_client_ip_http_x_forwarded_for():
@@ -17,3 +17,15 @@ def test_get_client_ip_remote_addr():
     request.META['REMOTE_ADDR'] = remote_addr
     ip_address = get_client_ip(request)
     assert ip_address == remote_addr
+
+
+def test_get_url_path_with_name():
+    url_name = 'empty'
+    url = get_url_path(url_name)
+    assert url == '/empty/'
+
+
+def test_get_url_path_with_path():
+    url_name = '/test/'
+    url = get_url_path(url_name)
+    assert url == '/test/'

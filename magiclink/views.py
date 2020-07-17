@@ -3,7 +3,6 @@ import logging
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.http import Http404, HttpResponseRedirect
-from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
@@ -14,6 +13,7 @@ from .forms import (
 )
 from .helpers import create_magiclink, get_or_create_user
 from .models import MagicLink
+from .utils import get_url_path
 
 User = get_user_model()
 log = logging.getLogger(__name__)
@@ -44,9 +44,7 @@ class Login(TemplateView):
         magic_link = create_magiclink(email, request, redirect_url=next_url)
         magic_link.send(request)
 
-        sent_url = reverse('magiclink:login_sent')
-        if settings.LOGIN_SENT_REDIRECT:
-            sent_url = settings.LOGIN_SENT_REDIRECT
+        sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
         return HttpResponseRedirect(sent_url)
 
 
@@ -118,9 +116,7 @@ class Signup(TemplateView):
         magic_link = create_magiclink(email, request, redirect_url=next_url)
         magic_link.send(request)
 
-        sent_url = reverse('magiclink:login_sent')
-        if settings.LOGIN_SENT_REDIRECT:
-            sent_url = settings.LOGIN_SENT_REDIRECT
+        sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
         return HttpResponseRedirect(sent_url)
 
 
@@ -128,4 +124,10 @@ class Logout(RedirectView):
 
     def get(self, request, *args, **kwargs):
         logout(self.request)
-        return HttpResponseRedirect(django_settings.LOGOUT_REDIRECT_URL)
+
+        next_page = request.GET.get('next')
+        if next_page:
+            return HttpResponseRedirect(next_page)
+
+        redirect_url = get_url_path(django_settings.LOGOUT_REDIRECT_URL)
+        return HttpResponseRedirect(redirect_url)

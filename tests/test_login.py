@@ -30,7 +30,7 @@ def test_login_post(mocker, client, user, settings):  # NOQA: F811
     data = {'email': user.email}
     response = client.post(url, data)
     assert response.status_code == 302
-    assert response.url == mlsettings.LOGIN_SENT_REDIRECT
+    assert response.url == reverse('magiclink:login_sent')
     usr = User.objects.get(email=user.email)
     assert usr
     magiclink = MagicLink.objects.get(email=user.email)
@@ -81,7 +81,7 @@ def test_login_email_ignore_case(settings, client, user):  # NOQA: F811
     magiclink = MagicLink.objects.get(email=user.email)
     assert magiclink
     assert response.status_code == 302
-    assert response.url == mlsettings.LOGIN_SENT_REDIRECT
+    assert response.url == reverse('magiclink:login_sent')
 
 
 @pytest.mark.django_db
@@ -95,7 +95,7 @@ def test_login_post_no_user_require_signup_false(settings, client):
     data = {'email': email}
     response = client.post(url, data)
     assert response.status_code == 302
-    assert response.url == mlsettings.LOGIN_SENT_REDIRECT
+    assert response.url == reverse('magiclink:login_sent')
     usr = User.objects.get(email=email)
     assert usr
     magiclink = MagicLink.objects.get(email=email)
@@ -158,17 +158,6 @@ def test_login_verify_no_token(client):
     response = client.get(url)
     assert response.status_code == 404
 
-
-@pytest.mark.django_db
-def test_logout(client, user):  # NOQA: F811
-    client.force_login(user)
-    url = reverse('magiclink:logout')
-    response = client.get(url)
-    assert response.status_code == 302
-
-    needs_login_url = reverse('needs_login')
-    needs_login_response = client.get(needs_login_url)
-    assert needs_login_response.status_code == 302
 
 
 @pytest.mark.django_db
