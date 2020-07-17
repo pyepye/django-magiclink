@@ -227,8 +227,6 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 ## ToDo
 
-* Setting cookie in Login and Signup views (and test)
-* Full end to end test - Signup, login, logout
 * Test SignupFormEmailOnly ValidationError
 * Test different Signup forms
     * SignupFormEmailOnly

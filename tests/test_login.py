@@ -14,6 +14,30 @@ from .fixtures import magic_link, user  # NOQA: F401
 User = get_user_model()
 
 
+@pytest.mark.django_db
+def test_login_end_to_end(mocker, settings, client, user):
+    spy = mocker.spy(MagicLink, 'get_magic_link_url')
+
+    login_url = reverse('magiclink:login')
+    data = {'email': user.email}
+    client.post(login_url, data, follow=True)
+    verify_url = spy.spy_return
+    response = client.get(verify_url, follow=True)
+    assert response.status_code == 200
+    assert response.request['PATH_INFO'] == reverse('needs_login')
+    assert response.context['user'] == user
+
+    url = reverse('magiclink:logout')
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert response.request['PATH_INFO'] == reverse('empty')
+
+    url = reverse('needs_login')
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert response.request['PATH_INFO'] == reverse('magiclink:login')
+
+
 def test_login_page_get(client):
     url = reverse('magiclink:login')
     response = client.get(url)

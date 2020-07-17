@@ -55,8 +55,11 @@ AUTHENTICATION_BACKENDS = [
     'magiclink.backends.MagicLinkBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+LOGIN_REDIRECT_URL = 'needs_login'
 LOGOUT_REDIRECT_URL = 'empty'
 LOGIN_URL = 'magiclink:login'
+
 MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
 
 MAGICLINK_TOKEN_LENGTH = 50

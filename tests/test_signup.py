@@ -7,6 +7,39 @@ from magiclink.models import MagicLink
 User = get_user_model()
 
 
+@pytest.mark.django_db
+def test_signup_end_to_end(mocker, settings, client):
+    spy = mocker.spy(MagicLink, 'get_magic_link_url')
+
+    login_url = reverse('magiclink:signup')
+    email = 'test@example.com'
+    first_name = 'test'
+    last_name = 'name'
+    data = {
+        'form_name': 'SignupForm',
+        'email': email,
+        'name': f'{first_name} {last_name}',
+    }
+    client.post(login_url, data, follow=True)
+    verify_url = spy.spy_return
+    response = client.get(verify_url, follow=True)
+    assert response.status_code == 200
+    assert response.request['PATH_INFO'] == reverse('needs_login')
+    assert response.context['user'].email == email
+    assert response.context['user'].first_name == first_name
+    assert response.context['user'].last_name == last_name
+
+    url = reverse('magiclink:logout')
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert response.request['PATH_INFO'] == reverse('empty')
+
+    url = reverse('needs_login')
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert response.request['PATH_INFO'] == reverse('magiclink:login')
+
+
 def test_signup_get(client):
     url = reverse('magiclink:signup')
     response = client.get(url)

@@ -2,6 +2,7 @@ from datetime import timedelta
 from importlib import reload
 
 import pytest
+from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.utils import timezone
@@ -28,7 +29,7 @@ def test_create_magiclink(settings, freezer):
     assert magic_link.email == email
     assert len(magic_link.token) == mlsettings.AUTH_TIMEOUT
     assert magic_link.expiry == expiry
-    assert magic_link.redirect_url == settings.LOGIN_REDIRECT_URL
+    assert magic_link.redirect_url == reverse(settings.LOGIN_REDIRECT_URL)
     assert len(magic_link.cookie_value) == 36
     assert magic_link.ip_address == remote_addr
 

@@ -9,7 +9,7 @@ from django.utils.crypto import get_random_string
 
 from . import settings
 from .models import MagicLink
-from .utils import get_client_ip
+from .utils import get_client_ip, get_url_path
 
 
 def create_magiclink(email, request, redirect_url=''):
@@ -17,7 +17,7 @@ def create_magiclink(email, request, redirect_url=''):
         email = email.lower()
 
     if not redirect_url:
-        redirect_url = djsettings.LOGIN_REDIRECT_URL
+        redirect_url = get_url_path(djsettings.LOGIN_REDIRECT_URL)
 
     expiry = timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT)
     magic_link = MagicLink.objects.create(
