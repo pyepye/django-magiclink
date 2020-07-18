@@ -61,22 +61,3 @@ LOGOUT_REDIRECT_URL = 'no_login'
 LOGIN_URL = 'magiclink:login'
 
 MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
-
-MAGICLINK_TOKEN_LENGTH = 50
-MAGICLINK_AUTH_TIMEOUT = 300
-MAGICLINK_TOKEN_USES = 1
-MAGICLINK_REQUIRE_SIGNUP = True
-MAGICLINK_EMAIL_AS_USERNAME = True
-MAGICLINK_EMAIL_IGNORE_CASE = True
-MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
-MAGICLINK_ALLOW_STAFF_LOGIN = False
-MAGICLINK_VERIFY_INCLUDE_EMAIL = True
-MAGICLINK_REQUIRE_SAME_BROWSER = True
-MAGICLINK_REQUIRE_SAME_IP = True
-MAGICLINK_EMAIL_STYLES = {
-    'logo_url': '',
-    'background_color': '#ffffff',
-    'main_text_color': '#000000',
-    'button_background_color': '#0078be',
-    'button_text_color': '#ffffff',
-}

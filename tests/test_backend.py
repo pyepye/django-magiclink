@@ -1,3 +1,4 @@
+from importlib import reload
 from datetime import timedelta
 
 import pytest
@@ -151,7 +152,11 @@ def test_auth_backend_used_times(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_auth_backend_superuser(user, magic_link):  # NOQA: F811
+def test_auth_backend_superuser(settings, user, magic_link):  # NOQA: F811
+    settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
+    from magiclink import settings
+    reload(settings)
+
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES['magiclink'] = ml.cookie_value
@@ -167,7 +172,11 @@ def test_auth_backend_superuser(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_auth_backend_staff(user, magic_link):  # NOQA: F811
+def test_auth_backend_staff(settings, user, magic_link):  # NOQA: F811
+    settings.MAGICLINK_ALLOW_STAFF_LOGIN = False
+    from magiclink import settings
+    reload(settings)
+
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES['magiclink'] = ml.cookie_value
