@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.db import models
+from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.urls import reverse
 
@@ -29,18 +30,18 @@ class MagicLink(models.Model):
     def __str__(self):
         return f'{self.email} - {self.expiry}'
 
-    def used(self):
+    def used(self) -> None:
         self.times_used += 1
         if self.times_used >= settings.TOKEN_USES:
             self.disabled = True
         self.save()
 
-    def disable(self):
+    def disable(self) -> None:
         self.times_used += 1
         self.disabled = True
         self.save()
 
-    def get_magic_link_url(self, request):
+    def get_magic_link_url(self, request: HttpRequest) -> str:
         url_path = reverse("magiclink:login_verify")
 
         params = {'token': self.token}
@@ -54,7 +55,7 @@ class MagicLink(models.Model):
         url = urljoin(f'{scheme}://{domain}', url_path)
         return url
 
-    def send(self, request):
+    def send(self, request: HttpRequest) -> None:
         user = User.objects.get(email=self.email)
         context = {
             'subject': settings.EMAIL_SUBJECT,

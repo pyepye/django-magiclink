@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.backends import BaseBackend
 from django.utils import timezone
 
 from . import settings
@@ -9,7 +8,7 @@ from .utils import get_client_ip
 User = get_user_model()
 
 
-class MagicLinkBackend(BaseBackend):
+class MagicLinkBackend():
 
     def authenticate(self, request, token=None, email=None):
         if settings.VERIFY_INCLUDE_EMAIL and not email:
@@ -18,13 +17,13 @@ class MagicLinkBackend(BaseBackend):
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
 
-        magiclink = MagicLink.objects.filter(token=token, disabled=False)
+        magiclinks = MagicLink.objects.filter(token=token, disabled=False)
         if email:
-            magiclink = magiclink.filter(email=email)
-        if not magiclink:
+            magiclinks = magiclinks.filter(email=email)
+        if not magiclinks:
             return
 
-        magiclink = magiclink.first()
+        magiclink = MagicLink.objects.get(token=token)
 
         if timezone.now() > magiclink.expiry:
             magiclink.disable()

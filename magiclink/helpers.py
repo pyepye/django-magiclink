@@ -4,6 +4,7 @@ from uuid import uuid4
 from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
+from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
@@ -12,7 +13,10 @@ from .models import MagicLink
 from .utils import get_client_ip, get_url_path
 
 
-def create_magiclink(email, request, redirect_url=''):
+def create_magiclink(
+    email: str, request: HttpRequest, redirect_url: str = ''
+) -> MagicLink:
+
     if settings.EMAIL_IGNORE_CASE:
         email = email.lower()
 
@@ -31,7 +35,12 @@ def create_magiclink(email, request, redirect_url=''):
     return magic_link
 
 
-def get_or_create_user(email, username='', first_name='', last_name=''):
+def get_or_create_user(
+    email: str,
+    username: str = '',
+    first_name: str = '',
+    last_name: str = ''
+):
     User = get_user_model()
 
     if settings.EMAIL_IGNORE_CASE:
@@ -57,12 +66,13 @@ def get_or_create_user(email, username='', first_name='', last_name=''):
     elif 'username' in user_fields:
         # Set a random username if we need to set a username and
         # EMAIL_AS_USERNAME is False
-        user = None
-        while not user:
+        created = False
+        while not created:
             try:
                 user = User.objects.create(
                     email=email, username=get_random_string(length=10),
                 )
+                created = True
             except IntegrityError:  # pragma: no cover
                 pass
     else:
@@ -73,9 +83,9 @@ def get_or_create_user(email, username='', first_name='', last_name=''):
     if 'last_name' in user_fields and last_name:
         user.last_name = last_name
     if 'full_name' in user_fields:
-        user.full_name = f'{first_name} {last_name}'.strip()
+        user.full_name = f'{first_name} {last_name}'.strip()  # type: ignore
     if 'name' in user_fields:
-        user.name = f'{first_name} {last_name}'.strip()
+        user.name = f'{first_name} {last_name}'.strip()  # type: ignore
     user.save()
 
     return user

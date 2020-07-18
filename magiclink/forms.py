@@ -9,7 +9,7 @@ User = get_user_model()
 class LoginForm(forms.Form):
     email = forms.EmailField()
 
-    def clean_email(self):
+    def clean_email(self) -> str:
         email = self.cleaned_data['email']
 
         if settings.EMAIL_IGNORE_CASE:
@@ -32,7 +32,7 @@ class SignupFormEmailOnly(forms.Form):
         widget=forms.EmailInput(attrs={'placeholder': 'Enter your email'})
     )
 
-    def clean_email(self):
+    def clean_email(self) -> str:
         email = self.cleaned_data['email']
 
         if settings.EMAIL_IGNORE_CASE:
@@ -66,7 +66,7 @@ class SignupFormWithUsername(SignupFormEmailOnly):
         widget=forms.TextInput(attrs={'placeholder': 'Enter your username'})
     )
 
-    def clean_username(self):
+    def clean_username(self) -> str:
         username = self.cleaned_data['username']
         users = User.objects.filter(username=username)
         if users:

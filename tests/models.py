@@ -3,16 +3,8 @@ from django.db import models
 
 
 class CustomUserEmailOnly(AbstractUser):
-    username = None
+    username = None  # type: ignore
     email = models.EmailField('email address', unique=True)
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-
-    objects = models.Manager()
-
-    def __str__(self):
-        return self.email
 
 
 class CustomUserFullName(CustomUserEmailOnly):
