@@ -3,7 +3,7 @@ name = "django-magiclink"
 packages = [
     {include = "magiclink"}
 ]
-version = "0.4.0"
+version = "0.5.0"
 description = "Passwordless Authentication for Django with Magic Links"
 authors = ["Matt Pye <pyematt@gmail.com>"]
 readme = "README.md"

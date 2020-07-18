@@ -290,6 +290,7 @@ magic_link_url = magiclink.generate_url(request)
 ```
 
 ## ToDo
-* Implement `MAGICLINK_SIGNUP_LOGIN_REDIRECT`
 * Create docs and setup Read the Docs
 * Add Travis for tests
+* Add Python version (3.6+)
+* Add coverage badge etc
