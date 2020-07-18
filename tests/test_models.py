@@ -18,7 +18,7 @@ def test_model_string(magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_get_magic_link_url(magic_link):  # NOQA: F811
+def test_generate_url(magic_link):  # NOQA: F811
     request = HttpRequest()
     host = '127.0.0.1'
     login_url = reverse('magiclink:login_verify')
@@ -26,7 +26,7 @@ def test_get_magic_link_url(magic_link):  # NOQA: F811
     request.META['SERVER_PORT'] = 80
     ml = magic_link(request)
     url = f'http://{host}{login_url}?token={ml.token}&email={quote(ml.email)}'
-    assert ml.get_magic_link_url(request) == url
+    assert ml.generate_url(request) == url
 
 
 @pytest.mark.django_db
@@ -35,7 +35,7 @@ def test_send_email(mocker, settings, magic_link):  # NOQA: F811
     send_mail = mocker.patch('magiclink.models.send_mail')
     render_to_string = mocker.patch('magiclink.models.render_to_string')
 
-    # spy = mocker.spy(MagicLink, 'get_magic_link_url')
+    # spy = mocker.spy(MagicLink, 'generate_url')
 
     request = HttpRequest()
     request.META['SERVER_NAME'] = '127.0.0.1'
@@ -48,7 +48,7 @@ def test_send_email(mocker, settings, magic_link):  # NOQA: F811
     context = {
         'subject': mlsettings.EMAIL_SUBJECT,
         'user': usr,
-        'magiclink': ml.get_magic_link_url(request),
+        'magiclink': ml.generate_url(request),
         'expiry': ml.expiry,
         'ip_address': ml.ip_address,
         'created': ml.created,

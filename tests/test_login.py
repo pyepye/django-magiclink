@@ -16,7 +16,7 @@ User = get_user_model()
 
 @pytest.mark.django_db
 def test_login_end_to_end(mocker, settings, client, user):  # NOQA: F811
-    spy = mocker.spy(MagicLink, 'get_magic_link_url')
+    spy = mocker.spy(MagicLink, 'generate_url')
 
     login_url = reverse('magiclink:login')
     data = {'email': user.email}
@@ -184,7 +184,7 @@ def test_login_verify_with_redirect(client, settings, user, magic_link):  # NOQA
     redirect_url = reverse('no_login')
     ml.redirect_url = redirect_url
     ml.save()
-    url = ml.get_magic_link_url(request)
+    url = ml.generate_url(request)
 
     client.cookies = SimpleCookie({'magiclink': ml.cookie_value})
     response = client.get(url)

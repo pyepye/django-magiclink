@@ -10,7 +10,7 @@ User = get_user_model()
 @pytest.mark.django_db
 def test_signup_end_to_end(mocker, settings, client):
     from magiclink import settings as mlsettings
-    spy = mocker.spy(MagicLink, 'get_magic_link_url')
+    spy = mocker.spy(MagicLink, 'generate_url')
 
     login_url = reverse('magiclink:signup')
     email = 'test@example.com'

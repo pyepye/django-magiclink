@@ -43,7 +43,7 @@ class MagicLink(models.Model):
         self.disabled = True
         self.save()
 
-    def get_magic_link_url(self, request: HttpRequest) -> str:
+    def generate_url(self, request: HttpRequest) -> str:
         url_path = reverse("magiclink:login_verify")
 
         params = {'token': self.token}
@@ -62,7 +62,7 @@ class MagicLink(models.Model):
         context = {
             'subject': settings.EMAIL_SUBJECT,
             'user': user,
-            'magiclink': self.get_magic_link_url(request),
+            'magiclink': self.generate_url(request),
             'expiry': self.expiry,
             'ip_address': self.ip_address,
             'created': self.created,
