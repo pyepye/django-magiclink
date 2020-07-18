@@ -9,19 +9,24 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 from . import settings
-from .models import MagicLink
+from .models import MagicLink, MagicLinkError
 from .utils import get_client_ip, get_url_path
 
 
 def create_magiclink(
     email: str, request: HttpRequest, redirect_url: str = ''
 ) -> MagicLink:
+    if settings.EMAIL_IGNORE_CASE:
+        email = email.lower()
+
+    limit = timezone.now() - timedelta(seconds=settings.LOGIN_REQUEST_TIME_LIMIT)  # NOQA: E501
+    over_limit = MagicLink.objects.filter(email=email, created__gte=limit)
+    if over_limit:
+        raise MagicLinkError('Too many magic login requests')
+
     if settings.ONE_TOKEN_PER_USER:
         magic_links = MagicLink.objects.filter(email=email, disabled=False)
         magic_links.update(disabled=True)
-
-    if settings.EMAIL_IGNORE_CASE:
-        email = email.lower()
 
     if not redirect_url:
         redirect_url = get_url_path(djsettings.LOGIN_REDIRECT_URL)

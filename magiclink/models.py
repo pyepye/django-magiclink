@@ -11,9 +11,11 @@ from django.urls import reverse
 
 from . import settings
 
-# from django.db.models.signals import post_save
-
 User = get_user_model()
+
+
+class MagicLinkError(Exception):
+    pass
 
 
 class MagicLink(models.Model):

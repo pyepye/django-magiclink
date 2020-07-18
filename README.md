@@ -250,7 +250,7 @@ MAGICLINK_REQUIRE_SAME_IP = True
 MAGICLINK_TOKEN_USES = 1
 
 # How often a user can request a new login token (basic rate limiting).
-MAGICLINK_TOKEN_REQUEST_LIMIT = 30  # In seconds
+MAGICLINK_LOGIN_REQUEST_TIME_LIMIT = 30  # In seconds
 
 # Disable all other tokens for a user when a new token is requested
 MAGICLINK_ONE_TOKEN_PER_USER = True
@@ -290,7 +290,6 @@ magic_link_url = magiclink.generate_url(request)
 ```
 
 ## ToDo
-* Implement `MAGICLINK_TOKEN_REQUEST_LIMIT`
 * Implement `MAGICLINK_SIGNUP_LOGIN_REDIRECT`
 * Create docs and setup Read the Docs
 * Add Travis for tests

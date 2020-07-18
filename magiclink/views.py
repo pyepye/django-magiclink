@@ -12,7 +12,7 @@ from .forms import (
     SignupFormWithUsername
 )
 from .helpers import create_magiclink, get_or_create_user
-from .models import MagicLink
+from .models import MagicLink, MagicLinkError
 from .utils import get_url_path
 
 User = get_user_model()
@@ -41,14 +41,19 @@ class Login(TemplateView):
             get_or_create_user(email)
 
         next_url = request.GET.get('next', '')
+        try:
+            magiclink = create_magiclink(email, request, redirect_url=next_url)
+        except MagicLinkError as e:
+            form.add_error('email', str(e))
+            context['login_form'] = form
+            return self.render_to_response(context)
 
-        magic_link = create_magiclink(email, request, redirect_url=next_url)
-        magic_link.send(request)
+        magiclink.send(request)
 
         sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
         response = HttpResponseRedirect(sent_url)
         if settings.REQUIRE_SAME_BROWSER:
-            response.cookies['magiclink'] = magic_link.cookie_value
+            response.cookies['magiclink'] = magiclink.cookie_value
         return response
 
 

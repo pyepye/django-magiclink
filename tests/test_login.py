@@ -138,6 +138,19 @@ def test_login_post_invalid(client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
+def test_login_too_many_tokens(client, user, magic_link):  # NOQA: F811
+    request = HttpRequest()
+    ml = magic_link(request)
+
+    url = reverse('magiclink:login')
+    data = {'email': ml.email}
+    response = client.post(url, data)
+    assert response.status_code == 200
+    error = ['Too many magic login requests']
+    assert response.context_data['login_form'].errors['email'] == error
+
+
+@pytest.mark.django_db
 def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
     url = reverse('magiclink:login_verify')
     request = HttpRequest()

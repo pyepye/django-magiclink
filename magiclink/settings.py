@@ -70,6 +70,12 @@ ONE_TOKEN_PER_USER = getattr(settings, 'MAGICLINK_ONE_TOKEN_PER_USER', True)
 if not isinstance(ONE_TOKEN_PER_USER, bool):
     raise ImproperlyConfigured('"MAGICLINK_ONE_TOKEN_PER_USER" must be a boolean')  # NOQA: E501
 
+try:
+    # In seconds
+    LOGIN_REQUEST_TIME_LIMIT = int(getattr(settings, 'MAGICLINK_LOGIN_REQUEST_TIME_LIMIT', 30))  # NOQA: E501
+except ValueError:
+    raise ImproperlyConfigured('"MAGICLINK_LOGIN_REQUEST_TIME_LIMIT" must be an integer')  # NOQA: E501
+
 
 EMAIL_STYLES = {
     'logo_url': '',
