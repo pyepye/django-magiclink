@@ -66,6 +66,10 @@ REQUIRE_SAME_IP = getattr(settings, 'MAGICLINK_REQUIRE_SAME_IP', True)
 if not isinstance(REQUIRE_SAME_IP, bool):
     raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SAME_IP" must be a boolean')
 
+ONE_TOKEN_PER_USER = getattr(settings, 'MAGICLINK_ONE_TOKEN_PER_USER', True)
+if not isinstance(ONE_TOKEN_PER_USER, bool):
+    raise ImproperlyConfigured('"MAGICLINK_ONE_TOKEN_PER_USER" must be a boolean')  # NOQA: E501
+
 
 EMAIL_STYLES = {
     'logo_url': '',

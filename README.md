@@ -18,10 +18,10 @@ pip install django-magiclink
 The setup of the app is simple but has a few steps and a few templates that need overriding.
 
 1. [Install the app](#install)
-1. [Configure the app](#configuration) - There are a large number of [additional configuration settings](#configuration-settings)
-1. [Set up the login page](#login-page) by overriding the login page HTML (or create a custom login view)
+1. [Configure the app](#configuration) adding urls and settings. There are also a number of [additional configuration settings](#configuration-settings)
+1. [Set up the login page](#login-page) by overriding the login page template
 1. [Override the login sent page HTML](#login-sent-page)
-1. [Set up the magic link email](#magic-link-email) by setting the email logo and colours. It's also possible to override the email templates
+1. [Set up the magic link email](#magic-link-email) (optional) by setting the email logo and colours. It's also possible to override the email templates
 1. [Create a signup page](#signup-page) (optional) depending on your settings configuration
 
 
@@ -68,18 +68,19 @@ AUTHENTICATION_BACKENDS = (
 *Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS* to ensure it is used
 
 
-Add the following settings to your `settings.py`
+Add the following settings to your `settings.py` (you will need to replace the template names in the below steps):
 ```python
 # Set Djangos login URL to the magiclink login page
 LOGIN_URL = 'magiclink:login'
 
-MAGICLINK_LOGIN_TEMPLATE_NAME = 'myapp/login.html'
-MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'myapp/login_sent.html'
+MAGICLINK_LOGIN_TEMPLATE_NAME = 'magiclink/login.html'
+MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'magiclink/login_sent.html'
 
-# If this setting is set to False a user account will be created the first time
-# a user requests a login link.
+# Optional:
+# If this setting is set to False a user account will be created the first
+# time a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
-MAGICLINK_SIGNUP_TEMPLATE_NAME = 'myapp/signup.html'
+MAGICLINK_SIGNUP_TEMPLATE_NAME = 'magiclink/signup.html'
 ```
 
 See [additional configuration settings](#configuration-settings) for all of the different available settings.
@@ -288,11 +289,8 @@ magiclink.send(request)
 magic_link_url = magiclink.generate_url(request)
 ```
 
-
 ## ToDo
-* Impliment `MAGICLINK_ONE_TOKEN_PER_USER`
 * Implement `MAGICLINK_TOKEN_REQUEST_LIMIT`
 * Implement `MAGICLINK_SIGNUP_LOGIN_REDIRECT`
-* Add type hinting with mypy / django-stubs
 * Create docs and setup Read the Docs
 * Add Travis for tests

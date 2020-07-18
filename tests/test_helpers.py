@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from magiclink import settings as mlsettings
 from magiclink.helpers import create_magiclink, get_or_create_user
+from magiclink.models import MagicLink
 
 from .fixtures import user  # NOQA: F401
 from .models import CustomUserEmailOnly, CustomUserFullName, CustomUserName
@@ -61,6 +62,20 @@ def test_create_magiclink_email_ignore_case_off(settings, freezer):
     email = 'TEST@example.com'
     request = HttpRequest()
     magic_link = create_magiclink(email, request)
+    assert magic_link.email == email
+
+
+@pytest.mark.django_db
+def test_create_magiclink_one_token_per_user(settings, freezer):
+    email = 'test@example.com'
+    request = HttpRequest()
+    magic_link = create_magiclink(email, request)
+    assert magic_link.disabled is False
+
+    create_magiclink(email, request)
+
+    magic_link = MagicLink.objects.get(token=magic_link.token)
+    assert magic_link.disabled is True
     assert magic_link.email == email
 
 

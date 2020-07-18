@@ -16,6 +16,9 @@ from .utils import get_client_ip, get_url_path
 def create_magiclink(
     email: str, request: HttpRequest, redirect_url: str = ''
 ) -> MagicLink:
+    if settings.ONE_TOKEN_PER_USER:
+        magic_links = MagicLink.objects.filter(email=email, disabled=False)
+        magic_links.update(disabled=True)
 
     if settings.EMAIL_IGNORE_CASE:
         email = email.lower()

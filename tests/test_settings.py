@@ -233,6 +233,21 @@ def test_require_same_ip_bad_value(settings):
         reload(settings)
 
 
+def test_one_token_per_user(settings):
+    settings.MAGICLINK_ONE_TOKEN_PER_USER = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.ONE_TOKEN_PER_USER == settings.MAGICLINK_ONE_TOKEN_PER_USER  # NOQA: E501
+
+
+def test_one_token_per_user_bad_value(settings):
+    settings.MAGICLINK_ONE_TOKEN_PER_USER = 'Test'
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+        reload(settings)
+
+
 def test_email_styles(settings):
     settings.MAGICLINK_EMAIL_STYLES = {
         'logo_url': '',
