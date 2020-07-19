@@ -12,7 +12,7 @@
   <h1>Create an account</h1>
   <form action="{% url 'magiclink:signup' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post">
     {% csrf_token %}
-    {{ signup_form }}
+    {{ SignupForm }}
     <button type="submit">Sign up</button>
   </form>
   <p>Already have an account? <a href="{% url 'magiclink:login' %}">Log in here</a></p>
