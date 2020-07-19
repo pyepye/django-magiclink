@@ -7,7 +7,11 @@ User = get_user_model()
 
 
 class LoginForm(forms.Form):
-    email = forms.EmailField()
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'autofocus': 'autofocus', 'placeholder': 'Enter your email'
+        })
+    )
 
     def clean_email(self) -> str:
         email = self.cleaned_data['email']
