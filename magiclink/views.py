@@ -31,6 +31,7 @@ class Login(TemplateView):
     def post(self, request, *args, **kwargs):
         logout(request)
         context = self.get_context_data(**kwargs)
+        context['require_signup'] = settings.REQUIRE_SIGNUP
         form = LoginForm(request.POST)
         if not form.is_valid():
             context['login_form'] = form

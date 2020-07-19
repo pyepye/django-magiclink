@@ -44,6 +44,16 @@ def test_login_page_get(client):
     assert response.status_code == 200
 
 
+def test_signup_require_signup_context(client):
+    from magiclink import settings as mlsettings
+
+    url = reverse('magiclink:login')
+    response = client.get(url)
+    assert response.context_data['require_signup'] == mlsettings.REQUIRE_SIGNUP
+    response = client.post(url)
+    assert response.context_data['require_signup'] == mlsettings.REQUIRE_SIGNUP
+
+
 @pytest.mark.django_db
 def test_login_post(mocker, client, user, settings):  # NOQA: F811
     from magiclink import settings as mlsettings
