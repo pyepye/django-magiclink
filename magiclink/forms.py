@@ -61,6 +61,8 @@ class SignupForm(SignupFormEmailOnly):
         widget=forms.TextInput(attrs={'placeholder': 'Enter your name'})
     )
 
+    field_order = ['form_name', 'name', 'email']
+
 
 class SignupFormWithUsername(SignupFormEmailOnly):
     form_name = forms.CharField(
@@ -69,6 +71,7 @@ class SignupFormWithUsername(SignupFormEmailOnly):
     username = forms.CharField(
         widget=forms.TextInput(attrs={'placeholder': 'Enter your username'})
     )
+    field_order = ['form_name', 'username', 'email']
 
     def clean_username(self) -> str:
         username = self.cleaned_data['username']
@@ -84,3 +87,4 @@ class SignupFormFull(SignupForm, SignupFormWithUsername):
     form_name = forms.CharField(
         initial='SignupFormFull', widget=forms.HiddenInput()
     )
+    field_order = ['form_name', 'username', 'name', 'email']

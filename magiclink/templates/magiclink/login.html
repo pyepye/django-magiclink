@@ -16,7 +16,7 @@
     <button type="submit">Send login email</button>
   </form>
   {% if require_signup %}
-  <p>Don't have an account? <a href="{% url 'magiclink:signup' %}">Sign up here</a></p>
+    <p>Don't have an account? <a href="{% url 'magiclink:signup' %}">Sign up here</a></p>
   {% endif %}
 
   <p>If you are seeing this you have not yet overridden the 'MAGICLINK_LOGIN_TEMPLATE_NAME' setting yet.</p>
