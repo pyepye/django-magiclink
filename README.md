@@ -221,6 +221,11 @@ MAGICLINK_AUTH_TIMEOUT = 300  # In second - Default is 5 minutes
 # emails addresses will be set to lowercase before any checks are run against it
 MAGICLINK_IGNORE_EMAIL_CASE = True
 
+# When creating a user assign their email as the username (if the User model
+# has a username field)
+MAGICLINK_EMAIL_AS_USERNAME = True
+
+
 # Allow superusers to login via a magic link
 MAGICLINK_ALLOW_SUPERUSER_LOGIN = True
 
