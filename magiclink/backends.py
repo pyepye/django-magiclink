@@ -20,7 +20,8 @@ class MagicLinkBackend():
             log.warn('Email address not supplied with token')
             return
 
-        if settings.EMAIL_IGNORE_CASE:
+        if settings.EMAIL_IGNORE_CASE and email:
+            log.debug('Setting email to lowercase')
             email = email.lower()
 
         magiclinks = MagicLink.objects.filter(token=token, disabled=False)
