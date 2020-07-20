@@ -17,7 +17,7 @@ class MagicLinkBackend():
         log.debug(f'MagicLink authenticate token: {token} - email: {email}')
 
         if settings.VERIFY_INCLUDE_EMAIL and not email:
-            log.warn('Email address not supplied with token')
+            log.warning('Email address not supplied with token')
             return
 
         if settings.EMAIL_IGNORE_CASE and email:
@@ -27,47 +27,47 @@ class MagicLinkBackend():
         try:
             magiclink = MagicLink.objects.get(token=token, disabled=False)
         except MagicLink.DoesNotExist:
-            log.warn('Valid MagicLink with token could not be found')
+            log.warning('Valid MagicLink with token could not be found')
             return
 
         if settings.VERIFY_INCLUDE_EMAIL and magiclink.email != email:
-            log.warn(f'Email address "{email}" does not match for {magiclink.pk}')  # NOQA: E501
+            log.warning(f'Email address "{email}" does not match for {magiclink.pk}')  # NOQA: E501
             return
 
         magiclink = MagicLink.objects.get(token=token)
 
         if timezone.now() > magiclink.expiry:
-            log.warn(f'MagicLink {magiclink.pk} is expired')
+            log.warning(f'MagicLink {magiclink.pk} is expired')
             magiclink.disable()
             return
 
         if settings.REQUIRE_SAME_IP:
             if magiclink.ip_address != get_client_ip(request):
-                log.warn(f'MagicLink {magiclink.pk} ip_address did not match request')  # NOQA: E501
+                log.warning(f'MagicLink {magiclink.pk} ip_address did not match request')  # NOQA: E501
                 magiclink.disable()
                 return
 
         if settings.REQUIRE_SAME_BROWSER:
             cookie_name = f'magiclink{magiclink.pk}'
             if magiclink.cookie_value != request.COOKIES.get(cookie_name):
-                log.warn(f'MagicLink {magiclink.pk} cookie did not match request')  # NOQA: E501
+                log.warning(f'MagicLink {magiclink.pk} cookie did not match request')  # NOQA: E501
                 magiclink.disable()
                 return
 
         if magiclink.times_used >= settings.TOKEN_USES:
-            log.warn(f'MagicLink {magiclink.pk} used too many times')
+            log.warning(f'MagicLink {magiclink.pk} used too many times')
             magiclink.disable()
             return
 
         user = User.objects.get(email=magiclink.email)
 
         if not settings.ALLOW_SUPERUSER_LOGIN and user.is_superuser:
-            log.warn(f'Superuser login is disabled')
+            log.warning(f'Superuser login is disabled')
             magiclink.disable()
             return
 
         if not settings.ALLOW_STAFF_LOGIN and user.is_staff:
-            log.warn(f'Staff login is disabled')
+            log.warning(f'Staff login is disabled')
             magiclink.disable()
             return
 
