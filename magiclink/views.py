@@ -80,7 +80,11 @@ class LoginVerify(RedirectView):
         log.info(f'Login successful for {email}')
 
         magiclink = MagicLink.objects.get(token=token)
-        return HttpResponseRedirect(magiclink.redirect_url)
+        response = HttpResponseRedirect(magiclink.redirect_url)
+        if settings.REQUIRE_SAME_BROWSER:
+            cookie_name = f'magiclink{magiclink.pk}'
+            response.delete_cookie(cookie_name, magiclink.cookie_value)
+        return response
 
 
 class Signup(TemplateView):

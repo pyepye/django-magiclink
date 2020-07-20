@@ -174,10 +174,13 @@ def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
     query = urlencode(params)
     url = f'{url}?{query}'
 
-    client.cookies = SimpleCookie({f'magiclink{ml.pk}': ml.cookie_value})
+    cookie_name = f'magiclink{ml.pk}'
+    client.cookies = SimpleCookie({cookie_name: ml.cookie_value})
     response = client.get(url)
     assert response.status_code == 302
     assert response.url == reverse(settings.LOGIN_REDIRECT_URL)
+    assert client.cookies[cookie_name].value == ''
+    assert client.cookies[cookie_name]['expires'].startswith('Thu, 01 Jan 1970')  # NOQA: E501
 
     needs_login_url = reverse('needs_login')
     needs_login_response = client.get(needs_login_url)
