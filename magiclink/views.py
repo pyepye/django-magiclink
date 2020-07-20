@@ -76,6 +76,7 @@ class LoginVerify(RedirectView):
             raise Http404()
 
         login(request, user)
+        log.info(f'Login successful for {email}')
 
         magiclink = MagicLink.objects.get(token=token)
         return HttpResponseRedirect(magiclink.redirect_url)
