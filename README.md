@@ -5,6 +5,8 @@ Passwordless Authentication for Django with Magic Links.
 
 This package was create a fully tested with a focus on [ease of setup](#steps-to-impliment), [security](#security) and testing (coverage is currently at 100%). The idea is to use sane defaults to quickly create secure single-use token authentication for Django.
 
+![](example.gif)
+
 
 ## Install
 
