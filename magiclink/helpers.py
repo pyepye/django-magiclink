@@ -66,34 +66,30 @@ def get_or_create_user(
     if not username and settings.EMAIL_AS_USERNAME:
         username = email
 
-    if username and 'username' in user_fields:
-        user = User.objects.create(
-            email=email,
-            username=username,
-        )
-    elif 'username' in user_fields:
+    user_details = {'email': email}
+    if 'first_name' in user_fields and first_name:
+        user_details['first_name'] = first_name
+    if 'last_name' in user_fields and last_name:
+        user_details['last_name'] = last_name
+    if 'full_name' in user_fields:
+        user_details['full_name'] = f'{first_name} {last_name}'.strip()  # type: ignore  # NOQA: E501
+    if 'name' in user_fields:
+        user_details['name'] = f'{first_name} {last_name}'.strip()  # type: ignore  # NOQA: E501
+
+    if 'username' in user_fields and not username:
         # Set a random username if we need to set a username and
         # EMAIL_AS_USERNAME is False
         created = False
         while not created:
+            user_details['username'] = get_random_string(length=10)
             try:
-                user = User.objects.create(
-                    email=email, username=get_random_string(length=10),
-                )
+                user = User.objects.create(**user_details)
                 created = True
             except IntegrityError:  # pragma: no cover
                 pass
     else:
-        user = User.objects.create(email=email)
-
-    if 'first_name' in user_fields and first_name:
-        user.first_name = first_name
-    if 'last_name' in user_fields and last_name:
-        user.last_name = last_name
-    if 'full_name' in user_fields:
-        user.full_name = f'{first_name} {last_name}'.strip()  # type: ignore
-    if 'name' in user_fields:
-        user.name = f'{first_name} {last_name}'.strip()  # type: ignore
-    user.save()
+        if 'username' in user_fields:
+            user_details['username'] = username
+        user = User.objects.create(**user_details)
 
     return user
