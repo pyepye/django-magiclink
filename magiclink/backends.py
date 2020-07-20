@@ -24,10 +24,14 @@ class MagicLinkBackend():
             log.debug('Setting email to lowercase')
             email = email.lower()
 
-        magiclinks = MagicLink.objects.filter(token=token, disabled=False)
-        if email:
-            magiclinks = magiclinks.filter(email=email)
-        if not magiclinks:
+        try:
+            magiclink = MagicLink.objects.get(token=token, disabled=False)
+        except MagicLink.DoesNotExist:
+            log.warn('Valid MagicLink with token could not be found')
+            return
+
+        if settings.VERIFY_INCLUDE_EMAIL and magiclink.email != email:
+            log.warn(f'Email address "{email}" does not match for {magiclink.pk}')  # NOQA: E501
             return
 
         magiclink = MagicLink.objects.get(token=token)
