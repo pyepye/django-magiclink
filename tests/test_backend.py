@@ -60,7 +60,7 @@ def test_auth_backend_no_token(user, magic_link):  # NOQA: F811
 def test_auth_backend_disabled_token(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     ml.disabled = True
     ml.save()
     user = MagicLinkBackend().authenticate(
@@ -73,7 +73,7 @@ def test_auth_backend_disabled_token(user, magic_link):  # NOQA: F811
 def test_auth_backend_no_email(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     user = MagicLinkBackend().authenticate(request=request, token=ml.token)
     assert user is None
 
@@ -82,7 +82,7 @@ def test_auth_backend_no_email(user, magic_link):  # NOQA: F811
 def test_auth_backend_wrong_email(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     user = MagicLinkBackend().authenticate(
         request=request, token=ml.token, email='fake@email.com'
     )
@@ -93,7 +93,7 @@ def test_auth_backend_wrong_email(user, magic_link):  # NOQA: F811
 def test_auth_backend_expired(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     ml.expiry = timezone.now() - timedelta(seconds=1)
     ml.save()
     user = MagicLinkBackend().authenticate(
@@ -109,7 +109,7 @@ def test_auth_backend_expired(user, magic_link):  # NOQA: F811
 def test_auth_backend_wrong_ip(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     ml.ip_address = '255.255.255.255'
     ml.save()
     user = MagicLinkBackend().authenticate(
@@ -125,7 +125,7 @@ def test_auth_backend_wrong_ip(user, magic_link):  # NOQA: F811
 def test_auth_backend_different_browser(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = 'bad_value'
+    request.COOKIES[f'magiclink{ml.pk}'] = 'bad_value'
     user = MagicLinkBackend().authenticate(
         request=request, token=ml.token, email=user.email
     )
@@ -139,7 +139,7 @@ def test_auth_backend_different_browser(user, magic_link):  # NOQA: F811
 def test_auth_backend_used_times(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     ml.times_used = settings.TOKEN_USES
     ml.save()
     user = MagicLinkBackend().authenticate(
@@ -159,7 +159,7 @@ def test_auth_backend_superuser(settings, user, magic_link):  # NOQA: F811
 
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     user.is_superuser = True
     user.save()
     user = MagicLinkBackend().authenticate(
@@ -179,7 +179,7 @@ def test_auth_backend_staff(settings, user, magic_link):  # NOQA: F811
 
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     user.is_staff = True
     user.save()
     user = MagicLinkBackend().authenticate(
