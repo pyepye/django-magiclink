@@ -69,7 +69,8 @@ def test_login_post(mocker, client, user, settings):  # NOQA: F811
     magiclink = MagicLink.objects.get(email=user.email)
     assert magiclink
     if mlsettings.REQUIRE_SAME_BROWSER:
-        assert response.cookies['magiclink'].value == magiclink.cookie_value
+        cookie_name = f'magiclink{magiclink.pk}'
+        assert response.cookies[cookie_name].value == magiclink.cookie_value
 
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
@@ -173,7 +174,7 @@ def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
     query = urlencode(params)
     url = f'{url}?{query}'
 
-    client.cookies = SimpleCookie({'magiclink': ml.cookie_value})
+    client.cookies = SimpleCookie({f'magiclink{ml.pk}': ml.cookie_value})
     response = client.get(url)
     assert response.status_code == 302
     assert response.url == reverse(settings.LOGIN_REDIRECT_URL)
@@ -196,7 +197,7 @@ def test_login_verify_with_redirect(client, settings, user, magic_link):  # NOQA
     ml.save()
     url = ml.generate_url(request)
 
-    client.cookies = SimpleCookie({'magiclink': ml.cookie_value})
+    client.cookies = SimpleCookie({f'magiclink{ml.pk}': ml.cookie_value})
     response = client.get(url)
     assert response.status_code == 302
     assert response.url == redirect_url
@@ -214,7 +215,7 @@ def test_login_verify_authentication_fail(client, settings, user, magic_link):  
     query = urlencode(params)
     url = f'{url}?{query}'
 
-    client.cookies = SimpleCookie({'magiclink': ml.cookie_value})
+    client.cookies = SimpleCookie({f'magiclink{ml.pk}': ml.cookie_value})
     response = client.get(url)
     assert response.status_code == 404
 

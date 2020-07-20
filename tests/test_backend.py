@@ -26,7 +26,7 @@ def test_auth_backend_get_user_do_not_exist(user):  # NOQA: F811
 def test_auth_backend(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     user = MagicLinkBackend().authenticate(
         request=request, token=ml.token, email=user.email
     )
@@ -40,7 +40,7 @@ def test_auth_backend(user, magic_link):  # NOQA: F811
 def test_auth_backend_email_ignore_case(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)
-    request.COOKIES['magiclink'] = ml.cookie_value
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
     user = MagicLinkBackend().authenticate(
         request=request, token=ml.token, email=user.email.upper()
     )

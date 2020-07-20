@@ -35,7 +35,8 @@ class MagicLinkBackend():
                 return
 
         if settings.REQUIRE_SAME_BROWSER:
-            if magiclink.cookie_value != request.COOKIES.get('magiclink'):
+            cookie_name = f'magiclink{magiclink.pk}'
+            if magiclink.cookie_value != request.COOKIES.get(cookie_name):
                 magiclink.disable()
                 return
 

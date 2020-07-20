@@ -159,7 +159,7 @@ When overriding this template please ensure the following content is included:
 There are actually several forms avalible in the context on this page depending on what information you want to collect.
 * **SignupFormEmailOnly** - Only includes an `email` field
 * **SignupForm** - Includes `name` and `email` fields
-* **SignupFormWithUsername** - Includes `Username` and `email` fields
+* **SignupFormWithUsername** - Includes `username` and `email` fields
 * **SignupFormFull** - Includes `username`, `name` and `email` fields
 
 
