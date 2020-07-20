@@ -55,7 +55,8 @@ class Login(TemplateView):
         response = HttpResponseRedirect(sent_url)
         if settings.REQUIRE_SAME_BROWSER:
             cookie_name = f'magiclink{magiclink.pk}'
-            response.cookies[cookie_name] = magiclink.cookie_value
+            response.set_cookie(cookie_name, magiclink.cookie_value)
+            log.info(f'Cookie {cookie_name} set for {email}')
         return response
 
 
@@ -132,7 +133,8 @@ class Signup(TemplateView):
         response = HttpResponseRedirect(sent_url)
         if settings.REQUIRE_SAME_BROWSER:
             cookie_name = f'magiclink{magiclink.pk}'
-            response.cookies[cookie_name] = magiclink.cookie_value
+            response.set_cookie(cookie_name, magiclink.cookie_value)
+            log.info(f'Cookie {cookie_name} set for {email}')
         return response
 
 
