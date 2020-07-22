@@ -145,7 +145,7 @@ If this email template is not to your liking you can override the email template
 
 #### Signup page
 
-If you want users to have to signup before being able to log in you will want to override the signup page template. This is needed when `MAGICLINK_REQUIRE_SIGNUP = True`. On successful signup the user will be sent a login email.
+If you want users to have to signup before being able to log in you will want to override the signup page template using the `MAGICLINK_SIGNUP_TEMPLATE_NAME` setting. This is needed when `MAGICLINK_REQUIRE_SIGNUP = True`. On successful signup the user will be sent a login email with a magic link.
 
 When overriding this template please ensure the following content is included:
 
@@ -158,15 +158,14 @@ When overriding this template please ensure the following content is included:
 <p>Already have an account? <a href='{% url 'magiclink:login' %}'>Log in here</a></p>
 ```
 
-There are actually several forms avalible in the context on this page depending on what information you want to collect.
+There are several forms made avalible in the context on this page depending on what information you want to collect:
 * **SignupFormEmailOnly** - Only includes an `email` field
 * **SignupForm** - Includes `name` and `email` fields
 * **SignupFormWithUsername** - Includes `username` and `email` fields
 * **SignupFormFull** - Includes `username`, `name` and `email` fields
 
 
-Like the login for the sign up flow can be overridden if you require more information from the user on signup. See the login/setup docs for more details
-ToDo: Include docs on how to use post_save signal to send Welcome email?
+Like the login for the sign up flow can be overridden if you require more information from the user on signup. See the login/setup docs for more details.
 
 
 #### Configuration settings
@@ -196,7 +195,7 @@ LOGIN_REDIRECT_URL = '/accounts/profile/'
 # If a new user is created via the signup page use this setting to send them to
 # a different url than LOGIN_REDIRECT_URL when clicking the magic link
 # This will fall back to LOGIN_REDIRECT_URL
-MAGICLINK_SIGNUP_LOGIN_REDIRECT = '/welcome'
+MAGICLINK_SIGNUP_LOGIN_REDIRECT = '/welcome/'
 
 # Change the url a user is redirect to after requesting a magic link
 MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
