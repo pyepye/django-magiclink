@@ -35,8 +35,6 @@ def test_send_email(mocker, settings, magic_link):  # NOQA: F811
     send_mail = mocker.patch('magiclink.models.send_mail')
     render_to_string = mocker.patch('magiclink.models.render_to_string')
 
-    # spy = mocker.spy(MagicLink, 'generate_url')
-
     request = HttpRequest()
     request.META['SERVER_NAME'] = '127.0.0.1'
     request.META['SERVER_PORT'] = 80
@@ -52,8 +50,8 @@ def test_send_email(mocker, settings, magic_link):  # NOQA: F811
         'expiry': ml.expiry,
         'ip_address': ml.ip_address,
         'created': ml.created,
-        'same_ip': mlsettings.REQUIRE_SAME_IP,
-        'same_browser': mlsettings.REQUIRE_SAME_BROWSER,
+        'require_same_ip': mlsettings.REQUIRE_SAME_IP,
+        'require_same_browser': mlsettings.REQUIRE_SAME_BROWSER,
         'token_uses': mlsettings.TOKEN_USES,
         'style': mlsettings.EMAIL_STYLES,
     }

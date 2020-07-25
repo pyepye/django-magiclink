@@ -66,8 +66,8 @@ class MagicLink(models.Model):
             'expiry': self.expiry,
             'ip_address': self.ip_address,
             'created': self.created,
-            'same_ip': settings.REQUIRE_SAME_IP,
-            'same_browser': settings.REQUIRE_SAME_BROWSER,
+            'require_same_ip': settings.REQUIRE_SAME_IP,
+            'require_same_browser': settings.REQUIRE_SAME_BROWSER,
             'token_uses': settings.TOKEN_USES,
             'style': settings.EMAIL_STYLES,
         }

@@ -138,8 +138,8 @@ If this email template is not to your liking you can override the email template
 * `{{ expiry }}` - Datetime for when the magiclink expires
 * `{{ ip_address }}` - The IP address of the person who requested the magic link
 * `{{ created }}` - Datetime of when the magic link was created
-* `{{ same_ip }}` - The value of MAGICLINK_REQUIRE_SAME_IP
-* `{{ same_browser }}` - The value of MAGICLINK_REQUIRE_SAME_BROWSER
+* `{{ require_same_ip }}` - The value of MAGICLINK_REQUIRE_SAME_IP
+* `{{ require_same_browser }}` - The value of MAGICLINK_REQUIRE_SAME_BROWSER
 * `{{ token_uses }}` - The value of MAGICLINK_TOKEN_USES
 
 
