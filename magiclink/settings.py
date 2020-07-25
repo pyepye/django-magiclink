@@ -7,6 +7,7 @@ LOGIN_SENT_REDIRECT = getattr(settings, 'MAGICLINK_LOGIN_SENT_REDIRECT', 'magicl
 
 LOGIN_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_TEMPLATE_NAME', 'magiclink/login.html')   # NOQA: E501
 LOGIN_SENT_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_SENT_TEMPLATE_NAME', 'magiclink/login_sent.html')   # NOQA: E501
+LOGIN_FAILED_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME', 'magiclink/login_failed.html')   # NOQA: E501
 
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.

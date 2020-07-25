@@ -64,17 +64,24 @@ class LoginSent(TemplateView):
     template_name = settings.LOGIN_SENT_TEMPLATE_NAME
 
 
-class LoginVerify(RedirectView):
+class LoginVerify(TemplateView):
+    template_name = settings.LOGIN_FAILED_TEMPLATE_NAME
 
     def get(self, request, *args, **kwargs):
         token = request.GET.get('token')
-        if not token:
-            raise Http404()
-
         email = request.GET.get('email')
         user = authenticate(request, token=token, email=email)
         if not user:
-            raise Http404()
+            if settings.LOGIN_FAILED_TEMPLATE_NAME:
+                context = self.get_context_data(**kwargs)
+                context['ONE_TOKEN_PER_USER'] = settings.ONE_TOKEN_PER_USER
+                context['REQUIRE_SAME_BROWSER'] = settings.REQUIRE_SAME_BROWSER
+                context['REQUIRE_SAME_IP'] = settings.REQUIRE_SAME_IP
+                context['ALLOW_SUPERUSER_LOGIN'] = settings.ALLOW_SUPERUSER_LOGIN  # NOQA: E501
+                context['ALLOW_STAFF_LOGIN'] = settings.ALLOW_STAFF_LOGIN
+                return self.render_to_response(context)
+            else:
+                raise Http404()
 
         login(request, user)
         log.info(f'Login successful for {email}')

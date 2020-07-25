@@ -1,10 +1,8 @@
 from importlib import reload
-from urllib.parse import urlencode
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
-from django.http.cookie import SimpleCookie
 from django.urls import reverse
 
 from magiclink.models import MagicLink
@@ -159,72 +157,3 @@ def test_login_too_many_tokens(client, user, magic_link):  # NOQA: F811
     assert response.status_code == 200
     error = ['Too many magic login requests']
     assert response.context_data['login_form'].errors['email'] == error
-
-
-@pytest.mark.django_db
-def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
-    url = reverse('magiclink:login_verify')
-    request = HttpRequest()
-    ml = magic_link(request)
-    ml.ip_address = '127.0.0.1'  # This is a little hacky
-    ml.save()
-
-    params = {'token': ml.token}
-    params['email'] = ml.email
-    query = urlencode(params)
-    url = f'{url}?{query}'
-
-    cookie_name = f'magiclink{ml.pk}'
-    client.cookies = SimpleCookie({cookie_name: ml.cookie_value})
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.url == reverse(settings.LOGIN_REDIRECT_URL)
-    assert client.cookies[cookie_name].value == ''
-    assert client.cookies[cookie_name]['expires'].startswith('Thu, 01 Jan 1970')  # NOQA: E501
-
-    needs_login_url = reverse('needs_login')
-    needs_login_response = client.get(needs_login_url)
-    assert needs_login_response.status_code == 200
-
-
-@pytest.mark.django_db
-def test_login_verify_with_redirect(client, settings, user, magic_link):  # NOQA: F811, E501
-    url = reverse('magiclink:login_verify')
-    request = HttpRequest()
-    request.META['SERVER_NAME'] = '127.0.0.1'
-    request.META['SERVER_PORT'] = 80
-    ml = magic_link(request)
-    ml.ip_address = '127.0.0.1'  # This is a little hacky
-    redirect_url = reverse('no_login')
-    ml.redirect_url = redirect_url
-    ml.save()
-    url = ml.generate_url(request)
-
-    client.cookies = SimpleCookie({f'magiclink{ml.pk}': ml.cookie_value})
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.url == redirect_url
-
-
-@pytest.mark.django_db
-def test_login_verify_authentication_fail(client, settings, user, magic_link):  # NOQA: F811, E501
-    url = reverse('magiclink:login_verify')
-    request = HttpRequest()
-    ml = magic_link(request)
-    ml.ip_address = '127.0.0.1'  # This is a little hacky
-    ml.save()
-
-    params = {'token': ml.token}
-    query = urlencode(params)
-    url = f'{url}?{query}'
-
-    client.cookies = SimpleCookie({f'magiclink{ml.pk}': ml.cookie_value})
-    response = client.get(url)
-    assert response.status_code == 404
-
-
-@pytest.mark.django_db
-def test_login_verify_no_token(client):
-    url = reverse('magiclink:login_verify')
-    response = client.get(url)
-    assert response.status_code == 404

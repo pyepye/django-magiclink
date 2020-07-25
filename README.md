@@ -23,6 +23,7 @@ The setup of the app is simple but has a few steps and a few templates that need
 1. [Configure the app](#configuration) adding urls and settings. There are also a number of [additional configuration settings](#configuration-settings)
 1. [Set up the login page](#login-page) by overriding the login page template
 1. [Override the login sent page HTML](#login-sent-page)
+1. [Customise the login failed page](#login-failed-page)
 1. [Set up the magic link email](#magic-link-email) (optional) by setting the email logo and colours. It's also possible to override the email templates
 1. [Create a signup page](#signup-page) (optional) depending on your settings configuration
 
@@ -67,7 +68,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 ```
-*Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS* to ensure it is used
+*Note: MagicLinkBackend should be placed at the top of AUTHENTICATION_BACKENDS* to ensure it is used as the primary login backend.
 
 
 Add the following settings to your `settings.py` (you will need to replace the template names in the below steps):
@@ -77,6 +78,7 @@ LOGIN_URL = 'magiclink:login'
 
 MAGICLINK_LOGIN_TEMPLATE_NAME = 'magiclink/login.html'
 MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'magiclink/login_sent.html'
+MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = 'magiclink/login_failed.html'
 
 # Optional:
 # If this setting is set to False a user account will be created the first
@@ -112,6 +114,24 @@ After the user has requested a magic link, they will be redirected to a success 
 <p>We have sent you a magic link to your email address</p>
 <p>Please click the link to be logged in automatically</p>
 ```
+
+
+#### Login failed page
+
+If the user tries to use an invalid magic token they will be shown a custom error page. To override the HTML for this page you can set the `MAGICLINK_LOGIN_SENT_TEMPLATE_NAME` setting. If you would like to return a 404 page you can set this setting to a empty string (or any falsy value).
+
+To help tailor the error page and explain the possible reasons the user could not login the following context variables are provided:
+
+* `{{ one_token_per_user }}` - The value of MAGICLINK_ONE_TOKEN_PER_USER
+* `{{ require_same_browser }}` - The value of MAGICLINK_REQUIRE_SAME_BROWSER
+* `{{ require_same_ip }}` - The value of MAGICLINK_REQUIRE_SAME_IP
+* `{{ allow_superuser_login }}` - The value of MAGICLINK_ALLOW_SUPERUSER_LOGIN
+* `{{ allow_staff_login }}` - The value of MAGICLINK_ALLOW_STAFF_LOGIN
+
+*Note: The reason the login request failed is not provided in the context*
+
+For an example of this page see the [default login failed template](https://github.com/pyepye/django-magiclink/blob/master/magiclink/templates/magiclink/login_sent.html)
+
 
 #### Magic link email
 
@@ -181,6 +201,11 @@ MAGICLINK_LOGIN_TEMPLATE_NAME = 'myapp/login.html'
 
 # Override the login page template. See 'Login sent page' in the Setup section
 MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'myapp/login_sent.html'
+
+# Override the template that shows when the user tries to login with a
+# magic link that is not valid. See 'Login failed page' in the Setup section
+MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = 'magiclink/login_failed.html'
+
 
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.

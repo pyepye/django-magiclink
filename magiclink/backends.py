@@ -16,6 +16,10 @@ class MagicLinkBackend():
     def authenticate(self, request, token=None, email=None):
         log.debug(f'MagicLink authenticate token: {token} - email: {email}')
 
+        if not token:
+            log.warning('Token missing from authentication')
+            return
+
         if settings.VERIFY_INCLUDE_EMAIL and not email:
             log.warning('Email address not supplied with token')
             return
