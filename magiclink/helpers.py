@@ -14,7 +14,9 @@ from .utils import get_client_ip, get_url_path
 
 
 def create_magiclink(
-    email: str, request: HttpRequest, redirect_url: str = ''
+    email: str,
+    request: HttpRequest,
+    redirect_url: str = '',
 ) -> MagicLink:
     if settings.EMAIL_IGNORE_CASE:
         email = email.lower()
@@ -72,9 +74,9 @@ def get_or_create_user(
     if 'last_name' in user_fields and last_name:
         user_details['last_name'] = last_name
     if 'full_name' in user_fields:
-        user_details['full_name'] = f'{first_name} {last_name}'.strip()  # type: ignore  # NOQA: E501
+        user_details['full_name'] = f'{first_name} {last_name}'.strip()
     if 'name' in user_fields:
-        user_details['name'] = f'{first_name} {last_name}'.strip()  # type: ignore  # NOQA: E501
+        user_details['name'] = f'{first_name} {last_name}'.strip()
 
     if 'username' in user_fields and not username:
         # Set a random username if we need to set a username and

@@ -118,19 +118,21 @@ After the user has requested a magic link, they will be redirected to a success 
 
 #### Login failed page
 
-If the user tries to use an invalid magic token they will be shown a custom error page. To override the HTML for this page you can set the `MAGICLINK_LOGIN_SENT_TEMPLATE_NAME` setting. If you would like to return a 404 page you can set this setting to a empty string (or any falsy value).
+If the user tries to use an invalid magic token they will be shown a custom error page. To override the HTML for this page you can set the `MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME` setting. If you would like to return a 404 page you can set this setting to a empty string (or any falsy value).
+
+The reasons for the login failing is passed through as the context variable `{{ login_error }}`
 
 To help tailor the error page and explain the possible reasons the user could not login the following context variables are provided:
 
-* `{{ one_token_per_user }}` - The value of MAGICLINK_ONE_TOKEN_PER_USER
-* `{{ require_same_browser }}` - The value of MAGICLINK_REQUIRE_SAME_BROWSER
-* `{{ require_same_ip }}` - The value of MAGICLINK_REQUIRE_SAME_IP
-* `{{ allow_superuser_login }}` - The value of MAGICLINK_ALLOW_SUPERUSER_LOGIN
-* `{{ allow_staff_login }}` - The value of MAGICLINK_ALLOW_STAFF_LOGIN
+* `{{ login_error }}` - The reason the login failed (raised by `MagicLink.validate()`)
+* `{{ one_token_per_user }}` - The value of the `MAGICLINK_ONE_TOKEN_PER_USER` setting
+* `{{ require_same_browser }}` - The value of the `MAGICLINK_REQUIRE_SAME_BROWSER` setting
+* `{{ require_same_ip }}` - The value of the `MAGICLINK_REQUIRE_SAME_IP` setting
+* `{{ allow_superuser_login }}` - The value of the `MAGICLINK_ALLOW_SUPERUSER_LOGIN` setting
+* `{{ allow_staff_login }}` - The value of the `MAGICLINK_ALLOW_STAFF_LOGIN` setting
 
-*Note: The reason the login request failed is not provided in the context*
 
-For an example of this page see the [default login failed template](https://github.com/pyepye/django-magiclink/blob/master/magiclink/templates/magiclink/login_sent.html)
+For an example of this page see the [default login failed template](https://github.com/pyepye/django-magiclink/blob/master/magiclink/templates/magiclink/login_failed.html)
 
 
 #### Magic link email
@@ -158,9 +160,9 @@ If this email template is not to your liking you can override the email template
 * `{{ expiry }}` - Datetime for when the magiclink expires
 * `{{ ip_address }}` - The IP address of the person who requested the magic link
 * `{{ created }}` - Datetime of when the magic link was created
-* `{{ require_same_ip }}` - The value of MAGICLINK_REQUIRE_SAME_IP
-* `{{ require_same_browser }}` - The value of MAGICLINK_REQUIRE_SAME_BROWSER
-* `{{ token_uses }}` - The value of MAGICLINK_TOKEN_USES
+* `{{ require_same_ip }}` - The value of `MAGICLINK_REQUIRE_SAME_IP`
+* `{{ require_same_browser }}` - The value of `MAGICLINK_REQUIRE_SAME_BROWSER`
+* `{{ token_uses }}` - The value of `MAGICLINK_TOKEN_USES`
 
 
 #### Signup page
@@ -251,7 +253,6 @@ MAGICLINK_IGNORE_EMAIL_CASE = True
 # has a username field)
 MAGICLINK_EMAIL_AS_USERNAME = True
 
-
 # Allow superusers to login via a magic link
 MAGICLINK_ALLOW_SUPERUSER_LOGIN = True
 
@@ -294,7 +295,7 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 * The one-time password issued will be valid for 5 minutes before it expires
 * The user's email is specified alongside login tokens to stop URLs being brute-forced
-* Each login token will be at least 20 digits?
+* Each login token will be at least 20 digits
 * The initial request and its response must take place from the same IP address
 * The initial request and its response must take place in the same browser
 * Each one-time link can only be used once

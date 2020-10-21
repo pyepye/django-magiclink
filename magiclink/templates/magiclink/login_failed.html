@@ -10,8 +10,10 @@
 
 <body>
   <h1>Login failed</h1>
-  <p>It was not possible to log you in</p>
-  <p>This could be due to one of the following reasons:</p>
+  <p>It was not possible to log you in due to:</p>
+  <p>{{ login_error }}</p>
+
+  <p>There are several possible ways for logins to fail with the current Django MagicLink settings:</p>
   <ul>
     <li>The URL you are trying to use is malformed</li>
     <li>The magic link you tried to use has expired</li>

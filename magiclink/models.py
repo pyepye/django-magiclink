@@ -2,14 +2,17 @@ from urllib.parse import urlencode, urljoin
 
 from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.db import models
 from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 
 from . import settings
+from .utils import get_client_ip
 
 User = get_user_model()
 
@@ -80,3 +83,49 @@ class MagicLink(models.Model):
             from_email=djsettings.DEFAULT_FROM_EMAIL,
             html_message=html,
         )
+
+    def validate(
+        self,
+        request: HttpRequest,
+        email: str = '',
+    ) -> AbstractUser:
+        if settings.EMAIL_IGNORE_CASE and email:
+            email = email.lower()
+
+        if settings.VERIFY_INCLUDE_EMAIL and self.email != email:
+            raise MagicLinkError('Email address does not match')
+
+        if timezone.now() > self.expiry:
+            self.disable()
+            raise MagicLinkError('Magic link has expired')
+
+        if settings.REQUIRE_SAME_IP:
+            if self.ip_address != get_client_ip(request):
+                self.disable()
+                raise MagicLinkError('IP address is different from the IP '
+                                     'address used to request the magic link')
+
+        if settings.REQUIRE_SAME_BROWSER:
+            cookie_name = f'magiclink{self.pk}'
+            if self.cookie_value != request.COOKIES.get(cookie_name):
+                self.disable()
+                raise MagicLinkError('Browser is different from the browser '
+                                     'used to request the magic link')
+
+        if self.times_used >= settings.TOKEN_USES:
+            self.disable()
+            raise MagicLinkError('Magic link has been used too many times')
+
+        user = User.objects.get(email=self.email)
+
+        if not settings.ALLOW_SUPERUSER_LOGIN and user.is_superuser:
+            self.disable()
+            raise MagicLinkError(
+                'You can not login to a super user account using a magic link')
+
+        if not settings.ALLOW_STAFF_LOGIN and user.is_staff:
+            self.disable()
+            raise MagicLinkError(
+                'You can not login to a staff account using a magic link')
+
+        return user

@@ -3,7 +3,6 @@ from django.db import models
 
 
 class CustomUserEmailOnly(AbstractUser):
-    username = None  # type: ignore
     email = models.EmailField('email address', unique=True)
 
 
