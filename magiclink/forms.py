@@ -1,12 +1,70 @@
+from time import time
+
 from django import forms
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
 from . import settings
 
 User = get_user_model()
 
 
-class LoginForm(forms.Form):
+class AntiSpam(forms.Form):
+    url = forms.CharField(
+        required=False,
+        label='url (antispam field, don\'t fill out)',
+        widget=forms.TextInput(
+            attrs={
+                'autocomplete': 'off',
+                'tabindex': '-1',
+                'style': 'display: none !important',
+            }
+        ),
+    )
+    load_time = forms.CharField(
+        label='ALT (antispam field, don\'t fill out)',
+        widget=forms.TextInput(
+            attrs={
+                'autocomplete': 'off',
+                'tabindex': '-1',
+                'style': 'display: none !important',
+            }
+        ),
+    )
+
+    def clean_url(self) -> str:
+        url = self.cleaned_data.get('url')
+        if url:
+            raise ValidationError('url should be empty')
+        return url
+
+    def clean_load_time(self) -> float:
+        load_time = self.cleaned_data.get('load_time')
+        try:
+            load_time = float(load_time)
+        except ValueError:
+            raise ValidationError('Invalid value')
+
+        shown_field_count = 0
+        spam_fields = ['load_time', 'url']
+        for name, field in self.fields.items():
+            if field.widget.input_type != 'hidden' and name not in spam_fields:
+                shown_field_count += 1
+
+        submit_threshold = shown_field_count * settings.ANTISPAM_FIELD_TIME
+        if (time() - load_time) < submit_threshold:
+            raise ValidationError('Form filled out too fast - bot detected')
+        return load_time
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['load_time'].initial = time()
+        if not settings.ANTISPAM_FORMS:
+            del self.fields['url']
+            del self.fields['load_time']
+
+
+class LoginForm(AntiSpam):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             'autofocus': 'autofocus', 'placeholder': 'Enter your email'
@@ -28,7 +86,7 @@ class LoginForm(forms.Form):
         return email
 
 
-class SignupFormEmailOnly(forms.Form):
+class SignupFormEmailOnly(AntiSpam):
     form_name = forms.CharField(
         initial='SignupFormEmailOnly', widget=forms.HiddenInput()
     )
@@ -60,7 +118,6 @@ class SignupForm(SignupFormEmailOnly):
     name = forms.CharField(
         widget=forms.TextInput(attrs={'placeholder': 'Enter your name'})
     )
-
     field_order = ['form_name', 'name', 'email']
 
 

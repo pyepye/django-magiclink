@@ -36,7 +36,7 @@ def test_create_magiclink(settings, freezer):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_redirect_url(settings, freezer):
+def test_create_magiclink_redirect_url(settings):
     email = 'test@example.com'
     request = HttpRequest()
     redirect_url = '/test/'
@@ -46,7 +46,7 @@ def test_create_magiclink_redirect_url(settings, freezer):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_email_ignore_case(settings, freezer):
+def test_create_magiclink_email_ignore_case(settings):
     email = 'TEST@example.com'
     request = HttpRequest()
     magic_link = create_magiclink(email, request)
@@ -54,7 +54,7 @@ def test_create_magiclink_email_ignore_case(settings, freezer):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_email_ignore_case_off(settings, freezer):
+def test_create_magiclink_email_ignore_case_off(settings):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = False
     from magiclink import settings
     reload(settings)
@@ -82,7 +82,7 @@ def test_create_magiclink_one_token_per_user(settings, freezer):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_login_request_time_limit(settings, freezer):
+def test_create_magiclink_login_request_time_limit(settings):
     email = 'test@example.com'
     request = HttpRequest()
     create_magiclink(email, request)

@@ -289,3 +289,33 @@ def test_email_styles_bad_value(settings):
     with pytest.raises(ImproperlyConfigured):
         from magiclink import settings
         reload(settings)
+
+
+def test_antispam_forms(settings):
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.ANTISPAM_FORMS == settings.MAGICLINK_ANTISPAM_FORMS
+
+
+def test_antispam_forms_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_FORMS = 'Test'
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+        reload(settings)
+
+
+def test_antispam_form_submit_time(settings):
+    settings.MAGICLINK_ANTISPAM_FIELD_TIME = 5
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.ANTISPAM_FIELD_TIME == settings.MAGICLINK_ANTISPAM_FIELD_TIME  # NOQA: E501
+
+
+def test_antispam_form_submit_time_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_FIELD_TIME = 'Test'
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+        reload(settings)

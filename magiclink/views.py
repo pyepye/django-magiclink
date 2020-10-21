@@ -128,9 +128,9 @@ class Signup(TemplateView):
             'SignupFormFull',
         ]
         forms = __import__('magiclink.forms', fromlist=from_list)
-        Form = getattr(forms, form_name)
+        SignupForm = getattr(forms, form_name)
 
-        form = Form(request.POST)
+        form = SignupForm(request.POST)
         if not form.is_valid():
             context[form_name] = form
             return self.render_to_response(context)

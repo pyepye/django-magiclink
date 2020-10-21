@@ -1,4 +1,5 @@
 from importlib import reload
+from time import time
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -157,3 +158,85 @@ def test_login_too_many_tokens(client, user, magic_link):  # NOQA: F811
     assert response.status_code == 200
     error = ['Too many magic login requests']
     assert response.context_data['login_form'].errors['email'] == error
+
+
+@pytest.mark.django_db
+def test_login_antispam(settings, client, user, freezer):  # NOQA: F811
+    freezer.move_to('2000-01-01T00:00:00')
+
+    submit_time = 1
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_FIELD_TIME = submit_time
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email, 'load_time': time() - submit_time}
+
+    response = client.post(url, data)
+    magiclink = MagicLink.objects.get(email=user.email)
+    assert magiclink
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+
+
+@pytest.mark.django_db
+def test_login_antispam_submit_too_fast(settings, client, user, freezer):  # NOQA: F811,E501
+    freezer.move_to('2000-01-01T00:00:00')
+
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email, 'load_time': time()}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context['login_form'].errors
+    assert form_errors['load_time'] == ['Form filled out too fast - bot detected']  # NOQA: E501
+
+
+@pytest.mark.django_db
+def test_login_antispam_missing_load_time(settings, client, user):  # NOQA: F811,E501
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context['login_form'].errors
+    assert form_errors['load_time'] == ['This field is required.']
+
+
+@pytest.mark.django_db
+def test_login_antispam_invalid_load_time(settings, client, user):  # NOQA: F811,E501
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email, 'load_time': 'test'}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context['login_form'].errors
+    assert form_errors['load_time'] == ['Invalid value']
+
+
+@pytest.mark.django_db
+def test_login_antispam_url_value(settings, client, user):  # NOQA: F811
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email, 'url': 'test'}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context['login_form'].errors
+    assert form_errors['url'] == ['url should be empty']

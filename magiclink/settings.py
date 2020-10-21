@@ -92,3 +92,14 @@ if EMAIL_STYLES and not isinstance(EMAIL_STYLES, dict):
 EMAIL_SUBJECT = getattr(settings, 'MAGICLINK_EMAIL_SUBJECT', 'Your login magic link')   # NOQA: E501
 EMAIL_TEMPLATE_NAME_TEXT = getattr(settings, 'MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT', 'magiclink/login_email.txt')   # NOQA: E501
 EMAIL_TEMPLATE_NAME_HTML = getattr(settings, 'MAGICLINK_EMAIL_TEMPLATE_NAME_HTML', 'magiclink/login_email.html')   # NOQA: E501
+
+
+ANTISPAM_FORMS = getattr(settings, 'MAGICLINK_ANTISPAM_FORMS', False)
+if not isinstance(ANTISPAM_FORMS, bool):
+    raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_FORMS" must be a boolean')
+ANTISPAM_FIELD_TIME = getattr(settings, 'MAGICLINK_ANTISPAM_FIELD_TIME', 1)
+if ANTISPAM_FIELD_TIME is not None:
+    try:
+        ANTISPAM_FIELD_TIME = float(ANTISPAM_FIELD_TIME)
+    except ValueError:
+        raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float')   # NOQA: E501

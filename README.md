@@ -286,6 +286,14 @@ MAGICLINK_LOGIN_REQUEST_TIME_LIMIT = 30  # In seconds
 
 # Disable all other tokens for a user when a new token is requested
 MAGICLINK_ONE_TOKEN_PER_USER = True
+
+# Include basic anti spam form fields to help stop bots. False by default
+MAGICLINK_ANTISPAM_FORMS = False
+# The shortest time a user can fill out each field and submit a form without
+# being considered a bot. The time is per field and defaults to 1 second.
+# This means if the form has 3 fields and the user will need to make more than
+# 3 seconds to fill out a form.
+MAGICLINK_ANTISPAM_FIELD_TIME = 1
 ```
 
 
