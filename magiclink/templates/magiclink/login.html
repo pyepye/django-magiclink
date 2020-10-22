@@ -3,9 +3,15 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Django MagicLink Signup - Please override this template</title>
+  <title>Django MagicLink Login - Please override this template</title>
   <meta name="description" content="Django MagicLink">
   <meta name="author" content="Django MagicLink">
+  <style type="text/css">
+    /* Hide the antispan field labels for the  Django's defailt form output */
+    label[for="id_url"], label[for="id_load_time"] {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
