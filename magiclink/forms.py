@@ -77,11 +77,16 @@ class LoginForm(AntiSpam):
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
 
-        if settings.REQUIRE_SIGNUP:
-            users = User.objects.filter(email=email)
-            if not users:
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            if settings.REQUIRE_SIGNUP:
                 error = 'We could not find a user with that email address'
                 raise forms.ValidationError(error)
+        else:
+            is_active = getattr(user, 'is_active', True)
+            if not settings.IGNORE_IS_ACTIVE_FLAG and not is_active:
+                raise forms.ValidationError('This user has been deactivated')
 
         return email
 
@@ -100,15 +105,16 @@ class SignupFormEmailOnly(AntiSpam):
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
 
-        users = User.objects.filter(email=email)
-        if users:
-            raise forms.ValidationError(
-                'Email address is already linked to an account'
-            )
-        if settings.EMAIL_IGNORE_CASE:
-            email = email.lower()
-
-        return email
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return email
+        else:
+            error = 'Email address is already linked to an account'
+            is_active = getattr(user, 'is_active', True)
+            if not settings.IGNORE_IS_ACTIVE_FLAG and not is_active:
+                error = 'This user has been deactivated'
+            raise forms.ValidationError(error)
 
 
 class SignupForm(SignupFormEmailOnly):

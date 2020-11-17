@@ -181,6 +181,39 @@ def test_login_antispam(settings, client, user, freezer):  # NOQA: F811
 
 
 @pytest.mark.django_db
+def test_login_not_active(settings, client, user):  # NOQA: F811
+    user.is_active = False
+    user.save()
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    error = ['This user has been deactivated']
+    assert response.context_data['login_form'].errors['email'] == error
+
+
+@pytest.mark.django_db
+def test_login_not_active_ignore_flag(settings, client, user):  # NOQA: F811
+    settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    user.is_active = False
+    user.save()
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email}
+
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+    magiclink = MagicLink.objects.get(email=user.email)
+    assert magiclink
+
+
+@pytest.mark.django_db
 def test_login_antispam_submit_too_fast(settings, client, user, freezer):  # NOQA: F811,E501
     freezer.move_to('2000-01-01T00:00:00')
 

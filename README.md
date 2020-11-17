@@ -259,6 +259,9 @@ MAGICLINK_ALLOW_SUPERUSER_LOGIN = True
 # Allow staff users to login via a magic link
 MAGICLINK_ALLOW_STAFF_LOGIN = True
 
+# Ignore the Django user model's is_active flag for login requests
+MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
+
 # Override the default magic link length
 # Warning: Overriding this setting has security implications, shorter tokens
 # are much more susceptible to brute force attacks*
@@ -271,7 +274,7 @@ MAGICLINK_VERIFY_INCLUDE_EMAIL = True
 # Ensure the user who clicked magic link used the same browser as the
 # initial login request.
 # Note: This can cause issues on devices where the default browser is
-# different from the browser being used by the user such as on iOS)*
+# different from the browser being used by the user such as on iOS)
 MAGICLINK_REQUIRE_SAME_BROWSER = True
 
 # Ensure the user who clicked magic link has the same IP address as the
