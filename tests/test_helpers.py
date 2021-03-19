@@ -28,7 +28,7 @@ def test_create_magiclink(settings, freezer):
     request.META['REMOTE_ADDR'] = remote_addr
     magic_link = create_magiclink(email, request)
     assert magic_link.email == email
-    assert len(magic_link.token) == mlsettings.AUTH_TIMEOUT
+    assert len(magic_link.token) == mlsettings.TOKEN_LENGTH
     assert magic_link.expiry == expiry
     assert magic_link.redirect_url == reverse(settings.LOGIN_REDIRECT_URL)
     assert len(magic_link.cookie_value) == 36
