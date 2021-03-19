@@ -36,7 +36,7 @@ def create_magiclink(
     expiry = timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT)
     magic_link = MagicLink.objects.create(
         email=email,
-        token=get_random_string(length=settings.AUTH_TIMEOUT),
+        token=get_random_string(length=settings.TOKEN_LENGTH),
         expiry=expiry,
         redirect_url=redirect_url,
         cookie_value=str(uuid4()),
