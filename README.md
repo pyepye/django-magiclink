@@ -3,7 +3,7 @@
 
 Passwordless Authentication for Django with Magic Links.
 
-This package was create a fully tested with a focus on [ease of setup](#steps-to-impliment), [security](#security) and testing (coverage is currently at 100%). The idea is to use sane defaults to quickly create secure single-use token authentication for Django.
+This package was created with a focus on [ease of setup](#steps-to-impliment), [security](#security) and testing (coverage is currently at 100%). The idea is to use sane defaults to quickly create secure single-use token authentication for Django.
 
 ![](example.gif)
 
@@ -192,7 +192,7 @@ Like the login for the sign up flow can be overridden if you require more inform
 
 #### Configuration settings
 
-Below are the different settings that can be overridden. To do so place the setting into you `settings.py`.
+Below are the different settings that can be overridden. To do so place the setting into your `settings.py`.
 
 *Note: Each of the url / redirect settings can either be a URL or url name*
 
@@ -315,7 +315,7 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 * Each one-time link can only be used once
 * Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
 
-*Note: Each of the above settings can be overridden*
+*Note: Each of the above settings can be overridden / changed when configuring django-magiclink*
 
 
 ## Manual usage
@@ -325,7 +325,7 @@ django-magiclink uses a model to help create, send and validate magic links. A `
 ```python
 from magiclink.helpers import create_magiclink
 
-# Returns nearly created from magiclink.models.MagicLink instance
+# Returns newly created from magiclink.models.MagicLink instance
 magiclink = create_magiclink(email, request, redirect_url='')
 
 # Generates the magic link url and sends it in an email
