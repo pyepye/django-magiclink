@@ -3,6 +3,8 @@ import logging
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.http import Http404, HttpResponseRedirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
@@ -64,6 +66,7 @@ class LoginSent(TemplateView):
     template_name = settings.LOGIN_SENT_TEMPLATE_NAME
 
 
+@method_decorator(never_cache, name='dispatch')
 class LoginVerify(TemplateView):
     template_name = settings.LOGIN_FAILED_TEMPLATE_NAME
 
