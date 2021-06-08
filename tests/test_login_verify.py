@@ -109,3 +109,32 @@ def test_login_verify_failed_validation(client, settings, magic_link):  # NOQA: 
     assert context['REQUIRE_SAME_IP'] == mlsettings.REQUIRE_SAME_IP
     assert context['ALLOW_SUPERUSER_LOGIN'] == mlsettings.ALLOW_SUPERUSER_LOGIN
     assert context['ALLOW_STAFF_LOGIN'] == mlsettings.ALLOW_STAFF_LOGIN
+
+
+@pytest.mark.django_db
+def test_login_verify_custom_verify(client, settings, user, magic_link):  # NOQA: F811,E501
+    settings.MAGICLINK_LOGIN_VERIFY_URL = 'custom_login_verify'
+    from magiclink import settings
+    reload(settings)
+
+    url = reverse(settings.LOGIN_VERIFY_URL)
+    request = HttpRequest()
+    request.META['SERVER_NAME'] = '127.0.0.1'
+    request.META['SERVER_PORT'] = 80
+    ml = magic_link(request)
+    ml.ip_address = '127.0.0.1'
+    ml.redirect_url = reverse('needs_login')  # Should be ignored
+    ml.save()
+    url = ml.generate_url(request)
+
+    cookie_name = f'magiclink{ml.pk}'
+    client.cookies = SimpleCookie({cookie_name: ml.cookie_value})
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.url == reverse('no_login')
+    assert client.cookies[cookie_name].value == ''
+    assert client.cookies[cookie_name]['expires'].startswith('Thu, 01 Jan 1970')  # NOQA: E501
+
+    settings.MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'
+    from magiclink import settings
+    reload(settings)

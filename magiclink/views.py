@@ -75,7 +75,7 @@ class Login(TemplateView):
         redirect_url = ''
         allowed_hosts = django_settings.ALLOWED_HOSTS
         if '*' in allowed_hosts:
-            allowed_hosts = self.request.get_host()
+            allowed_hosts = [self.request.get_host()]
         url_is_safe = safe_url(
             url=next_url,
             allowed_hosts=allowed_hosts,
@@ -127,12 +127,20 @@ class LoginVerify(TemplateView):
         login(request, user)
         log.info(f'Login successful for {email}')
 
-        magiclink = MagicLink.objects.get(token=token)
-        response = HttpResponseRedirect(magiclink.redirect_url)
+        response = self.login_complete_action()
         if settings.REQUIRE_SAME_BROWSER:
+            magiclink = MagicLink.objects.get(token=token)
             cookie_name = f'magiclink{magiclink.pk}'
             response.delete_cookie(cookie_name, magiclink.cookie_value)
         return response
+
+    def login_complete_redirect(self) -> HttpResponse:
+        token = self.request.GET.get('token')
+        magiclink = MagicLink.objects.get(token=token)
+        return HttpResponseRedirect(magiclink.redirect_url)
+
+    def login_complete_action(self) -> HttpResponse:
+        return self.login_complete_redirect()
 
 
 @method_decorator(csrf_protect, name='dispatch')
