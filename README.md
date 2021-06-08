@@ -300,6 +300,10 @@ MAGICLINK_ANTISPAM_FORMS = False
 # This means if the form has 3 fields and the user will need to make more than
 # 3 seconds to fill out a form.
 MAGICLINK_ANTISPAM_FIELD_TIME = 1
+
+# Override the login verify address. You must inherit from Magiclink LoginVerify
+# view. See Manual usage for more details
+MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'
 ```
 
 
@@ -320,6 +324,8 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 ## Manual usage
 
+### Creating magiclinks
+
 django-magiclink uses a model to help create, send and validate magic links. A `create_magiclink` helper function can be used easily create a MagicLink using the correct settings:
 
 ```python
@@ -334,4 +340,53 @@ magiclink.send(request)
 # If you want to build the magic link from the model instance but don't want to
 #  send the email you can you can use:
 magic_link_url = magiclink.generate_url(request)
+```
+
+### Custom Login verify flow
+
+It is also possible to override the login verify flow to run your own code once the user has successfully logged in instead of a simple redirect. To do this you will need to create a new view which inherits the `magiclink.views.LoginVerify` view and overrides the `login_complete_action` method.
+
+The below example will redirect the user to a different page depending on superuser / staff status:
+
+
+Your own `views.py`
+
+```python
+from magiclink.views import LoginVerify
+
+
+class CustomLoginVerify(LoginVerify):
+
+    def login_complete_action(self):
+        if self.request.user.is_superuser:
+            url = reverse('superuser_page')
+        elif self.request.user.is_staff:
+            url = reverse('staff_page')
+        else:
+            url = reverse('normal_page')
+        return HttpResponseRedirect(url)
+```
+
+
+Your own `urls.py`
+
+```python
+urlpatterns = [
+    ...
+    path(
+        'custom-login-verify/',
+        CustomLoginVerify.as_view(),
+        name='custom_login_verify'
+    ),
+    ...
+]
+```
+
+
+`settings.py`
+
+```python
+...
+MAGICLINK_LOGIN_VERIFY_URL = 'custom_login_verify'
+...
 ```

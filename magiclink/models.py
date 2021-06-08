@@ -47,7 +47,7 @@ class MagicLink(models.Model):
         self.save()
 
     def generate_url(self, request: HttpRequest) -> str:
-        url_path = reverse("magiclink:login_verify")
+        url_path = reverse(settings.LOGIN_VERIFY_URL)
 
         params = {'token': self.token}
         if settings.VERIFY_INCLUDE_EMAIL:
@@ -56,7 +56,7 @@ class MagicLink(models.Model):
 
         url_path = f'{url_path}?{query}'
         domain = get_current_site(request).domain
-        scheme = request.is_secure() and "https" or "http"
+        scheme = request.is_secure() and 'https' or 'http'
         url = urljoin(f'{scheme}://{domain}', url_path)
         return url
 

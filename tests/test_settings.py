@@ -327,3 +327,10 @@ def test_antispam_form_submit_time_bad_value(settings):
     with pytest.raises(ImproperlyConfigured):
         from magiclink import settings
         reload(settings)
+
+
+def test_login_verify_url(settings):
+    settings.MAGICLINK_LOGIN_VERIFY_URL = 'custom_login_verify'
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.LOGIN_VERIFY_URL == settings.MAGICLINK_LOGIN_VERIFY_URL
