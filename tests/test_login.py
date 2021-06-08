@@ -273,3 +273,38 @@ def test_login_antispam_url_value(settings, client, user):  # NOQA: F811
     assert response.status_code == 200
     form_errors = response.context['login_form'].errors
     assert form_errors['url'] == ['url should be empty']
+
+
+@pytest.mark.django_db
+def test_login_post_redirect_url(mocker, client, user, settings):  # NOQA: F811
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    url = reverse('magiclink:login')
+    redirect_url = reverse('no_login')
+    url = f'{url}?next={redirect_url}'
+    data = {'email': user.email}
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+    usr = User.objects.get(email=user.email)
+    assert usr
+    magiclink = MagicLink.objects.get(email=user.email)
+    assert magiclink.redirect_url == redirect_url
+
+
+@pytest.mark.django_db
+def test_login_post_redirect_url_unsafe(mocker, client, user, settings):  # NOQA: F811,E501
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    url = reverse('magiclink:login')
+    url = f'{url}?next=https://test.com/'
+    data = {'email': user.email}
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+    usr = User.objects.get(email=user.email)
+    assert usr
+    magiclink = MagicLink.objects.get(email=user.email)
+    assert magiclink.redirect_url == reverse('needs_login')

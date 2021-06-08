@@ -7,6 +7,10 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
+try:
+    from django.utils.http import url_has_allowed_host_and_scheme as safe_url
+except ImportError:
+    from django.utils.http import is_safe_url as safe_url
 
 from . import settings
 from .forms import (
@@ -43,9 +47,11 @@ class Login(TemplateView):
         if not settings.REQUIRE_SIGNUP:
             get_or_create_user(email)
 
-        next_url = request.GET.get('next', '')
+        redirect_url = self.login_redirect_url(request.GET.get('next', ''))
         try:
-            magiclink = create_magiclink(email, request, redirect_url=next_url)
+            magiclink = create_magiclink(
+                email, request, redirect_url=redirect_url
+            )
         except MagicLinkError as e:
             form.add_error('email', str(e))
             context['login_form'] = form
@@ -60,6 +66,20 @@ class Login(TemplateView):
             response.set_cookie(cookie_name, magiclink.cookie_value)
             log.info(f'Cookie {cookie_name} set for {email}')
         return response
+
+    def login_redirect_url(self, next_url) -> str:
+        redirect_url = ''
+        allowed_hosts = django_settings.ALLOWED_HOSTS
+        if '*' in allowed_hosts:
+            allowed_hosts = self.request.get_host()
+        url_is_safe = safe_url(
+            url=next_url,
+            allowed_hosts=allowed_hosts,
+            require_https=self.request.is_secure(),
+        )
+        if url_is_safe:
+            redirect_url = next_url
+        return redirect_url
 
 
 class LoginSent(TemplateView):
