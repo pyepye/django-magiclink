@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
@@ -156,7 +156,10 @@ class Signup(TemplateView):
             'SignupFormFull',
         ]
         forms = __import__('magiclink.forms', fromlist=from_list)
-        SignupForm = getattr(forms, form_name)
+        try:
+            SignupForm = getattr(forms, form_name)
+        except AttributeError:
+            return HttpResponseRedirect(self.request.path_info)
 
         form = SignupForm(request.POST)
         if not form.is_valid():

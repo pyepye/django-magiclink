@@ -239,6 +239,19 @@ def test_signup_form_full(mocker, client):
 
 
 @pytest.mark.django_db
+def test_signup_form_invalid_name(mocker, client):
+    url = reverse('magiclink:signup')
+    email = 'test@example.com'
+    data = {
+        'form_name': 'FakeName',
+        'email': email,
+    }
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:signup')
+
+
+@pytest.mark.django_db
 def test_signup_antispam(settings, client, freezer):  # NOQA: F811
     freezer.move_to('2000-01-01T00:00:00')
 
