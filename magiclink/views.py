@@ -7,10 +7,13 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
+
 try:
     from django.utils.http import url_has_allowed_host_and_scheme as safe_url
 except ImportError:
     from django.utils.http import is_safe_url as safe_url
+
+from django.views.decorators.csrf import csrf_protect
 
 from . import settings
 from .forms import (
@@ -25,6 +28,7 @@ User = get_user_model()
 log = logging.getLogger(__name__)
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class Login(TemplateView):
     template_name = settings.LOGIN_TEMPLATE_NAME
 
@@ -131,6 +135,7 @@ class LoginVerify(TemplateView):
         return response
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class Signup(TemplateView):
     template_name = settings.SIGNUP_TEMPLATE_NAME
 

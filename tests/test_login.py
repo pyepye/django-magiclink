@@ -60,7 +60,7 @@ def test_login_post(mocker, client, user, settings):  # NOQA: F811
 
     url = reverse('magiclink:login')
     data = {'email': user.email}
-    response = client.post(url, data)
+    response = client.post(url, data, enforce_csrf_checks=True)
     assert response.status_code == 302
     assert response.url == reverse('magiclink:login_sent')
     usr = User.objects.get(email=user.email)
