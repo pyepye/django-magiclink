@@ -1,4 +1,4 @@
-Click to confirm and sign in. This link will expire in 5 minutes
+Click to confirm and sign in. This link will expire in {{ expiry|timeuntil }}
 
 {{ magiclink }}
 
