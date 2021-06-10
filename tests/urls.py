@@ -16,9 +16,22 @@ def no_login(request):
 
 class CustomLoginVerify(LoginVerify):
 
-    def login_complete_action(self) -> HttpResponse:
+    def get(self, request, *args, **kwargs):
+        super().get(request, *args, **kwargs)
+
+        from magiclink import settings
+        from magiclink.models import MagicLink
+
         url = reverse('no_login')
-        return HttpResponseRedirect(url)
+        response = HttpResponseRedirect(url)
+
+        if settings.REQUIRE_SAME_BROWSER:
+            token = self.request.GET.get('token')
+            magiclink = MagicLink.objects.get(token=token)
+            cookie_name = f'magiclink{magiclink.pk}'
+            response.delete_cookie(cookie_name, magiclink.cookie_value)
+
+        return response
 
 
 urlpatterns = [

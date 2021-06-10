@@ -351,20 +351,32 @@ The below example will redirect the user to a different page depending on superu
 
 Your own `views.py`
 
+_**Note:** The code to delete the cookie must be included at the bottom of your get to ensure the `REQUIRE_SAME_BROWSER` cookie is removed.
+
 ```python
+from magiclink import settings
+from magiclink.models import MagicLink
 from magiclink.views import LoginVerify
 
 
 class CustomLoginVerify(LoginVerify):
 
-    def login_complete_action(self):
+    def get(self, request, *args, **kwargs):
         if self.request.user.is_superuser:
             url = reverse('superuser_page')
-        elif self.request.user.is_superuser:
+        elif self.request.user.is_staff:
             url = reverse('staff_page')
         else:
             url = reverse('normal_page')
-        return HttpResponseRedirect(url)
+
+        reponse = HttpResponseRedirect(url)
+        if settings.REQUIRE_SAME_BROWSER:
+            token = self.request.GET.get('token')
+            magiclink = MagicLink.objects.get(token=token)
+            cookie_name = f'magiclink{magiclink.pk}'
+            response.delete_cookie(cookie_name, magiclink.cookie_value)
+
+        return response
 ```
 
 
