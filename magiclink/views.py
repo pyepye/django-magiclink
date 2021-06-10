@@ -99,30 +99,30 @@ class LoginVerify(TemplateView):
         email = request.GET.get('email')
         user = authenticate(request, token=token, email=email)
         if not user:
-            if settings.LOGIN_FAILED_TEMPLATE_NAME:
-                context = self.get_context_data(**kwargs)
-                # The below settings are left in for backward compatibility
-                context['ONE_TOKEN_PER_USER'] = settings.ONE_TOKEN_PER_USER
-                context['REQUIRE_SAME_BROWSER'] = settings.REQUIRE_SAME_BROWSER
-                context['REQUIRE_SAME_IP'] = settings.REQUIRE_SAME_IP
-                context['ALLOW_SUPERUSER_LOGIN'] = settings.ALLOW_SUPERUSER_LOGIN  # NOQA: E501
-                context['ALLOW_STAFF_LOGIN'] = settings.ALLOW_STAFF_LOGIN
-
-                try:
-                    magiclink = MagicLink.objects.get(token=token)
-                except MagicLink.DoesNotExist:
-                    error = 'A magic link with that token could not be found'
-                    context['login_error'] = error
-                    return self.render_to_response(context)
-
-                try:
-                    magiclink.validate(request, email)
-                except MagicLinkError as error:
-                    context['login_error'] = str(error)
-
-                return self.render_to_response(context)
-            else:
+            if not settings.LOGIN_FAILED_TEMPLATE_NAME:
                 raise Http404()
+
+            context = self.get_context_data(**kwargs)
+            # The below settings are left in for backward compatibility
+            context['ONE_TOKEN_PER_USER'] = settings.ONE_TOKEN_PER_USER
+            context['REQUIRE_SAME_BROWSER'] = settings.REQUIRE_SAME_BROWSER
+            context['REQUIRE_SAME_IP'] = settings.REQUIRE_SAME_IP
+            context['ALLOW_SUPERUSER_LOGIN'] = settings.ALLOW_SUPERUSER_LOGIN  # NOQA: E501
+            context['ALLOW_STAFF_LOGIN'] = settings.ALLOW_STAFF_LOGIN
+
+            try:
+                magiclink = MagicLink.objects.get(token=token)
+            except MagicLink.DoesNotExist:
+                error = 'A magic link with that token could not be found'
+                context['login_error'] = error
+                return self.render_to_response(context)
+
+            try:
+                magiclink.validate(request, email)
+            except MagicLinkError as error:
+                context['login_error'] = str(error)
+
+            return self.render_to_response(context)
 
         login(request, user)
         log.info(f'Login successful for {email}')
