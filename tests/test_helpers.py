@@ -43,7 +43,7 @@ def test_create_magiclink_require_same_ip_off_no_ip(settings):
     request = HttpRequest()
     request.META['REMOTE_ADDR'] = '127.0.0.1'
     magic_link = create_magiclink('test@example.com', request)
-    assert magic_link.ip_address == None
+    assert magic_link.ip_address is None
 
 
 @pytest.mark.django_db

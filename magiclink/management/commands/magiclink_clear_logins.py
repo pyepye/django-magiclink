@@ -1,10 +1,11 @@
 from datetime import timedelta
-from django.utils import timezone
 
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
-from ...models import MagicLink
 from ... import settings
+from ...models import MagicLink
+
 
 class Command(BaseCommand):
     help = 'Delete disabled Magic Links'
@@ -16,8 +17,8 @@ class Command(BaseCommand):
         for magic_links in MagicLink.objects.filter(expiry__lte=week_before):
             magic_links.disable()
 
-        magic_links = MagicLink.objects.filter(disabled=True)
-        self.stdout.write(f'Deleting {magic_links.count()} magic links')
+        disabled_links = MagicLink.objects.filter(disabled=True)
+        self.stdout.write(f'Deleting {disabled_links.count()} magic links')
 
-        for magic_links in MagicLink.objects.filter(disabled=True):
-            magic_links.delete()
+        for magic_link in MagicLink.objects.filter(disabled=True):
+            magic_link.delete()

@@ -1,11 +1,9 @@
 from datetime import timedelta
-from django.utils import timezone
 
 import pytest
 from django.core.management import call_command
 from django.utils import timezone
 
-from magiclink import settings
 from magiclink.models import MagicLink
 
 
