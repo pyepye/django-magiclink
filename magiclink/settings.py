@@ -77,8 +77,7 @@ if not isinstance(ONE_TOKEN_PER_USER, bool):
     raise ImproperlyConfigured('"MAGICLINK_ONE_TOKEN_PER_USER" must be a boolean')
 
 try:
-    # In seconds
-    LOGIN_REQUEST_TIME_LIMIT = int(getattr(settings, 'MAGICLINK_LOGIN_REQUEST_TIME_LIMIT', 30))
+    LOGIN_REQUEST_TIME_LIMIT = int(getattr(settings, 'MAGICLINK_LOGIN_REQUEST_TIME_LIMIT', 30))  # In seconds
 except ValueError:
     raise ImproperlyConfigured('"MAGICLINK_LOGIN_REQUEST_TIME_LIMIT" must be an integer')
 
@@ -108,3 +107,5 @@ if ANTISPAM_FIELD_TIME is not None:
         ANTISPAM_FIELD_TIME = float(ANTISPAM_FIELD_TIME)
     except ValueError:
         raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float')
+
+LOGIN_VERIFY_URL = getattr(settings, 'MAGICLINK_LOGIN_VERIFY_URL', 'magiclink:login_verify')
