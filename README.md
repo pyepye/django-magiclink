@@ -306,6 +306,16 @@ MAGICLINK_ANTISPAM_FIELD_TIME = 1
 MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'
 ```
 
+## Magic Link cleanup
+
+Each Magic Link is a seperate row in the database. To help give the user a better warning as to why their login was not successful, magic links are not cleared even once they have expired or have been disabled.
+
+To clear old disabled magic links as well as magic links which expired over 1 week ago, you can use the `magiclink_clear_logins` management command
+
+```
+python manage.py magiclink_clear_logins
+```
+
 
 ## Security
 
