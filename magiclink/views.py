@@ -99,6 +99,10 @@ class LoginVerify(TemplateView):
         email = request.GET.get('email')
         user = authenticate(request, token=token, email=email)
         if not user:
+            if settings.LOGIN_FAILED_REDIRECT:
+                redirect_url = get_url_path(settings.LOGIN_FAILED_REDIRECT)
+                return HttpResponseRedirect(redirect_url)
+
             if not settings.LOGIN_FAILED_TEMPLATE_NAME:
                 raise Http404()
 

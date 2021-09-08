@@ -32,6 +32,13 @@ def test_login_failed_template_name(settings):
     assert mlsettings.LOGIN_FAILED_TEMPLATE_NAME == settings.MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME  # NOQA: E501
 
 
+def test_login_failed_redirect(settings):
+    settings.MAGICLINK_LOGIN_FAILED_REDIRECT = '/loginfailed'
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.LOGIN_FAILED_REDIRECT == settings.MAGICLINK_LOGIN_FAILED_REDIRECT  # NOQA: E501
+
+
 def test_signup_template_name(settings):
     settings.MAGICLINK_SIGNUP_TEMPLATE_NAME = 'signup.html'
     from magiclink import settings as mlsettings

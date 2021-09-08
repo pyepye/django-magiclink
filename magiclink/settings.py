@@ -9,6 +9,9 @@ LOGIN_SENT_REDIRECT = getattr(settings, 'MAGICLINK_LOGIN_SENT_REDIRECT', 'magicl
 LOGIN_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_TEMPLATE_NAME', 'magiclink/login.html')
 LOGIN_SENT_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_SENT_TEMPLATE_NAME', 'magiclink/login_sent.html')
 LOGIN_FAILED_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME', 'magiclink/login_failed.html')
+# If LOGIN_FAILED_REDIRECT has a value the user will be redirected to this
+# URL instead of being shown the LOGIN_FAILED_TEMPLATE
+LOGIN_FAILED_REDIRECT = getattr(settings, 'MAGICLINK_LOGIN_FAILED_REDIRECT', '')
 
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.
