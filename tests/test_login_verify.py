@@ -13,11 +13,11 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
+def test_login_verify(client, settings, magic_link):  # NOQA: F811
     url = reverse('magiclink:login_verify')
     request = HttpRequest()
     ml = magic_link(request)
-    ml.ip_address = '127.0.0.1'  # This is a little hacky
+    ml.ip_address = '127.0.0.0'  # This is a little hacky
     ml.save()
 
     params = {'token': ml.token}
@@ -39,13 +39,13 @@ def test_login_verify(client, settings, user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_verify_with_redirect(client, settings, user, magic_link):  # NOQA: F811,E501
+def test_login_verify_with_redirect(client, magic_link):  # NOQA: F811
     url = reverse('magiclink:login_verify')
     request = HttpRequest()
     request.META['SERVER_NAME'] = '127.0.0.1'
     request.META['SERVER_PORT'] = 80
     ml = magic_link(request)
-    ml.ip_address = '127.0.0.1'  # This is a little hacky
+    ml.ip_address = '127.0.0.0'  # This is a little hacky
     redirect_url = reverse('no_login')
     ml.redirect_url = redirect_url
     ml.save()
@@ -112,7 +112,7 @@ def test_login_verify_failed_validation(client, settings, magic_link):  # NOQA: 
 
 
 @pytest.mark.django_db
-def test_login_verify_custom_verify(client, settings, user, magic_link):  # NOQA: F811,E501
+def test_login_verify_custom_verify(client, settings, magic_link):  # NOQA: F811,E501
     settings.MAGICLINK_LOGIN_VERIFY_URL = 'custom_login_verify'
     from magiclink import settings
     reload(settings)
@@ -122,7 +122,7 @@ def test_login_verify_custom_verify(client, settings, user, magic_link):  # NOQA
     request.META['SERVER_NAME'] = '127.0.0.1'
     request.META['SERVER_PORT'] = 80
     ml = magic_link(request)
-    ml.ip_address = '127.0.0.1'
+    ml.ip_address = '127.0.0.0'
     ml.redirect_url = reverse('needs_login')  # Should be ignored
     ml.save()
     url = ml.generate_url(request)

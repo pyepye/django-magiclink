@@ -281,6 +281,11 @@ MAGICLINK_REQUIRE_SAME_BROWSER = True
 # initial login request.
 MAGICLINK_REQUIRE_SAME_IP = True
 
+# Remove the last 8-bit octet of a clients IP address.
+# Note: This has no effect if MAGICLINK_REQUIRE_SAME_IP as no IP address
+# is stored
+MAGICLINK_ANONYMIZE_IP = True
+
 # The number of times a login token can be used before being disabled
 MAGICLINK_TOKEN_USES = 1
 

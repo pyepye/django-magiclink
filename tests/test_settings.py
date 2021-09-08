@@ -248,6 +248,21 @@ def test_require_same_ip_bad_value(settings):
         reload(settings)
 
 
+def test_anonymize_ip(settings):
+    settings.MAGICLINK_ANONYMIZE_IP = False
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.ANONYMIZE_IP == settings.MAGICLINK_ANONYMIZE_IP
+
+
+def test_anonymize_ip_bad_value(settings):
+    settings.MAGICLINK_ANONYMIZE_IP = 'Test'
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+        reload(settings)
+
+
 def test_one_token_per_user(settings):
     settings.MAGICLINK_ONE_TOKEN_PER_USER = True
     from magiclink import settings as mlsettings
