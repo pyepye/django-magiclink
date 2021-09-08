@@ -10,7 +10,7 @@ from django.views.generic.base import RedirectView
 
 try:
     from django.utils.http import url_has_allowed_host_and_scheme as safe_url
-except ImportError:
+except ImportError:  # pragma: no cover
     from django.utils.http import is_safe_url as safe_url
 
 from django.views.decorators.csrf import csrf_protect

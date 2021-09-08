@@ -33,6 +33,10 @@ def create_magiclink(
     if not redirect_url:
         redirect_url = get_url_path(djsettings.LOGIN_REDIRECT_URL)
 
+    ip_address = None
+    if settings.REQUIRE_SAME_IP:
+        ip_address = get_client_ip(request)
+
     expiry = timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT)
     magic_link = MagicLink.objects.create(
         email=email,
@@ -40,7 +44,7 @@ def create_magiclink(
         expiry=expiry,
         redirect_url=redirect_url,
         cookie_value=str(uuid4()),
-        ip_address=get_client_ip(request),
+        ip_address=ip_address,
     )
     return magic_link
 

@@ -36,7 +36,20 @@ def test_create_magiclink(settings, freezer):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_redirect_url(settings):
+def test_create_magiclink_require_same_ip_off_no_ip(settings):
+    settings.MAGICLINK_REQUIRE_SAME_IP = False
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    request = HttpRequest()
+    request.META['REMOTE_ADDR'] = '127.0.0.1'
+    magic_link = create_magiclink('test@example.com', request)
+    assert magic_link.ip_address == None
+
+
+
+@pytest.mark.django_db
+def test_create_magiclink_redirect_url():
     email = 'test@example.com'
     request = HttpRequest()
     redirect_url = '/test/'
@@ -46,7 +59,7 @@ def test_create_magiclink_redirect_url(settings):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_email_ignore_case(settings):
+def test_create_magiclink_email_ignore_case():
     email = 'TEST@example.com'
     request = HttpRequest()
     magic_link = create_magiclink(email, request)
@@ -66,7 +79,7 @@ def test_create_magiclink_email_ignore_case_off(settings):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_one_token_per_user(settings, freezer):
+def test_create_magiclink_one_token_per_user(freezer):
     email = 'test@example.com'
     request = HttpRequest()
     freezer.move_to('2000-01-01T00:00:00')
@@ -82,7 +95,7 @@ def test_create_magiclink_one_token_per_user(settings, freezer):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_login_request_time_limit(settings):
+def test_create_magiclink_login_request_time_limit():
     email = 'test@example.com'
     request = HttpRequest()
     create_magiclink(email, request)
@@ -109,7 +122,7 @@ def test_get_or_create_user_exists_ignore_case(settings, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_email_as_username(settings):
+def test_get_or_create_user_email_as_username():
     email = 'test@example.com'
     usr = get_or_create_user(email=email)
     assert usr.email == email
@@ -130,21 +143,21 @@ def test_get_or_create_user_random_username(settings):
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_first_name(settings):
+def test_get_or_create_user_first_name():
     first_name = 'fname'
     usr = get_or_create_user(email='test@example.com', first_name=first_name)
     assert usr.first_name == first_name
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_last_name(settings):
+def test_get_or_create_user_last_name():
     last_name = 'lname'
     usr = get_or_create_user(email='test@example.com', last_name=last_name)
     assert usr.last_name == last_name
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_no_username(mocker, settings):
+def test_get_or_create_user_no_username(mocker):
     gum = mocker.patch('magiclink.helpers.get_user_model')
     gum.return_value = CustomUserEmailOnly
 
@@ -155,7 +168,7 @@ def test_get_or_create_user_no_username(mocker, settings):
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_full_name(mocker, settings):
+def test_get_or_create_user_full_name(mocker):
     gum = mocker.patch('magiclink.helpers.get_user_model')
     gum.return_value = CustomUserFullName
 
@@ -169,7 +182,7 @@ def test_get_or_create_user_full_name(mocker, settings):
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_name(mocker, settings):
+def test_get_or_create_user_name(mocker):
     gum = mocker.patch('magiclink.helpers.get_user_model')
     gum.return_value = CustomUserName
 
