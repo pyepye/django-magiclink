@@ -118,7 +118,7 @@ After the user has requested a magic link, they will be redirected to a success 
 
 #### Login failed page
 
-If the user tries to use an invalid magic token they will be shown a custom error page. To override the HTML for this page you can set the `MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME` setting. If you would like to return a 404 page you can set this setting to a empty string (or any falsy value).
+If the user tries to use an invalid magic token they will be shown a custom error page. To override the HTML for this page you can set the `MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME` setting. If you would like to return a 404 page you can set this setting to a empty string (or any falsy value). If you would like to redirect to another page (say a custom front-end) you can use the `MAGICLINK_LOGIN_FAILED_REDIRECT` setting.
 
 The reasons for the login failing is passed through as the context variable `{{ login_error }}`
 
