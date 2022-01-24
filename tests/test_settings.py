@@ -356,3 +356,18 @@ def test_login_verify_url(settings):
     from magiclink import settings as mlsettings
     reload(mlsettings)
     assert mlsettings.LOGIN_VERIFY_URL == settings.MAGICLINK_LOGIN_VERIFY_URL
+
+
+def test_ignore_unsubscribe_if_user(settings):
+    settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.IGNORE_UNSUBSCRIBE_IF_USER == settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER  # NOQA: E501
+
+
+def test_ignore_unsubscribe_if_user_bad_value(settings):
+    settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = 'Test'
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+        reload(settings)

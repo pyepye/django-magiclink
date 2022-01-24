@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 from . import settings
+from .models import MagicLinkUnsubscribe
 
 User = get_user_model()
 
@@ -88,6 +89,14 @@ class LoginForm(AntiSpam):
             if not settings.IGNORE_IS_ACTIVE_FLAG and not is_active:
                 raise forms.ValidationError('This user has been deactivated')
 
+        if not settings.IGNORE_UNSUBSCRIBE_IF_USER:
+            try:
+                MagicLinkUnsubscribe.objects.get(email=email)
+                error = 'Email address is on the unsubscribe list'
+                raise forms.ValidationError(error)
+            except MagicLinkUnsubscribe.DoesNotExist:
+                pass
+
         return email
 
 
@@ -104,6 +113,13 @@ class SignupFormEmailOnly(AntiSpam):
 
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
+
+        try:
+            MagicLinkUnsubscribe.objects.get(email=email)
+            error = 'Email address is on the unsubscribe list'
+            raise forms.ValidationError(error)
+        except MagicLinkUnsubscribe.DoesNotExist:
+            pass
 
         try:
             user = User.objects.get(email=email)

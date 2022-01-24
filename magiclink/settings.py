@@ -116,3 +116,7 @@ if ANTISPAM_FIELD_TIME is not None:
         raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float')
 
 LOGIN_VERIFY_URL = getattr(settings, 'MAGICLINK_LOGIN_VERIFY_URL', 'magiclink:login_verify')
+
+IGNORE_UNSUBSCRIBE_IF_USER = getattr(settings, 'MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER', False)
+if not isinstance(IGNORE_UNSUBSCRIBE_IF_USER, bool):
+    raise ImproperlyConfigured('"MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER" must be a boolean')

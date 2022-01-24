@@ -5,7 +5,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from magiclink.models import MagicLink
+from magiclink.models import MagicLink, MagicLinkUnsubscribe
 
 User = get_user_model()
 
@@ -351,3 +351,21 @@ def test_signup_antispam_url_value(settings, client):  # NOQA: F811
     assert response.status_code == 200
     form_errors = response.context[signup_form].errors
     assert form_errors['url'] == ['url should be empty']
+
+
+@pytest.mark.django_db
+def test_signup_email_in_unsubscribe(client):
+    email = 'test@example.com'
+    MagicLinkUnsubscribe.objects.create(email=email)
+
+    url = reverse('magiclink:signup')
+    signup_form = 'SignupFormEmailOnly'
+    data = {
+        'form_name': signup_form,
+        'email': email,
+        'url': 'test',
+    }
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context[signup_form].errors
+    assert form_errors['email'] == ['Email address is on the unsubscribe list']

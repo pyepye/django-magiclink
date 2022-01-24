@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.urls import reverse
 
-from magiclink.models import MagicLink
+from magiclink.models import MagicLink, MagicLinkUnsubscribe
 
 from .fixtures import magic_link, user  # NOQA: F401
 
@@ -308,3 +308,34 @@ def test_login_post_redirect_url_unsafe(mocker, client, user, settings):  # NOQA
     assert usr
     magiclink = MagicLink.objects.get(email=user.email)
     assert magiclink.redirect_url == reverse('needs_login')
+
+
+@pytest.mark.django_db
+def test_login_error_email_in_unsubscribe(client, user):  # NOQA: F811,E501
+    MagicLinkUnsubscribe.objects.create(email=user.email)
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context['login_form'].errors
+    assert form_errors['email'] == ['Email address is on the unsubscribe list']
+
+
+@pytest.mark.django_db
+def test_login_pass_email_in_unsubscribe(settings, client, user):  # NOQA: F811,E501
+    settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    MagicLinkUnsubscribe.objects.create(email=user.email)
+
+    url = reverse('magiclink:login')
+    data = {'email': user.email}
+
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('magiclink:login_sent')
+    magiclink = MagicLink.objects.get(email=user.email)
+    assert magiclink

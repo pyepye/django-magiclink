@@ -14,7 +14,6 @@ This package was created with a focus on [ease of setup](#steps-to-impliment), [
 pip install django-magiclink
 ```
 
-
 ## Setup
 
 The setup of the app is simple but has a few steps and a few templates that need overriding.
@@ -89,6 +88,12 @@ MAGICLINK_SIGNUP_TEMPLATE_NAME = 'magiclink/signup.html'
 
 See [additional configuration settings](#configuration-settings) for all of the different available settings.
 
+
+Once the app has been added to `INSTALLED_APPS` you must run the migrations for `magiclink`
+
+```bash
+python manage.py migrate magiclink
+```
 
 #### Login page
 
@@ -312,6 +317,10 @@ MAGICLINK_ANTISPAM_FIELD_TIME = 1
 # Override the login verify address. You must inherit from Magiclink LoginVerify
 # view. See Manual usage for more details
 MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'
+
+# If an email address has been added to the unsubscribe table but is also
+# assocaited with a Django user, should a login email be sent
+MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = False
 ```
 
 ## Magic Link cleanup
@@ -338,6 +347,21 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 * Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
 
 *Note: Each of the above settings can be overridden / changed when configuring django-magiclink*
+
+
+## Unsubscribe / stopping email spam
+
+Sadly bots like to go around the internet and fill out any forms they can with random email addresses that don't belong to them. Because of this, if an email is added to the `MagicLinkUnsubscribe` model they will no longer receive a login or welcome email, even if the email has a user associated with it. This behaviour can be changed for existing users using the `MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER` setting.
+
+Adding a user to the unsubscribe model is done using the normal Django ORM create method
+
+```python
+from magiclink.models import MagicLinkUnsubscribe
+
+MagicLinkUnsubscribe.objects.create(email='test@example.com')
+```
+
+If you are using the Django Magiclink login or signup functionality, the unsubscribe check happens during form validation. This means a new user will never be created if their email address has already been added to the `MagicLinkUnsubscribe` list.
 
 
 ## Manual usage
@@ -407,4 +431,13 @@ urlpatterns = [
 ...
 MAGICLINK_LOGIN_VERIFY_URL = 'custom_login_verify'
 ...
+```
+
+
+## Upgrading
+
+A new migration was added to version `1.2.0`. If you upgrade to `1.2.0` or above from a previous version please ensure you migrate
+
+```bash
+python manage.py migrate magiclink
 ```

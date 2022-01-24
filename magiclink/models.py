@@ -62,6 +62,15 @@ class MagicLink(models.Model):
 
     def send(self, request: HttpRequest) -> None:
         user = User.objects.get(email=self.email)
+
+        if not settings.IGNORE_UNSUBSCRIBE_IF_USER:
+            try:
+                MagicLinkUnsubscribe.objects.get(email=self.email)
+                raise MagicLinkError(
+                    'Email address is on the unsubscribe list')
+            except MagicLinkUnsubscribe.DoesNotExist:
+                pass
+
         context = {
             'subject': settings.EMAIL_SUBJECT,
             'user': user,
@@ -132,3 +141,7 @@ class MagicLink(models.Model):
                 'You can not login to a staff account using a magic link')
 
         return user
+
+
+class MagicLinkUnsubscribe(models.Model):
+    email = models.EmailField()

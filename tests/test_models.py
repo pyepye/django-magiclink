@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from magiclink import settings
-from magiclink.models import MagicLink, MagicLinkError
+from magiclink.models import MagicLink, MagicLinkError, MagicLinkUnsubscribe
 
 from .fixtures import magic_link, user  # NOQA: F401
 
@@ -89,6 +89,43 @@ def test_send_email(mocker, settings, magic_link):  # NOQA: F811
         mocker.call(mlsettings.EMAIL_TEMPLATE_NAME_TEXT, context),
         mocker.call(mlsettings.EMAIL_TEMPLATE_NAME_HTML, context),
     ])
+    send_mail.assert_called_once_with(
+        subject=mlsettings.EMAIL_SUBJECT,
+        message=mocker.ANY,
+        recipient_list=[ml.email],
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        html_message=mocker.ANY,
+    )
+
+
+@pytest.mark.django_db
+def test_send_email_error_email_in_unsubscribe(magic_link):  # NOQA: F811
+    request = HttpRequest()
+    ml = magic_link(request)
+    MagicLinkUnsubscribe.objects.create(email=ml.email)
+
+    with pytest.raises(MagicLinkError) as error:
+        ml.send(request)
+
+    error.match('Email address is on the unsubscribe list')
+
+
+@pytest.mark.django_db
+def test_send_email_pass_email_in_unsubscribe(mocker, settings, magic_link):  # NOQA: E501, F811
+    settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+
+    send_mail = mocker.patch('magiclink.models.send_mail')
+
+    request = HttpRequest()
+    request.META['SERVER_NAME'] = '127.0.0.1'
+    request.META['SERVER_PORT'] = 80
+    ml = magic_link(request)
+    MagicLinkUnsubscribe.objects.create(email=ml.email)
+
+    ml.send(request)
+
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
         message=mocker.ANY,
