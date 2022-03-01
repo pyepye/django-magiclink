@@ -371,3 +371,16 @@ def test_ignore_unsubscribe_if_user_bad_value(settings):
     with pytest.raises(ImproperlyConfigured):
         from magiclink import settings
         reload(settings)
+
+
+def test_from_settings(settings):
+    settings.MAGICLINK_FROM_EMAIL = 'test@email.com'
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.FROM_EMAIL == settings.MAGICLINK_FROM_EMAIL
+
+
+def test_default_email_if_no_magiclink_email(settings):
+    from magiclink import settings as mlsettings
+    reload(mlsettings)
+    assert mlsettings.FROM_EMAIL == 'default@email.com'

@@ -61,3 +61,5 @@ LOGIN_REDIRECT_URL = 'needs_login'
 LOGOUT_REDIRECT_URL = 'no_login'
 MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
 MAGICLINK_SIGNUP_LOGIN_REDIRECT = 'no_login'
+
+DEFAULT_FROM_EMAIL = 'default@email.com'

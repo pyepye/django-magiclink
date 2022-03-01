@@ -89,8 +89,7 @@ class MagicLink(models.Model):
             subject=settings.EMAIL_SUBJECT,
             message=plain,
             recipient_list=[user.email],
-            from_email=getattr(djsettings, 'MAGICLINK_FROM_EMAIL',
-                               djsettings.DEFAULT_FROM_EMAIL),
+            from_email=settings.FROM_EMAIL,
             html_message=html,
         )
 
