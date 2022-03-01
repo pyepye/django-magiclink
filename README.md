@@ -3,7 +3,7 @@
 
 Passwordless Authentication for Django with Magic Links.
 
-This package was created with a focus on [ease of setup](#steps-to-impliment), [security](#security) and testing (coverage is currently at 100%). The idea is to use sane defaults to quickly create secure single-use token authentication for Django.
+This package was created with a focus on [ease of setup](#configuration), [security](#security) and testing (coverage is currently at 100%). The idea is to use sane defaults to quickly create secure single-use token authentication for Django.
 
 ![](example.gif)
 
@@ -185,7 +185,7 @@ When overriding this template please ensure the following content is included:
 <p>Already have an account? <a href='{% url 'magiclink:login' %}'>Log in here</a></p>
 ```
 
-There are several forms made avalible in the context on this page depending on what information you want to collect:
+There are several forms made available in the context on this page depending on what information you want to collect:
 * **SignupFormEmailOnly** - Only includes an `email` field
 * **SignupForm** - Includes `name` and `email` fields
 * **SignupFormWithUsername** - Includes `username` and `email` fields
@@ -319,8 +319,12 @@ MAGICLINK_ANTISPAM_FIELD_TIME = 1
 MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'
 
 # If an email address has been added to the unsubscribe table but is also
-# assocaited with a Django user, should a login email be sent
+# associated with a Django user, should a login email be sent
 MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = False
+
+# By default, the sign in e-mail is sent from the DEFAULT_FROM_EMAIL. set
+# this if you would like to override the from e-mail.
+MAGICLINK_FROM_EMAIL = 'custom@email.com'
 ```
 
 ## Magic Link cleanup
