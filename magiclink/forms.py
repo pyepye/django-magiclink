@@ -34,15 +34,15 @@ class AntiSpam(forms.Form):
     )
 
     def clean_url(self) -> str:
-        url = self.cleaned_data.get('url')
+        url: str = self.cleaned_data.get('url', '')
         if url:
             raise ValidationError('url should be empty')
         return url
 
     def clean_load_time(self) -> float:
-        load_time = self.cleaned_data.get('load_time')
+        cleaned_load_time: str = self.cleaned_data.get('load_time', '')
         try:
-            load_time = float(load_time)
+            load_time = float(cleaned_load_time)
         except ValueError:
             raise ValidationError('Invalid value')
 
