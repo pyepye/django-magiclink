@@ -120,3 +120,5 @@ LOGIN_VERIFY_URL = getattr(settings, 'MAGICLINK_LOGIN_VERIFY_URL', 'magiclink:lo
 IGNORE_UNSUBSCRIBE_IF_USER = getattr(settings, 'MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER', False)
 if not isinstance(IGNORE_UNSUBSCRIBE_IF_USER, bool):
     raise ImproperlyConfigured('"MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER" must be a boolean')
+
+FROM_EMAIL = getattr(settings, 'MAGICLINK_FROM_SETTINGS', settings.DEFAULT_FROM_EMAIL)
