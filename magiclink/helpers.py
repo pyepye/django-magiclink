@@ -10,7 +10,7 @@ from django.utils.crypto import get_random_string
 
 from . import settings
 from .models import MagicLink, MagicLinkError
-from .utils import get_client_ip, get_url_path
+from .utils import get_client_ip, get_url_path, anonymize_ip_address
 
 
 def create_magiclink(
@@ -37,7 +37,7 @@ def create_magiclink(
     if settings.REQUIRE_SAME_IP:
         client_ip = get_client_ip(request)
         if client_ip and settings.ANONYMIZE_IP:
-            client_ip = client_ip[:client_ip.rfind('.')+1] + '0'
+            client_ip = anonymize_ip_address(client_ip)
 
     expiry = timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT)
     magic_link = MagicLink.objects.create(

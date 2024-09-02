@@ -33,6 +33,22 @@ def test_create_magiclink(settings, freezer):
     assert len(magic_link.cookie_value) == 36
     assert magic_link.ip_address == '127.0.0.0'  # Anonymize IP by default
 
+@pytest.mark.django_db
+def test_create_magiclink_ipv6_remote_addr(settings, freezer):
+    freezer.move_to('2000-01-01T00:00:00')
+
+    email = 'test@example.com'
+    expiry = timezone.now() + timedelta(seconds=mlsettings.AUTH_TIMEOUT)
+    request = HttpRequest()
+    request.META['REMOTE_ADDR'] = '2001:0db8:85a3:0000:0000:8a2e:0370:7334'
+    magic_link = create_magiclink(email, request)
+    assert magic_link.email == email
+    assert len(magic_link.token) == mlsettings.TOKEN_LENGTH
+    assert magic_link.expiry == expiry
+    assert magic_link.redirect_url == reverse(settings.LOGIN_REDIRECT_URL)
+    assert len(magic_link.cookie_value) == 36
+    assert magic_link.ip_address == '2001:db8:85a3::'  # Anonymize IP by default
+
 
 @pytest.mark.django_db
 def test_create_magiclink_require_same_ip_off_no_ip(settings):

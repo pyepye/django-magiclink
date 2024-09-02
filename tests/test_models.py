@@ -202,6 +202,20 @@ def test_validate_wrong_ip(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
+def test_validate_ipv6_anonymization(user, magic_link):  # NOQA: F811
+    request = HttpRequest()
+    request.META['REMOTE_ADDR'] = '2001:0db8:85a3:0000:0000:8a2e:0370:7334'
+
+    ml = magic_link(request)
+    request.COOKIES[f'magiclink{ml.pk}'] = ml.cookie_value
+    ml.ip_address = '2001:db8:85a3::'
+    ml.save()
+
+    ml_user = ml.validate(request=request, email=user.email.upper())
+    assert ml_user == user
+
+
+@pytest.mark.django_db
 def test_validate_different_browser(user, magic_link):  # NOQA: F811
     request = HttpRequest()
     ml = magic_link(request)

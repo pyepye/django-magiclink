@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from . import settings
-from .utils import get_client_ip
+from .utils import get_client_ip, anonymize_ip_address
 
 User = get_user_model()
 
@@ -111,7 +111,7 @@ class MagicLink(models.Model):
         if settings.REQUIRE_SAME_IP:
             client_ip = get_client_ip(request)
             if client_ip and settings.ANONYMIZE_IP:
-                client_ip = client_ip[:client_ip.rfind('.')+1] + '0'
+                client_ip = anonymize_ip_address(client_ip)
             if self.ip_address != client_ip:
                 self.disable()
                 raise MagicLinkError('IP address is different from the IP '
