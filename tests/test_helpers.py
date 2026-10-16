@@ -18,8 +18,8 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_create_magiclink(settings, freezer):
-    freezer.move_to('2000-01-01T00:00:00')
+def test_create_magiclink(settings, time_machine):
+    time_machine.move_to('2000-01-01T00:00:00', tick=False)
 
     email = 'test@example.com'
     expiry = timezone.now() + timedelta(seconds=mlsettings.AUTH_TIMEOUT)
@@ -90,14 +90,14 @@ def test_create_magiclink_email_ignore_case_off(settings):
 
 
 @pytest.mark.django_db
-def test_create_magiclink_one_token_per_user(freezer):
+def test_create_magiclink_one_token_per_user(time_machine):
     email = 'test@example.com'
     request = HttpRequest()
-    freezer.move_to('2000-01-01T00:00:00')
+    time_machine.move_to('2000-01-01T00:00:00', tick=False)
     magic_link = create_magiclink(email, request)
     assert magic_link.disabled is False
 
-    freezer.move_to('2000-01-01T00:00:31')
+    time_machine.move_to('2000-01-01T00:00:31', tick=False)
     create_magiclink(email, request)
 
     magic_link = MagicLink.objects.get(token=magic_link.token)

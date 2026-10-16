@@ -161,8 +161,8 @@ def test_login_too_many_tokens(client, user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_antispam(settings, client, user, freezer):  # NOQA: F811
-    freezer.move_to('2000-01-01T00:00:00')
+def test_login_antispam(settings, client, user, time_machine):  # NOQA: F811
+    time_machine.move_to('2000-01-01T00:00:00', tick=False)
 
     submit_time = 1
     settings.MAGICLINK_ANTISPAM_FORMS = True
@@ -214,8 +214,8 @@ def test_login_not_active_ignore_flag(settings, client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_antispam_submit_too_fast(settings, client, user, freezer):  # NOQA: F811,E501
-    freezer.move_to('2000-01-01T00:00:00')
+def test_login_antispam_submit_too_fast(settings, client, user, time_machine):  # NOQA: F811,E501
+    time_machine.move_to('2000-01-01T00:00:00', tick=False)
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings

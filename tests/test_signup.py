@@ -252,8 +252,8 @@ def test_signup_form_invalid_name(mocker, client):
 
 
 @pytest.mark.django_db
-def test_signup_antispam(settings, client, freezer):  # NOQA: F811
-    freezer.move_to('2000-01-01T00:00:00')
+def test_signup_antispam(settings, client, time_machine):  # NOQA: F811
+    time_machine.move_to('2000-01-01T00:00:00', tick=False)
 
     submit_time = 1
     settings.MAGICLINK_ANTISPAM_FORMS = True
@@ -277,8 +277,8 @@ def test_signup_antispam(settings, client, freezer):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_signup_antispam_submit_too_fast(settings, client, freezer):  # NOQA: F811,E501
-    freezer.move_to('2000-01-01T00:00:00')
+def test_signup_antispam_submit_too_fast(settings, client, time_machine):  # NOQA: F811,E501
+    time_machine.move_to('2000-01-01T00:00:00', tick=False)
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
