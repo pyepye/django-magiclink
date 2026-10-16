@@ -67,3 +67,32 @@ module-name = "magiclink"
 module-root = ""
 source-exclude = ["**/.DS_Store"]
 wheel-exclude = ["**/.DS_Store"]
+
+[tool.pytest]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "--cov=magiclink",
+    "--cov-report=term-missing",
+]
+filterwarnings = ["error"]
+
+[tool.tox]
+requires = ["tox>=4.67.4", "tox-uv>=1.37.2"]
+env_list = [
+    { product = [["3.11", "3.12", "3.13", "3.14"], ["django52"]] },
+    { product = [["3.12", "3.13", "3.14"], ["django60"]] },
+    { product = [["3.12", "3.13", "3.14", "3.15"], ["django61"]] },
+]
+
+[tool.tox.env_run_base]
+description = "Run tests under {base_python}"
+dependency_groups = ["test"]
+set_env = { COVERAGE_FILE = "{env_dir}{/}.coverage" }
+deps = [
+    { replace = "if", condition = "factor.django52", then = ["Django>=5.2,<5.3"], extend = true },
+    { replace = "if", condition = "factor.django60", then = ["Django>=6.0,<6.1"], extend = true },
+    { replace = "if", condition = "factor.django61", then = ["Django>=6.1,<6.2"], extend = true },
+]
+commands = [["pytest", { replace = "posargs", extend = true }]]
