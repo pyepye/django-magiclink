@@ -8,7 +8,7 @@ User = get_user_model()
 
 @pytest.fixture()
 def user():
-    user = get_or_create_user(email='test@example.com')
+    user = get_or_create_user(email="test@example.com")
     return user
 
 
@@ -16,6 +16,6 @@ def user():
 def magic_link(user):
 
     def _create(request):
-        return create_magiclink(user.email, request, redirect_url='')
+        return create_magiclink(user.email, request, redirect_url="")
 
     return _create

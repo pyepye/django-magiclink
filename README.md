@@ -73,17 +73,17 @@ AUTHENTICATION_BACKENDS = (
 Add the following settings to your `settings.py` (you will need to replace the template names in the below steps):
 ```python
 # Set Djangos login URL to the magiclink login page
-LOGIN_URL = 'magiclink:login'
+LOGIN_URL = "magiclink:login"
 
-MAGICLINK_LOGIN_TEMPLATE_NAME = 'magiclink/login.html'
-MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'magiclink/login_sent.html'
-MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = 'magiclink/login_failed.html'
+MAGICLINK_LOGIN_TEMPLATE_NAME = "magiclink/login.html"
+MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = "magiclink/login_sent.html"
+MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = "magiclink/login_failed.html"
 
 # Optional:
 # If this setting is set to False a user account will be created the first
 # time a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
-MAGICLINK_SIGNUP_TEMPLATE_NAME = 'magiclink/signup.html'
+MAGICLINK_SIGNUP_TEMPLATE_NAME = "magiclink/signup.html"
 ```
 
 See [additional configuration settings](#configuration-settings) for all of the different available settings.
@@ -148,11 +148,11 @@ This `MAGICLINK_EMAIL_STYLES` setting should be a dict with the following key va
 
 ```python
 MAGICLINK_EMAIL_STYLES = {
-    'logo_url': 'https://example.com/logo.png',
-    'background-colour': '#ffffff',
-    'main-text-color': '#000000',
-    'button-background-color': '#0078be',
-    'button-text-color': '#ffffff',
+    "logo_url": "https://example.com/logo.png",
+    "background-colour": "#ffffff",
+    "main-text-color": "#000000",
+    "button-background-color": "#0078be",
+    "button-text-color": "#ffffff",
 }
 ```
 *Note: The logo URL must be a full URL. For email client support you should use either a jpeg or png.*
@@ -202,53 +202,52 @@ Below are the different settings that can be overridden. To do so place the sett
 *Note: Each of the url / redirect settings can either be a URL or url name*
 
 ```python
-
 # Override the login page template. See 'Login page' in the Setup section
-MAGICLINK_LOGIN_TEMPLATE_NAME = 'myapp/login.html'
+MAGICLINK_LOGIN_TEMPLATE_NAME = "myapp/login.html"
 
 # Override the login page template. See 'Login sent page' in the Setup section
-MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'myapp/login_sent.html'
+MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = "myapp/login_sent.html"
 
 # Override the template that shows when the user tries to login with a
 # magic link that is not valid. See 'Login failed page' in the Setup section
-MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = 'magiclink/login_failed.html'
+MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = "magiclink/login_failed.html"
 
 # If a login failed redirect is specified the user will be redirected to this
 # URL instead of being shown the LOGIN_FAILED_TEMPLATE
-MAGICLINK_LOGIN_FAILED_REDIRECT = ''
+MAGICLINK_LOGIN_FAILED_REDIRECT = ""
 
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
 # Override the login page template. See 'Login sent page' in the Setup section
-MAGICLINK_SIGNUP_TEMPLATE_NAME = 'myapp/signup.html'
+MAGICLINK_SIGNUP_TEMPLATE_NAME = "myapp/signup.html"
 
 # Set Djangos login redirect URL to be used once the user opens the magic link
 # This will be used whenever a ?next parameter is not set on login
-LOGIN_REDIRECT_URL = '/accounts/profile/'
+LOGIN_REDIRECT_URL = "/accounts/profile/"
 
 # If a new user is created via the signup page use this setting to send them to
 # a different url than LOGIN_REDIRECT_URL when clicking the magic link
 # This will fall back to LOGIN_REDIRECT_URL
-MAGICLINK_SIGNUP_LOGIN_REDIRECT = '/welcome/'
+MAGICLINK_SIGNUP_LOGIN_REDIRECT = "/welcome/"
 
 # Change the url a user is redirect to after requesting a magic link
-MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
+MAGICLINK_LOGIN_SENT_REDIRECT = "magiclink:login_sent"
 
 # Ensure the branding of the login email is correct. This setting is not needed
 # if you override the `login_email.html` template
 MAGICLINK_EMAIL_STYLES = {
-    'logo_url': '',
-    'background-colour': '#ffffff',
-    'main-text-color': '#000000',
-    'button-background-color': '#0078be',
-    'button-text-color': '#ffffff',
+    "logo_url": "",
+    "background-colour": "#ffffff",
+    "main-text-color": "#000000",
+    "button-background-color": "#0078be",
+    "button-text-color": "#ffffff",
 }
 
 # If you want to use your own email templates you can override the text and
 # html templates used with:
-MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT = 'myapp/login_email.text'
-MAGICLINK_EMAIL_TEMPLATE_NAME_HTML = 'myapp/login_email.html'
+MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT = "myapp/login_email.text"
+MAGICLINK_EMAIL_TEMPLATE_NAME_HTML = "myapp/login_email.html"
 
 # How long a magic link is valid for before returning an error
 MAGICLINK_AUTH_TIMEOUT = 300  # In second - Default is 5 minutes
@@ -316,7 +315,7 @@ MAGICLINK_ANTISPAM_FIELD_TIME = 1
 
 # Override the login verify address. You must inherit from Magiclink LoginVerify
 # view. See Manual usage for more details
-MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'
+MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
 
 # If an email address has been added to the unsubscribe table but is also
 # assocaited with a Django user, should a login email be sent
@@ -358,7 +357,7 @@ Adding a user to the unsubscribe model is done using the normal Django ORM creat
 ```python
 from magiclink.models import MagicLinkUnsubscribe
 
-MagicLinkUnsubscribe.objects.create(email='test@example.com')
+MagicLinkUnsubscribe.objects.create(email="test@example.com")
 ```
 
 If you are using the Django Magiclink login or signup functionality, the unsubscribe check happens during form validation. This means a new user will never be created if their email address has already been added to the `MagicLinkUnsubscribe` list.
@@ -374,7 +373,7 @@ django-magiclink uses a model to help create, send and validate magic links. A `
 from magiclink.helpers import create_magiclink
 
 # Returns newly created from magiclink.models.MagicLink instance
-magiclink = create_magiclink(email, request, redirect_url='')
+magiclink = create_magiclink(email, request, redirect_url="")
 
 # Generates the magic link url and sends it in an email
 magiclink.send(request)
@@ -398,14 +397,13 @@ from magiclink.views import LoginVerify
 
 
 class CustomLoginVerify(LoginVerify):
-
     def login_complete_action(self):
         if self.request.user.is_superuser:
-            url = reverse('superuser_page')
+            url = reverse("superuser_page")
         elif self.request.user.is_staff:
-            url = reverse('staff_page')
+            url = reverse("staff_page")
         else:
-            url = reverse('normal_page')
+            url = reverse("normal_page")
         return HttpResponseRedirect(url)
 ```
 
@@ -429,7 +427,7 @@ urlpatterns = [
 
 ```python
 ...
-MAGICLINK_LOGIN_VERIFY_URL = 'custom_login_verify'
+MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
 ...
 ```
 

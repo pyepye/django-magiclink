@@ -16,7 +16,7 @@ from .utils import get_client_ip, get_url_path
 def create_magiclink(
     email: str,
     request: HttpRequest,
-    redirect_url: str = '',
+    redirect_url: str = "",
 ) -> MagicLink:
     if settings.EMAIL_IGNORE_CASE:
         email = email.lower()
@@ -24,7 +24,7 @@ def create_magiclink(
     limit = timezone.now() - timedelta(seconds=settings.LOGIN_REQUEST_TIME_LIMIT)  # NOQA: E501
     over_limit = MagicLink.objects.filter(email=email, created__gte=limit)
     if over_limit:
-        raise MagicLinkError('Too many magic login requests')
+        raise MagicLinkError("Too many magic login requests")
 
     if settings.ONE_TOKEN_PER_USER:
         magic_links = MagicLink.objects.filter(email=email, disabled=False)
@@ -37,7 +37,7 @@ def create_magiclink(
     if settings.REQUIRE_SAME_IP:
         client_ip = get_client_ip(request)
         if client_ip and settings.ANONYMIZE_IP:
-            client_ip = client_ip[:client_ip.rfind('.')+1] + '0'
+            client_ip = client_ip[: client_ip.rfind(".") + 1] + "0"
 
     expiry = timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT)
     magic_link = MagicLink.objects.create(
@@ -52,10 +52,7 @@ def create_magiclink(
 
 
 def get_or_create_user(
-    email: str,
-    username: str = '',
-    first_name: str = '',
-    last_name: str = ''
+    email: str, username: str = "", first_name: str = "", last_name: str = ""
 ):
     User = get_user_model()
 
@@ -74,30 +71,30 @@ def get_or_create_user(
     if not username and settings.EMAIL_AS_USERNAME:
         username = email
 
-    user_details = {'email': email}
-    if 'first_name' in user_fields and first_name:
-        user_details['first_name'] = first_name
-    if 'last_name' in user_fields and last_name:
-        user_details['last_name'] = last_name
-    if 'full_name' in user_fields:
-        user_details['full_name'] = f'{first_name} {last_name}'.strip()
-    if 'name' in user_fields:
-        user_details['name'] = f'{first_name} {last_name}'.strip()
+    user_details = {"email": email}
+    if "first_name" in user_fields and first_name:
+        user_details["first_name"] = first_name
+    if "last_name" in user_fields and last_name:
+        user_details["last_name"] = last_name
+    if "full_name" in user_fields:
+        user_details["full_name"] = f"{first_name} {last_name}".strip()
+    if "name" in user_fields:
+        user_details["name"] = f"{first_name} {last_name}".strip()
 
-    if 'username' in user_fields and not username:
+    if "username" in user_fields and not username:
         # Set a random username if we need to set a username and
         # EMAIL_AS_USERNAME is False
         created = False
         while not created:
-            user_details['username'] = get_random_string(length=10)
+            user_details["username"] = get_random_string(length=10)
             try:
                 user = User.objects.create(**user_details)
                 created = True
             except IntegrityError:  # pragma: no cover
                 pass
     else:
-        if 'username' in user_fields:
-            user_details['username'] = username
+        if "username" in user_fields:
+            user_details["username"] = username
         user = User.objects.create(**user_details)
 
     return user
