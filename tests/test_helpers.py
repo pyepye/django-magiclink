@@ -11,7 +11,6 @@ from magiclink import settings as mlsettings
 from magiclink.helpers import create_magiclink, get_or_create_user
 from magiclink.models import MagicLink, MagicLinkError
 
-from .fixtures import user  # NOQA: F401
 from .models import CustomUserEmailOnly, CustomUserFullName, CustomUserName
 
 User = get_user_model()
@@ -118,14 +117,14 @@ def test_create_magiclink_login_request_time_limit():
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_exists(user):  # NOQA: F811
+def test_get_or_create_user_exists(user):
     usr = get_or_create_user(email=user.email)
     assert usr == user
     assert User.objects.count() == 1
 
 
 @pytest.mark.django_db
-def test_get_or_create_user_exists_ignore_case(settings, user):  # NOQA: F811
+def test_get_or_create_user_exists_ignore_case(settings, user):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = True
     from magiclink import settings
 

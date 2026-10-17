@@ -25,6 +25,6 @@ urlpatterns = [
     path("needs-login/", needs_login, name="needs_login"),
     path(
         "custom-login-verify/", CustomLoginVerify.as_view(), name="custom_login_verify"
-    ),  # NOQA: E501
+    ),
     path("auth/", include("magiclink.urls", namespace="magiclink")),
 ]

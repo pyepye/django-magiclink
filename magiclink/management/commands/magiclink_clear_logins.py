@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = "Delete disabled Magic Links"
 
     def handle(self, *args, **options):
-        limit = timezone.now() - timedelta(seconds=settings.LOGIN_REQUEST_TIME_LIMIT)  # NOQA: E501
+        limit = timezone.now() - timedelta(seconds=settings.LOGIN_REQUEST_TIME_LIMIT)
         week_before = limit - timedelta(days=7)
 
         for magic_links in MagicLink.objects.filter(expiry__lte=week_before):

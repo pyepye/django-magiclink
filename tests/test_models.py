@@ -11,13 +11,11 @@ from django.utils import timezone
 from magiclink import settings
 from magiclink.models import MagicLink, MagicLinkError, MagicLinkUnsubscribe
 
-from .fixtures import magic_link, user  # NOQA: F401
-
 User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_model_string(magic_link):  # NOQA: F811
+def test_model_string(magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     assert str(ml) == f"{ml.email} - {ml.expiry}"
@@ -29,7 +27,7 @@ def test_unsubscribe_model_string():
 
 
 @pytest.mark.django_db
-def test_generate_url(settings, magic_link):  # NOQA: F811
+def test_generate_url(settings, magic_link):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
     from magiclink import settings
 
@@ -46,7 +44,7 @@ def test_generate_url(settings, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_generate_url_custom_verify(settings, magic_link):  # NOQA: F811
+def test_generate_url_custom_verify(settings, magic_link):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
     from magiclink import settings
 
@@ -68,7 +66,7 @@ def test_generate_url_custom_verify(settings, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_send_email(mocker, settings, magic_link):  # NOQA: F811
+def test_send_email(mocker, settings, magic_link):
     from magiclink import settings as mlsettings
 
     send_mail = mocker.patch("magiclink.models.send_mail")
@@ -110,7 +108,7 @@ def test_send_email(mocker, settings, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_send_email_error_email_in_unsubscribe(magic_link):  # NOQA: F811
+def test_send_email_error_email_in_unsubscribe(magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     MagicLinkUnsubscribe.objects.create(email=ml.email)
@@ -122,7 +120,7 @@ def test_send_email_error_email_in_unsubscribe(magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_send_email_pass_email_in_unsubscribe(mocker, settings, magic_link):  # NOQA: E501, F811
+def test_send_email_pass_email_in_unsubscribe(mocker, settings, magic_link):
     settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
     from magiclink import settings as mlsettings
 
@@ -148,7 +146,7 @@ def test_send_email_pass_email_in_unsubscribe(mocker, settings, magic_link):  # 
 
 
 @pytest.mark.django_db
-def test_validate(user, magic_link):  # NOQA: F811
+def test_validate(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
@@ -157,7 +155,7 @@ def test_validate(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_email_ignore_case(user, magic_link):  # NOQA: F811
+def test_validate_email_ignore_case(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
@@ -166,7 +164,7 @@ def test_validate_email_ignore_case(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_wrong_email(user, magic_link):  # NOQA: F811
+def test_validate_wrong_email(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     email = "fake@email.com"
@@ -178,7 +176,7 @@ def test_validate_wrong_email(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_expired(user, magic_link):  # NOQA: F811
+def test_validate_expired(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
@@ -196,7 +194,7 @@ def test_validate_expired(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_wrong_ip(user, magic_link):  # NOQA: F811
+def test_validate_wrong_ip(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
@@ -215,7 +213,7 @@ def test_validate_wrong_ip(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_different_browser(user, magic_link):  # NOQA: F811
+def test_validate_different_browser(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES[f"magiclink{ml.pk}"] = "bad_value"
@@ -230,7 +228,7 @@ def test_validate_different_browser(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_used_times(user, magic_link):  # NOQA: F811
+def test_validate_used_times(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
@@ -247,7 +245,7 @@ def test_validate_used_times(user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_superuser(settings, user, magic_link):  # NOQA: F811
+def test_validate_superuser(settings, user, magic_link):
     settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
     from magiclink import settings
 
@@ -269,7 +267,7 @@ def test_validate_superuser(settings, user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_validate_staff(settings, user, magic_link):  # NOQA: F811
+def test_validate_staff(settings, user, magic_link):
     settings.MAGICLINK_ALLOW_STAFF_LOGIN = False
     from magiclink import settings
 

@@ -112,7 +112,7 @@ class LoginVerify(TemplateView):
             context["ONE_TOKEN_PER_USER"] = settings.ONE_TOKEN_PER_USER
             context["REQUIRE_SAME_BROWSER"] = settings.REQUIRE_SAME_BROWSER
             context["REQUIRE_SAME_IP"] = settings.REQUIRE_SAME_IP
-            context["ALLOW_SUPERUSER_LOGIN"] = settings.ALLOW_SUPERUSER_LOGIN  # NOQA: E501
+            context["ALLOW_SUPERUSER_LOGIN"] = settings.ALLOW_SUPERUSER_LOGIN
             context["ALLOW_STAFF_LOGIN"] = settings.ALLOW_STAFF_LOGIN
 
             try:

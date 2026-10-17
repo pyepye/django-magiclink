@@ -8,13 +8,11 @@ from django.urls import reverse
 
 from magiclink.models import MagicLink, MagicLinkUnsubscribe
 
-from .fixtures import magic_link, user  # NOQA: F401
-
 User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_login_end_to_end(mocker, settings, client, user):  # NOQA: F811
+def test_login_end_to_end(mocker, settings, client, user):
     spy = mocker.spy(MagicLink, "generate_url")
 
     login_url = reverse("magiclink:login")
@@ -54,7 +52,7 @@ def test_signup_require_signup_context(client):
 
 
 @pytest.mark.django_db
-def test_login_post(mocker, client, user, settings):  # NOQA: F811
+def test_login_post(mocker, client, user, settings):
     from magiclink import settings as mlsettings
 
     send_mail = mocker.patch("magiclink.models.send_mail")
@@ -92,7 +90,7 @@ def test_login_post_no_user(client):
 
 
 @pytest.mark.django_db
-def test_login_email_wrong_case(settings, client, user):  # NOQA: F811
+def test_login_email_wrong_case(settings, client, user):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = False
     from magiclink import settings as mlsettings
 
@@ -107,7 +105,7 @@ def test_login_email_wrong_case(settings, client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_email_ignore_case(settings, client, user):  # NOQA: F811
+def test_login_email_ignore_case(settings, client, user):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = True
     from magiclink import settings as mlsettings
 
@@ -142,7 +140,7 @@ def test_login_post_no_user_require_signup_false(settings, client):
 
 
 @pytest.mark.django_db
-def test_login_post_invalid(client, user):  # NOQA: F811
+def test_login_post_invalid(client, user):
     url = reverse("magiclink:login")
     data = {"email": "notanemail"}
     response = client.post(url, data)
@@ -152,7 +150,7 @@ def test_login_post_invalid(client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_too_many_tokens(client, user, magic_link):  # NOQA: F811
+def test_login_too_many_tokens(client, user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
 
@@ -165,7 +163,7 @@ def test_login_too_many_tokens(client, user, magic_link):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_antispam(settings, client, user, time_machine):  # NOQA: F811
+def test_login_antispam(settings, client, user, time_machine):
     time_machine.move_to("2000-01-01T00:00:00", tick=False)
 
     submit_time = 1
@@ -186,7 +184,7 @@ def test_login_antispam(settings, client, user, time_machine):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_not_active(settings, client, user):  # NOQA: F811
+def test_login_not_active(settings, client, user):
     user.is_active = False
     user.save()
 
@@ -200,7 +198,7 @@ def test_login_not_active(settings, client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_not_active_ignore_flag(settings, client, user):  # NOQA: F811
+def test_login_not_active_ignore_flag(settings, client, user):
     settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
     from magiclink import settings as mlsettings
 
@@ -220,7 +218,7 @@ def test_login_not_active_ignore_flag(settings, client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_antispam_submit_too_fast(settings, client, user, time_machine):  # NOQA: F811,E501
+def test_login_antispam_submit_too_fast(settings, client, user, time_machine):
     time_machine.move_to("2000-01-01T00:00:00", tick=False)
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
@@ -234,11 +232,11 @@ def test_login_antispam_submit_too_fast(settings, client, user, time_machine):  
     response = client.post(url, data)
     assert response.status_code == 200
     form_errors = response.context["login_form"].errors
-    assert form_errors["load_time"] == ["Form filled out too fast - bot detected"]  # NOQA: E501
+    assert form_errors["load_time"] == ["Form filled out too fast - bot detected"]
 
 
 @pytest.mark.django_db
-def test_login_antispam_missing_load_time(settings, client, user):  # NOQA: F811,E501
+def test_login_antispam_missing_load_time(settings, client, user):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
 
@@ -254,7 +252,7 @@ def test_login_antispam_missing_load_time(settings, client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_antispam_invalid_load_time(settings, client, user):  # NOQA: F811,E501
+def test_login_antispam_invalid_load_time(settings, client, user):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
 
@@ -270,7 +268,7 @@ def test_login_antispam_invalid_load_time(settings, client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_antispam_url_value(settings, client, user):  # NOQA: F811
+def test_login_antispam_url_value(settings, client, user):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
 
@@ -286,7 +284,7 @@ def test_login_antispam_url_value(settings, client, user):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_post_redirect_url(mocker, client, user, settings):  # NOQA: F811
+def test_login_post_redirect_url(mocker, client, user, settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
@@ -305,7 +303,7 @@ def test_login_post_redirect_url(mocker, client, user, settings):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_login_post_redirect_url_unsafe(mocker, client, user, settings):  # NOQA: F811,E501
+def test_login_post_redirect_url_unsafe(mocker, client, user, settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
@@ -323,7 +321,7 @@ def test_login_post_redirect_url_unsafe(mocker, client, user, settings):  # NOQA
 
 
 @pytest.mark.django_db
-def test_login_error_email_in_unsubscribe(client, user):  # NOQA: F811,E501
+def test_login_error_email_in_unsubscribe(client, user):
     MagicLinkUnsubscribe.objects.create(email=user.email)
 
     url = reverse("magiclink:login")
@@ -336,7 +334,7 @@ def test_login_error_email_in_unsubscribe(client, user):  # NOQA: F811,E501
 
 
 @pytest.mark.django_db
-def test_login_pass_email_in_unsubscribe(settings, client, user):  # NOQA: F811,E501
+def test_login_pass_email_in_unsubscribe(settings, client, user):
     settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
     from magiclink import settings as mlsettings
 

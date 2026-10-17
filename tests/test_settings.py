@@ -9,7 +9,7 @@ def test_login_sent_redirect(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.LOGIN_SENT_REDIRECT == settings.MAGICLINK_LOGIN_SENT_REDIRECT  # NOQA: E501
+    assert mlsettings.LOGIN_SENT_REDIRECT == settings.MAGICLINK_LOGIN_SENT_REDIRECT
 
 
 def test_login_template_name(settings):
@@ -17,7 +17,7 @@ def test_login_template_name(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.LOGIN_TEMPLATE_NAME == settings.MAGICLINK_LOGIN_TEMPLATE_NAME  # NOQA: E501
+    assert mlsettings.LOGIN_TEMPLATE_NAME == settings.MAGICLINK_LOGIN_TEMPLATE_NAME
 
 
 def test_login_sent_template_name(settings):
@@ -28,7 +28,7 @@ def test_login_sent_template_name(settings):
     assert (
         mlsettings.LOGIN_SENT_TEMPLATE_NAME
         == settings.MAGICLINK_LOGIN_SENT_TEMPLATE_NAME
-    )  # NOQA: E501
+    )
 
 
 def test_login_failed_template_name(settings):
@@ -39,7 +39,7 @@ def test_login_failed_template_name(settings):
     assert (
         mlsettings.LOGIN_FAILED_TEMPLATE_NAME
         == settings.MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME
-    )  # NOQA: E501
+    )
 
 
 def test_login_failed_redirect(settings):
@@ -47,7 +47,7 @@ def test_login_failed_redirect(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.LOGIN_FAILED_REDIRECT == settings.MAGICLINK_LOGIN_FAILED_REDIRECT  # NOQA: E501
+    assert mlsettings.LOGIN_FAILED_REDIRECT == settings.MAGICLINK_LOGIN_FAILED_REDIRECT
 
 
 def test_signup_template_name(settings):
@@ -55,7 +55,7 @@ def test_signup_template_name(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.SIGNUP_TEMPLATE_NAME == settings.MAGICLINK_SIGNUP_TEMPLATE_NAME  # NOQA: E501
+    assert mlsettings.SIGNUP_TEMPLATE_NAME == settings.MAGICLINK_SIGNUP_TEMPLATE_NAME
 
 
 def test_signup_login_redirect(settings):
@@ -63,7 +63,7 @@ def test_signup_login_redirect(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.SIGNUP_LOGIN_REDIRECT == settings.MAGICLINK_SIGNUP_LOGIN_REDIRECT  # NOQA: E501
+    assert mlsettings.SIGNUP_LOGIN_REDIRECT == settings.MAGICLINK_SIGNUP_LOGIN_REDIRECT
 
 
 def test_email_subject(settings):
@@ -82,7 +82,7 @@ def test_email_template_name_text(settings):
     assert (
         mlsettings.EMAIL_TEMPLATE_NAME_TEXT
         == settings.MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT
-    )  # NOQA: E501
+    )
 
 
 def test_email_template_name_html(settings):
@@ -93,7 +93,7 @@ def test_email_template_name_html(settings):
     assert (
         mlsettings.EMAIL_TEMPLATE_NAME_HTML
         == settings.MAGICLINK_EMAIL_TEMPLATE_NAME_HTML
-    )  # NOQA: E501
+    )
 
 
 def test_token_length(settings):
@@ -212,7 +212,7 @@ def test_allow_superuser_login(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.ALLOW_SUPERUSER_LOGIN == settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN  # NOQA: E501
+    assert mlsettings.ALLOW_SUPERUSER_LOGIN == settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN
 
 
 def test_allow_superuser_login_bad_value(settings):
@@ -255,7 +255,7 @@ def test_verify_include_email(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.VERIFY_INCLUDE_EMAIL == settings.MAGICLINK_VERIFY_INCLUDE_EMAIL  # NOQA: E501
+    assert mlsettings.VERIFY_INCLUDE_EMAIL == settings.MAGICLINK_VERIFY_INCLUDE_EMAIL
 
 
 def test_verify_include_email_bad_value(settings):
@@ -272,7 +272,7 @@ def test_require_same_browser(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.REQUIRE_SAME_BROWSER == settings.MAGICLINK_REQUIRE_SAME_BROWSER  # NOQA: E501
+    assert mlsettings.REQUIRE_SAME_BROWSER == settings.MAGICLINK_REQUIRE_SAME_BROWSER
 
 
 def test_require_same_browser_bad_value(settings):
@@ -323,7 +323,7 @@ def test_one_token_per_user(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.ONE_TOKEN_PER_USER == settings.MAGICLINK_ONE_TOKEN_PER_USER  # NOQA: E501
+    assert mlsettings.ONE_TOKEN_PER_USER == settings.MAGICLINK_ONE_TOKEN_PER_USER
 
 
 def test_one_token_per_user_bad_value(settings):
@@ -343,7 +343,7 @@ def test_token_request_time_limit(settings):
     assert (
         mlsettings.LOGIN_REQUEST_TIME_LIMIT
         == settings.MAGICLINK_LOGIN_REQUEST_TIME_LIMIT
-    )  # NOQA: E501
+    )
 
 
 def test_token_request_time_limit_bad_value(settings):
@@ -400,7 +400,7 @@ def test_antispam_form_submit_time(settings):
     from magiclink import settings as mlsettings
 
     reload(mlsettings)
-    assert mlsettings.ANTISPAM_FIELD_TIME == settings.MAGICLINK_ANTISPAM_FIELD_TIME  # NOQA: E501
+    assert mlsettings.ANTISPAM_FIELD_TIME == settings.MAGICLINK_ANTISPAM_FIELD_TIME
 
 
 def test_antispam_form_submit_time_bad_value(settings):
@@ -428,7 +428,7 @@ def test_ignore_unsubscribe_if_user(settings):
     assert (
         mlsettings.IGNORE_UNSUBSCRIBE_IF_USER
         == settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER
-    )  # NOQA: E501
+    )
 
 
 def test_ignore_unsubscribe_if_user_bad_value(settings):

@@ -57,7 +57,7 @@ def test_signup_get(client):
 
 
 @pytest.mark.django_db
-def test_signup_post(mocker, client, settings):  # NOQA: F811
+def test_signup_post(mocker, client, settings):
     from magiclink import settings as mlsettings
 
     send_mail = mocker.patch("magiclink.models.send_mail")
@@ -91,7 +91,7 @@ def test_signup_post(mocker, client, settings):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_signup_signup_form_missing_name(mocker, client, settings):  # NOQA: F811, E501
+def test_signup_signup_form_missing_name(mocker, client, settings):
     url = reverse("magiclink:signup")
     data = {
         "form_name": "SignupForm",
@@ -255,7 +255,7 @@ def test_signup_form_invalid_name(mocker, client):
 
 
 @pytest.mark.django_db
-def test_signup_antispam(settings, client, time_machine):  # NOQA: F811
+def test_signup_antispam(settings, client, time_machine):
     time_machine.move_to("2000-01-01T00:00:00", tick=False)
 
     submit_time = 1
@@ -281,7 +281,7 @@ def test_signup_antispam(settings, client, time_machine):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_signup_antispam_submit_too_fast(settings, client, time_machine):  # NOQA: F811,E501
+def test_signup_antispam_submit_too_fast(settings, client, time_machine):
     time_machine.move_to("2000-01-01T00:00:00", tick=False)
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
@@ -296,11 +296,11 @@ def test_signup_antispam_submit_too_fast(settings, client, time_machine):  # NOQ
     response = client.post(url, data)
     assert response.status_code == 200
     form_errors = response.context[signup_form].errors
-    assert form_errors["load_time"] == ["Form filled out too fast - bot detected"]  # NOQA: E501
+    assert form_errors["load_time"] == ["Form filled out too fast - bot detected"]
 
 
 @pytest.mark.django_db
-def test_signup_antispam_missing_load_time(settings, client):  # NOQA: F811
+def test_signup_antispam_missing_load_time(settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
 
@@ -317,7 +317,7 @@ def test_signup_antispam_missing_load_time(settings, client):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_signup_antispam_invalid_load_time(settings, client):  # NOQA: F811
+def test_signup_antispam_invalid_load_time(settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
 
@@ -334,7 +334,7 @@ def test_signup_antispam_invalid_load_time(settings, client):  # NOQA: F811
 
 
 @pytest.mark.django_db
-def test_signup_antispam_url_value(settings, client):  # NOQA: F811
+def test_signup_antispam_url_value(settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
 
