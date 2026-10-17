@@ -25,23 +25,23 @@ SIGNUP_TEMPLATE_NAME = getattr(settings, 'MAGICLINK_SIGNUP_TEMPLATE_NAME', 'magi
 try:
     TOKEN_LENGTH = int(getattr(settings, 'MAGICLINK_TOKEN_LENGTH', 50))
 except ValueError:
-    raise ImproperlyConfigured('"MAGICLINK_TOKEN_LENGTH" must be an integer')
+    raise ImproperlyConfigured('"MAGICLINK_TOKEN_LENGTH" must be an integer') from None
 else:
     if TOKEN_LENGTH < 20:
-        warning = ('Shorter MAGICLINK_TOKEN_LENGTH values make your login more'
-                   'sussptable to brute force attacks')
-        warnings.warn(warning, RuntimeWarning)
+        warning = ('Shorter MAGICLINK_TOKEN_LENGTH values make your login more '
+                   'susceptible to brute force attacks')
+        warnings.warn(warning, RuntimeWarning, stacklevel=2)
 
 try:
     # In seconds
     AUTH_TIMEOUT = int(getattr(settings, 'MAGICLINK_AUTH_TIMEOUT', 300))
 except ValueError:
-    raise ImproperlyConfigured('"MAGICLINK_AUTH_TIMEOUT" must be an integer')
+    raise ImproperlyConfigured('"MAGICLINK_AUTH_TIMEOUT" must be an integer') from None
 
 try:
     TOKEN_USES = int(getattr(settings, 'MAGICLINK_TOKEN_USES', 1))
 except ValueError:
-    raise ImproperlyConfigured('"MAGICLINK_TOKEN_USES" must be an integer')
+    raise ImproperlyConfigured('"MAGICLINK_TOKEN_USES" must be an integer') from None
 
 EMAIL_IGNORE_CASE = getattr(settings, 'MAGICLINK_EMAIL_IGNORE_CASE', True)
 if not isinstance(EMAIL_IGNORE_CASE, bool):
@@ -86,7 +86,7 @@ if not isinstance(ONE_TOKEN_PER_USER, bool):
 try:
     LOGIN_REQUEST_TIME_LIMIT = int(getattr(settings, 'MAGICLINK_LOGIN_REQUEST_TIME_LIMIT', 30))  # In seconds
 except ValueError:
-    raise ImproperlyConfigured('"MAGICLINK_LOGIN_REQUEST_TIME_LIMIT" must be an integer')
+    raise ImproperlyConfigured('"MAGICLINK_LOGIN_REQUEST_TIME_LIMIT" must be an integer') from None
 
 
 EMAIL_STYLES = {
@@ -113,7 +113,7 @@ if ANTISPAM_FIELD_TIME is not None:
     try:
         ANTISPAM_FIELD_TIME = float(ANTISPAM_FIELD_TIME)
     except ValueError:
-        raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float')
+        raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float') from None
 
 LOGIN_VERIFY_URL = getattr(settings, 'MAGICLINK_LOGIN_VERIFY_URL', 'magiclink:login_verify')
 

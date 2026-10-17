@@ -17,8 +17,11 @@ from django.views.decorators.csrf import csrf_protect
 
 from . import settings
 from .forms import (
-    LoginForm, SignupForm, SignupFormEmailOnly, SignupFormFull,
-    SignupFormWithUsername
+    LoginForm,
+    SignupForm,
+    SignupFormEmailOnly,
+    SignupFormFull,
+    SignupFormWithUsername,
 )
 from .helpers import create_magiclink, get_or_create_user
 from .models import MagicLink, MagicLinkError

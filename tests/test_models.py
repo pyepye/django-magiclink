@@ -23,6 +23,11 @@ def test_model_string(magic_link):  # NOQA: F811
     assert str(ml) == f'{ml.email} - {ml.expiry}'
 
 
+def test_unsubscribe_model_string():
+    unsubscribe = MagicLinkUnsubscribe(email='test@example.com')
+    assert str(unsubscribe) == 'test@example.com'
+
+
 @pytest.mark.django_db
 def test_generate_url(settings, magic_link):  # NOQA: F811
     settings.MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'

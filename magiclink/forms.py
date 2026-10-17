@@ -44,7 +44,7 @@ class AntiSpam(forms.Form):
         try:
             load_time = float(cleaned_load_time)
         except ValueError:
-            raise ValidationError('Invalid value')
+            raise ValidationError('Invalid value') from None
 
         shown_field_count = 0
         spam_fields = ['load_time', 'url']
@@ -83,7 +83,7 @@ class LoginForm(AntiSpam):
         except User.DoesNotExist:
             if settings.REQUIRE_SIGNUP:
                 error = 'We could not find a user with that email address'
-                raise forms.ValidationError(error)
+                raise forms.ValidationError(error) from None
         else:
             is_active = getattr(user, 'is_active', True)
             if not settings.IGNORE_IS_ACTIVE_FLAG and not is_active:

@@ -114,7 +114,7 @@ def test_signup_form_user_exists(mocker, client):
     response = client.post(url, data)
     assert response.status_code == 200
     error = ['Email address is already linked to an account']
-    response.context_data['SignupFormEmailOnly'].errors['email'] == error
+    assert response.context_data['SignupFormEmailOnly'].errors['email'] == error
 
 
 @pytest.mark.django_db
@@ -130,7 +130,7 @@ def test_signup_form_user_exists_inactive(mocker, client):
     response = client.post(url, data)
     assert response.status_code == 200
     error = ['This user has been deactivated']
-    response.context_data['SignupFormEmailOnly'].errors['email'] == error
+    assert response.context_data['SignupFormEmailOnly'].errors['email'] == error
 
 
 @pytest.mark.django_db
@@ -150,7 +150,7 @@ def test_signup_form_user_exists_ignore_active_flag(mocker, client, settings):
     response = client.post(url, data)
     assert response.status_code == 200
     error = ['Email address is already linked to an account']
-    response.context_data['SignupFormEmailOnly'].errors['email'] == error
+    assert response.context_data['SignupFormEmailOnly'].errors['email'] == error
 
 
 @pytest.mark.django_db
@@ -197,7 +197,7 @@ def test_signup_form_with_username_taken(mocker, client):
     response = client.post(url, data)
     assert response.status_code == 200
     error = ['username is already linked to an account']
-    response.context_data['SignupFormWithUsername'].errors['username'] == error
+    assert response.context_data['SignupFormWithUsername'].errors['username'] == error
 
 
 @pytest.mark.django_db
@@ -213,7 +213,7 @@ def test_signup_form_with_username_required(mocker, client):
     response = client.post(url, data)
     assert response.status_code == 200
     error = ['This field is required.']
-    response.context_data['SignupFormWithUsername'].errors['username'] == error
+    assert response.context_data['SignupFormWithUsername'].errors['username'] == error
 
 
 @pytest.mark.django_db

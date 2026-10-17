@@ -96,3 +96,9 @@ deps = [
     { replace = "if", condition = "factor.django61", then = ["Django>=6.1,<6.2"], extend = true },
 ]
 commands = [["pytest", { replace = "posargs", extend = true }]]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "DJ", "ASYNC"]
+
+[tool.ruff.lint.per-file-ignores]
+"magiclink/migrations/*" = ["E501"]

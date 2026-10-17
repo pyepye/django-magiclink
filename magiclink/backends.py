@@ -10,7 +10,7 @@ User = get_user_model()
 log = logging.getLogger(__name__)
 
 
-class MagicLinkBackend():
+class MagicLinkBackend:
 
     def authenticate(
         self,
