@@ -81,6 +81,8 @@ filterwarnings = ["error"]
 [tool.tox]
 requires = ["tox>=4.67.4", "tox-uv>=1.37.2"]
 env_list = [
+    "lint",
+    "types",
     { product = [["3.11", "3.12", "3.13", "3.14"], ["django52"]] },
     { product = [["3.12", "3.13", "3.14"], ["django60"]] },
     { product = [["3.12", "3.13", "3.14", "3.15"], ["django61"]] },
@@ -97,6 +99,46 @@ deps = [
 ]
 commands = [["pytest", { replace = "posargs", extend = true }]]
 
+[tool.tox.env.lint]
+description = "Check lint and formatting"
+skip_install = true
+dependency_groups = ["lint"]
+commands = [["ruff", "check", "."], ["ruff", "format", "--check", "."]]
+
+[tool.tox.env.types]
+description = "Type check with mypy"
+dependency_groups = ["types"]
+commands = [["mypy", "magiclink"]]
+
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "B", "DJ", "ASYNC", "RUF100"]
 ignore = ["E501"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+check_untyped_defs = true
+disallow_any_explicit = true
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+ignore_missing_imports = true
+implicit_reexport = false
+local_partial_types = true
+no_implicit_optional = true
+strict_equality = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "magiclink.migrations.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "magiclink.views"
+disallow_untyped_calls = false
+
+[tool.django-stubs]
+django_settings_module = "tests.settings"
