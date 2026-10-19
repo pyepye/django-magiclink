@@ -1,4 +1,7 @@
 import pytest
+from asgiref.sync import sync_to_async
+from django.contrib.auth import aauthenticate, aget_user, alogin
+from django.contrib.sessions.backends.db import SessionStore
 from django.http import HttpRequest
 
 from magiclink.backends import MagicLinkBackend
@@ -69,3 +72,25 @@ def test_auth_backend_invalid(user, magic_link):
         request=request, token=ml.token, email="fake@email.com"
     )
     assert user is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_auth_backend_aget_user(user):
+    assert await MagicLinkBackend().aget_user(user.id) == user
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate_and_auser(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    request.session = SessionStore()
+
+    authed = await aauthenticate(request, token=ml.token, email=user.email)
+    assert authed == user
+    assert authed.backend == "magiclink.backends.MagicLinkBackend"
+
+    await alogin(request, authed)
+    assert await aget_user(request) == user

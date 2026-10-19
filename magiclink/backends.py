@@ -1,5 +1,6 @@
 import logging
 
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 
@@ -47,8 +48,19 @@ class MagicLinkBackend:
         log.info(f"{user} authenticated via MagicLink")
         return user
 
+    async def aauthenticate(
+        self,
+        request: HttpRequest,
+        token: str = "",
+        email: str = "",
+    ):
+        return await sync_to_async(self.authenticate)(request, token, email)
+
     def get_user(self, user_id):
         try:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return
+
+    async def aget_user(self, user_id):
+        return await sync_to_async(self.get_user)(user_id)
