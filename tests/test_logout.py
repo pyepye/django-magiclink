@@ -33,3 +33,12 @@ def test_logout_with_next(client, user, settings):
     needs_login_response = client.get(needs_login_url)
     assert needs_login_response.status_code == 302
     assert response.url == reverse(settings.LOGOUT_REDIRECT_URL)
+
+
+@pytest.mark.django_db
+def test_logout_with_unsafe_next(client, user, settings):
+    client.force_login(user)
+    url = reverse("magiclink:logout")
+    response = client.get(f"{url}?next=https://evil.example.com/")
+    assert response.status_code == 302
+    assert response.url == reverse(settings.LOGOUT_REDIRECT_URL)

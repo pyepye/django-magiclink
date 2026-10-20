@@ -1,6 +1,12 @@
+from django.conf import settings as django_settings
 from django.http import HttpRequest
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+
+try:
+    from django.utils.http import url_has_allowed_host_and_scheme as safe_url
+except ImportError:  # pragma: no cover
+    from django.utils.http import is_safe_url as safe_url  # type: ignore
 
 
 def get_client_ip(request: HttpRequest) -> str:
@@ -21,3 +27,18 @@ def get_url_path(url: str) -> str:
         return reverse(url)
     except NoReverseMatch:
         return url
+
+
+def get_safe_redirect_url(request: HttpRequest, url: str) -> str:
+    """
+    Return url if it points to an allowed host, otherwise an empty string
+    """
+    allowed_hosts = django_settings.ALLOWED_HOSTS
+    if "*" in allowed_hosts:
+        allowed_hosts = [request.get_host()]
+    url_is_safe = safe_url(
+        url=url,
+        allowed_hosts=allowed_hosts,
+        require_https=request.is_secure(),
+    )
+    return url if url_is_safe else ""

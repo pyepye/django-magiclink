@@ -369,3 +369,38 @@ def test_signup_email_in_unsubscribe(client):
     assert response.status_code == 200
     form_errors = response.context[signup_form].errors
     assert form_errors["email"] == ["Email address is on the unsubscribe list"]
+
+
+@pytest.mark.django_db
+def test_signup_with_next(mocker, client):
+    mocker.patch("magiclink.models.send_mail")
+    url = reverse("magiclink:signup")
+    next_url = reverse("needs_login")
+    data = {"form_name": "SignupFormEmailOnly", "email": "test@example.com"}
+    response = client.post(f"{url}?next={next_url}", data)
+    assert response.status_code == 302
+    magiclink = MagicLink.objects.get(email="test@example.com")
+    assert magiclink.redirect_url == next_url
+
+
+@pytest.mark.django_db
+def test_signup_with_unsafe_next(mocker, client, settings):
+    mocker.patch("magiclink.models.send_mail")
+    url = reverse("magiclink:signup")
+    data = {"form_name": "SignupFormEmailOnly", "email": "test@example.com"}
+    response = client.post(f"{url}?next=https://evil.example.com/", data)
+    assert response.status_code == 302
+    magiclink = MagicLink.objects.get(email="test@example.com")
+    assert magiclink.redirect_url == reverse(settings.MAGICLINK_SIGNUP_LOGIN_REDIRECT)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("form_name", ["time", "MagicLinkUnsubscribe", None])
+def test_signup_form_name_not_a_signup_form(client, form_name):
+    url = reverse("magiclink:signup")
+    data = {"email": "test@example.com"}
+    if form_name:
+        data["form_name"] = form_name
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:signup")
