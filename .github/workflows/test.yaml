@@ -6,24 +6,54 @@ on:
       - master
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  lint:
+    name: Lint and types
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python: ["3.8", "3.9", "3.10", "3.11"]
-
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          python-version: ${{ matrix.python }}
+          persist-credentials: false
 
-      - name: Install tox and any other packages
-        run: pip install tox
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
 
-      - name: Run tox
-        # Run tox using the version of Python in `PATH`
-        run: tox -e python
+      - run: uv run --locked tox run -e lint,types
+
+  test:
+    name: ${{ matrix.python }}-django${{ matrix.django }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { python: "3.11", django: "52" }
+          - { python: "3.12", django: "52" }
+          - { python: "3.13", django: "52" }
+          - { python: "3.14", django: "52" }
+          - { python: "3.12", django: "60" }
+          - { python: "3.13", django: "60" }
+          - { python: "3.14", django: "60" }
+          - { python: "3.12", django: "61" }
+          - { python: "3.13", django: "61" }
+          - { python: "3.14", django: "61" }
+          - { python: "3.15", django: "61", experimental: true }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+
+      - run: uv run --locked tox run -e ${{ matrix.python }}-django${{ matrix.django }}
