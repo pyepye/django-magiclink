@@ -30,6 +30,7 @@ def test_login_verify(client, settings, magic_link):
     assert response.url == reverse(settings.LOGIN_REDIRECT_URL)
     assert client.cookies[cookie_name].value == ""
     assert client.cookies[cookie_name]["expires"].startswith("Thu, 01 Jan 1970")
+    assert client.cookies[cookie_name]["path"] == "/"
 
     needs_login_url = reverse("needs_login")
     needs_login_response = client.get(needs_login_url)
@@ -152,6 +153,7 @@ def test_login_verify_custom_verify(client, settings, magic_link):
     assert response.url == reverse("no_login")
     assert client.cookies[cookie_name].value == ""
     assert client.cookies[cookie_name]["expires"].startswith("Thu, 01 Jan 1970")
+    assert client.cookies[cookie_name]["path"] == "/"
 
     settings.MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
     from magiclink import settings
