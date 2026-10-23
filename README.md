@@ -14,6 +14,16 @@ This package was created with a focus on [ease of setup](#steps-to-impliment), [
 pip install django-magiclink
 ```
 
+### Supported versions
+
+django-magiclink is tested against the following versions of Django and Python:
+
+| Django | Python |
+|---|---|
+| 5.2 LTS | 3.11, 3.12, 3.13, 3.14 |
+| 6.0 | 3.12, 3.13, 3.14 |
+| 6.1 | 3.12, 3.13, 3.14 |
+
 ## Setup
 
 The setup of the app is simple but has a few steps and a few templates that need overriding.
@@ -347,6 +357,8 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 *Note: Each of the above settings can be overridden / changed when configuring django-magiclink*
 
+The `?next` parameter on the login and signup pages and the logout URL is only used if it points to an allowed host (see Django's `ALLOWED_HOSTS` setting). This stops these URLs from being used to send users to another site.
+
 
 ## Unsubscribe / stopping email spam
 
@@ -432,10 +444,52 @@ MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
 ```
 
 
+### Async
+
+The `MagicLinkBackend` authentication backend can be used with Django's async authentication functions such as `aauthenticate()`, `alogin()` and `request.auser()`. The django-magiclink views are synchronous but can be used with both WSGI and ASGI.
+
+
 ## Upgrading
+
+### Upgrading to 1.4.0
+
+Version `1.4.0` does not add any new migrations or settings. If you upgrade from a previous version please note the following changes:
+
+* Python 3.11 or above is required
+* The magiclink models always use `AutoField` for their primary keys, whatever `DEFAULT_AUTO_FIELD` is set to. This stops Django 6 asking to create a new migration for magiclink. If you have already changed the magiclink tables to `BigAutoField` with your own migration (for example using `MIGRATION_MODULES`) you will need to subclass `magiclink.apps.MagiclinkConfig`, set `default_auto_field = "django.db.models.BigAutoField"` and use your subclass in `INSTALLED_APPS`
+* The `?next` parameter on the signup page and the logout URL is ignored if it points to a different host. The user is sent to `MAGICLINK_SIGNUP_LOGIN_REDIRECT` or `LOGOUT_REDIRECT_URL` instead
+* If the signup page is posted with a `form_name` which is not one of the four signup forms, the user is redirected back to the signup page
+
+### Upgrading to 1.2.0
 
 A new migration was added to version `1.2.0`. If you upgrade to `1.2.0` or above from a previous version please ensure you migrate
 
 ```bash
 python manage.py migrate magiclink
 ```
+
+
+## Development
+
+django-magiclink uses [uv](https://docs.astral.sh/uv/) to manage its dependencies and [tox](https://tox.wiki/) to run the tests against each supported version of Python and Django.
+
+```bash
+# Create a virtual environment with all of the development dependencies
+uv sync
+
+# Run the tests using the latest version of Django
+uv run pytest
+
+# Run the linting, type checks and tests for every supported version
+uv run tox p
+
+# Lint, format and type check the code
+uv run ruff check --fix .
+uv run ruff format .
+uv run mypy magiclink
+
+# Build the package
+uv build
+```
+
+New versions are published to PyPI by GitHub Actions when a version tag such as `1.4.0` is pushed. The tag must match the version in `pyproject.toml`.
