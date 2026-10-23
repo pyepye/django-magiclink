@@ -1,6 +1,6 @@
 Click to confirm and sign in. This link will expire in {{ expiry|timeuntil }}
 
-{{ magiclink }}
+{{ magiclink|safe }}
 
 Please do not forward this message to anyone else, if you do they will be able to access your account
 

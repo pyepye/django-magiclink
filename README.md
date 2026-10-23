@@ -459,6 +459,7 @@ Version `1.4.0` does not add any new migrations or settings. If you upgrade from
 * The magiclink models always use `AutoField` for their primary keys, whatever `DEFAULT_AUTO_FIELD` is set to. This stops Django 6 asking to create a new migration for magiclink. If you have already changed the magiclink tables to `BigAutoField` with your own migration (for example using `MIGRATION_MODULES`) you will need to subclass `magiclink.apps.MagiclinkConfig`, set `default_auto_field = "django.db.models.BigAutoField"` and use your subclass in `INSTALLED_APPS`
 * The `?next` parameter on the signup page and the logout URL is ignored if it points to a different host. The user is sent to `MAGICLINK_SIGNUP_LOGIN_REDIRECT` or `LOGOUT_REDIRECT_URL` instead
 * If the signup page is posted with a `form_name` which is not one of the four signup forms, the user is redirected back to the signup page
+* If you have overridden the `login_email.txt` template, change `{{ magiclink }}` to `{{ magiclink|safe }}` otherwise the link in the plain text email will not work
 
 ### Upgrading to 1.2.0
 

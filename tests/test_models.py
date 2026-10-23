@@ -286,3 +286,12 @@ def test_validate_staff(settings, user, magic_link):
     ml = MagicLink.objects.get(token=ml.token)
     assert ml.times_used == 1
     assert ml.disabled is True
+
+
+@pytest.mark.django_db
+def test_send_text_email_link_not_html_escaped(rf, magic_link, mailoutbox):
+    request = rf.get("/")
+    ml = magic_link(request)
+    ml.send(request)
+    assert len(mailoutbox) == 1
+    assert ml.generate_url(request) in mailoutbox[0].body
