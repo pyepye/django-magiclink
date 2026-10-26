@@ -1,5 +1,6 @@
 from urllib.parse import urlencode, urljoin
 
+from asgiref.sync import sync_to_async
 from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -41,10 +42,21 @@ class MagicLink(models.Model):
             self.disabled = True
         self.save()
 
+    async def aused(self) -> None:
+        self.times_used += 1
+        if self.times_used >= settings.TOKEN_USES:
+            self.disabled = True
+        await self.asave()
+
     def disable(self) -> None:
         self.times_used += 1
         self.disabled = True
         self.save()
+
+    async def adisable(self) -> None:
+        self.times_used += 1
+        self.disabled = True
+        await self.asave()
 
     def generate_url(self, request: HttpRequest) -> str:
         url_path = reverse(settings.LOGIN_VERIFY_URL)
@@ -92,60 +104,92 @@ class MagicLink(models.Model):
             html_message=html,
         )
 
+    async def asend(self, request: HttpRequest) -> None:
+        await sync_to_async(self.send)(request)
+
     def validate(
         self,
         request: HttpRequest,
         email: str = "",
     ) -> AbstractUser:
+        error, should_disable = self._link_error(request, email)
+        if error:
+            if should_disable:
+                self.disable()
+            raise MagicLinkError(error)
+
+        user = User.objects.get(email=self.email)
+        error = self._user_error(user)
+        if error:
+            self.disable()
+            raise MagicLinkError(error)
+
+        return user
+
+    async def avalidate(
+        self,
+        request: HttpRequest,
+        email: str = "",
+    ) -> AbstractUser:
+        error, should_disable = self._link_error(request, email)
+        if error:
+            if should_disable:
+                await self.adisable()
+            raise MagicLinkError(error)
+
+        user = await User.objects.aget(email=self.email)
+        error = self._user_error(user)
+        if error:
+            await self.adisable()
+            raise MagicLinkError(error)
+
+        return user
+
+    def _link_error(self, request: HttpRequest, email: str) -> tuple[str, bool]:
+        """
+        Return why the link can not be used (or an empty string) and if the link
+        should be disabled because of it
+        """
         if settings.EMAIL_IGNORE_CASE and email:
             email = email.lower()
 
         if settings.VERIFY_INCLUDE_EMAIL and self.email != email:
-            raise MagicLinkError("Email address does not match")
+            return "Email address does not match", False
 
         if timezone.now() > self.expiry:
-            self.disable()
-            raise MagicLinkError("Magic link has expired")
+            return "Magic link has expired", True
 
         if settings.REQUIRE_SAME_IP:
             client_ip = get_client_ip(request)
             if client_ip and settings.ANONYMIZE_IP:
                 client_ip = client_ip[: client_ip.rfind(".") + 1] + "0"
             if self.ip_address != client_ip:
-                self.disable()
-                raise MagicLinkError(
+                return (
                     "IP address is different from the IP "
                     "address used to request the magic link"
-                )
+                ), True
 
         if settings.REQUIRE_SAME_BROWSER:
             cookie_name = f"magiclink{self.pk}"
             if self.cookie_value != request.COOKIES.get(cookie_name):
-                self.disable()
-                raise MagicLinkError(
+                return (
                     "Browser is different from the browser "
                     "used to request the magic link"
-                )
+                ), True
 
         if self.times_used >= settings.TOKEN_USES:
-            self.disable()
-            raise MagicLinkError("Magic link has been used too many times")
+            return "Magic link has been used too many times", True
 
-        user = User.objects.get(email=self.email)
+        return "", False
 
+    def _user_error(self, user: AbstractUser) -> str:
         if not settings.ALLOW_SUPERUSER_LOGIN and user.is_superuser:
-            self.disable()
-            raise MagicLinkError(
-                "You can not login to a super user account using a magic link"
-            )
+            return "You can not login to a super user account using a magic link"
 
         if not settings.ALLOW_STAFF_LOGIN and user.is_staff:
-            self.disable()
-            raise MagicLinkError(
-                "You can not login to a staff account using a magic link"
-            )
+            return "You can not login to a staff account using a magic link"
 
-        return user
+        return ""
 
 
 class MagicLinkUnsubscribe(models.Model):
