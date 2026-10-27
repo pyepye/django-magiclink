@@ -1,5 +1,6 @@
 from datetime import timedelta
 from importlib import reload
+from types import SimpleNamespace
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -8,7 +9,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from magiclink import settings as mlsettings
-from magiclink.helpers import create_magiclink, get_or_create_user
+from magiclink.helpers import (
+    _new_user_details,
+    acreate_magiclink,
+    aget_or_create_user,
+    create_magiclink,
+    get_or_create_user,
+)
 from magiclink.models import MagicLink, MagicLinkError
 
 from .models import CustomUserEmailOnly, CustomUserFullName, CustomUserName
@@ -211,3 +218,74 @@ def test_get_or_create_user_name(mocker):
     usr = get_or_create_user(email=email, first_name=first, last_name=last)
     assert usr.email == email
     assert usr.name == f"{first} {last}"
+
+
+def test_new_user_details_no_username_field(mocker):
+    gum = mocker.patch("magiclink.helpers.get_user_model")
+    gum.return_value._meta.get_fields.return_value = [SimpleNamespace(name="email")]
+    details, random_username = _new_user_details("test@example.com", "", "", "")
+    assert details == {"email": "test@example.com"}
+    assert random_username is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_acreate_magiclink(settings):
+    email = "test@example.com"
+    request = HttpRequest()
+    request.META["REMOTE_ADDR"] = "127.0.0.1"
+    magic_link = await acreate_magiclink(email, request)
+    assert magic_link.email == email
+    assert len(magic_link.token) == mlsettings.TOKEN_LENGTH
+    assert magic_link.redirect_url == reverse(settings.LOGIN_REDIRECT_URL)
+    assert magic_link.ip_address == "127.0.0.0"
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_acreate_magiclink_login_request_time_limit():
+    email = "test@example.com"
+    request = HttpRequest()
+    await acreate_magiclink(email, request)
+    with pytest.raises(MagicLinkError) as error:
+        await acreate_magiclink(email, request)
+
+    error.match("Too many magic login requests")
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_acreate_magiclink_one_token_per_user(settings):
+    settings.MAGICLINK_LOGIN_REQUEST_TIME_LIMIT = 0
+    reload(mlsettings)
+
+    email = "test@example.com"
+    request = HttpRequest()
+    magic_link = await acreate_magiclink(email, request)
+    await acreate_magiclink(email, request)
+
+    magic_link = await MagicLink.objects.aget(token=magic_link.token)
+    assert magic_link.disabled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aget_or_create_user():
+    email = "test@example.com"
+    usr = await aget_or_create_user(email=email)
+    assert usr.email == email
+    assert usr.username == email
+    assert await aget_or_create_user(email=email) == usr
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aget_or_create_user_random_username(settings):
+    settings.MAGICLINK_EMAIL_AS_USERNAME = False
+    reload(mlsettings)
+
+    email = "test@example.com"
+    usr = await aget_or_create_user(email=email)
+    assert usr.email == email
+    assert usr.username != email
+    assert len(usr.username) == 10
