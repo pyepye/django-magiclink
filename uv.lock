@@ -270,12 +270,11 @@ wheels = [
 
 [[package]]
 name = "django-magiclink"
-version = "1.4.0"
+version = "2.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "django", version = "6.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "packaging" },
 ]
 
 [package.dev-dependencies]
@@ -309,10 +308,7 @@ types = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "django", specifier = ">=2.1" },
-    { name = "packaging", specifier = ">=20.9" },
-]
+requires-dist = [{ name = "django", specifier = ">=5.2" }]
 
 [package.metadata.requires-dev]
 dev = [

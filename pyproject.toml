@@ -1,6 +1,6 @@
 [project]
 name = "django-magiclink"
-version = "1.4.0"
+version = "2.0.0"
 description = "Passwordless authentication for Django with Magic Links"
 readme = "README.md"
 license = "MIT"
@@ -9,8 +9,7 @@ authors = [{ name = "Matt Pye", email = "pyematt@gmail.com" }]
 keywords = ["magic link", "authentication", "passwordless"]
 requires-python = ">=3.11"
 dependencies = [
-    "Django>=2.1",
-    "packaging>=20.9",
+    "Django>=5.2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

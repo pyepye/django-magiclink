@@ -94,3 +94,70 @@ async def test_aauthenticate_and_auser(user, magic_link):
 
     await alogin(request, authed)
     assert await aget_user(request) == user
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_auth_backend_aget_user_does_not_exist(user):
+    assert await MagicLinkBackend().aget_user(123456) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    authed = await MagicLinkBackend().aauthenticate(
+        request=request, token=ml.token, email=user.email
+    )
+    assert authed == user
+    ml = await MagicLink.objects.aget(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate_no_token(user):
+    request = HttpRequest()
+    authed = await MagicLinkBackend().aauthenticate(
+        request=request, token="", email=user.email
+    )
+    assert authed is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate_token_not_found(user):
+    request = HttpRequest()
+    authed = await MagicLinkBackend().aauthenticate(
+        request=request, token="fake", email=user.email
+    )
+    assert authed is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate_disabled_token(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    ml.disabled = True
+    await ml.asave()
+    authed = await MagicLinkBackend().aauthenticate(
+        request=request, token=ml.token, email=user.email
+    )
+    assert authed is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate_invalid(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    authed = await MagicLinkBackend().aauthenticate(
+        request=request, token=ml.token, email="fake@email.com"
+    )
+    assert authed is None

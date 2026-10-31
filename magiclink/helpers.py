@@ -23,13 +23,41 @@ def create_magiclink(
 
     limit = timezone.now() - timedelta(seconds=settings.LOGIN_REQUEST_TIME_LIMIT)
     over_limit = MagicLink.objects.filter(email=email, created__gte=limit)
-    if over_limit:
+    if over_limit.exists():
         raise MagicLinkError("Too many magic login requests")
 
     if settings.ONE_TOKEN_PER_USER:
         magic_links = MagicLink.objects.filter(email=email, disabled=False)
         magic_links.update(disabled=True)
 
+    return MagicLink.objects.create(**_magiclink_fields(email, request, redirect_url))
+
+
+async def acreate_magiclink(
+    email: str,
+    request: HttpRequest,
+    redirect_url: str = "",
+) -> MagicLink:
+    if settings.EMAIL_IGNORE_CASE:
+        email = email.lower()
+
+    limit = timezone.now() - timedelta(seconds=settings.LOGIN_REQUEST_TIME_LIMIT)
+    over_limit = MagicLink.objects.filter(email=email, created__gte=limit)
+    if await over_limit.aexists():
+        raise MagicLinkError("Too many magic login requests")
+
+    if settings.ONE_TOKEN_PER_USER:
+        magic_links = MagicLink.objects.filter(email=email, disabled=False)
+        await magic_links.aupdate(disabled=True)
+
+    return await MagicLink.objects.acreate(
+        **_magiclink_fields(email, request, redirect_url)
+    )
+
+
+def _magiclink_fields(
+    email: str, request: HttpRequest, redirect_url: str
+) -> dict[str, object]:
     if not redirect_url:
         redirect_url = get_url_path(djsettings.LOGIN_REDIRECT_URL)
 
@@ -39,16 +67,14 @@ def create_magiclink(
         if client_ip and settings.ANONYMIZE_IP:
             client_ip = client_ip[: client_ip.rfind(".") + 1] + "0"
 
-    expiry = timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT)
-    magic_link = MagicLink.objects.create(
-        email=email,
-        token=get_random_string(length=settings.TOKEN_LENGTH),
-        expiry=expiry,
-        redirect_url=redirect_url,
-        cookie_value=str(uuid4()),
-        ip_address=client_ip,
-    )
-    return magic_link
+    return {
+        "email": email,
+        "token": get_random_string(length=settings.TOKEN_LENGTH),
+        "expiry": timezone.now() + timedelta(seconds=settings.AUTH_TIMEOUT),
+        "redirect_url": redirect_url,
+        "cookie_value": str(uuid4()),
+        "ip_address": client_ip,
+    }
 
 
 def get_or_create_user(
@@ -60,13 +86,58 @@ def get_or_create_user(
         email = email.lower()
 
     try:
-        user = User.objects.get(email=email)
+        return User.objects.get(email=email)
     except User.DoesNotExist:
         pass
-    else:
-        return user
 
-    user_fields = [field.name for field in User._meta.get_fields()]
+    user_details, needs_random_username = _new_user_details(
+        email, username, first_name, last_name
+    )
+    if not needs_random_username:
+        return User.objects.create(**user_details)
+
+    while True:
+        user_details["username"] = get_random_string(length=10)
+        try:
+            return User.objects.create(**user_details)
+        except IntegrityError:  # pragma: no cover
+            pass
+
+
+async def aget_or_create_user(
+    email: str, username: str = "", first_name: str = "", last_name: str = ""
+):
+    User = get_user_model()
+
+    if settings.EMAIL_IGNORE_CASE:
+        email = email.lower()
+
+    try:
+        return await User.objects.aget(email=email)
+    except User.DoesNotExist:
+        pass
+
+    user_details, needs_random_username = _new_user_details(
+        email, username, first_name, last_name
+    )
+    if not needs_random_username:
+        return await User.objects.acreate(**user_details)
+
+    while True:
+        user_details["username"] = get_random_string(length=10)
+        try:
+            return await User.objects.acreate(**user_details)
+        except IntegrityError:  # pragma: no cover
+            pass
+
+
+def _new_user_details(
+    email: str, username: str, first_name: str, last_name: str
+) -> tuple[dict[str, str], bool]:
+    """
+    Return the fields for a new user and if a random username must be added
+    """
+    user_fields = [field.name for field in get_user_model()._meta.get_fields()]
 
     if not username and settings.EMAIL_AS_USERNAME:
         username = email
@@ -81,20 +152,13 @@ def get_or_create_user(
     if "name" in user_fields:
         user_details["name"] = f"{first_name} {last_name}".strip()
 
-    if "username" in user_fields and not username:
+    if "username" not in user_fields:
+        return user_details, False
+
+    if not username:
         # Set a random username if we need to set a username and
         # EMAIL_AS_USERNAME is False
-        created = False
-        while not created:
-            user_details["username"] = get_random_string(length=10)
-            try:
-                user = User.objects.create(**user_details)
-                created = True
-            except IntegrityError:  # pragma: no cover
-                pass
-    else:
-        if "username" in user_fields:
-            user_details["username"] = username
-        user = User.objects.create(**user_details)
+        return user_details, True
 
-    return user
+    user_details["username"] = username
+    return user_details, False

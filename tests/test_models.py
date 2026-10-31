@@ -3,6 +3,7 @@ from importlib import reload
 from urllib.parse import quote
 
 import pytest
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.urls import reverse
@@ -295,3 +296,81 @@ def test_send_text_email_link_not_html_escaped(rf, magic_link, mailoutbox):
     ml.send(request)
     assert len(mailoutbox) == 1
     assert ml.generate_url(request) in mailoutbox[0].body
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_avalidate(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    assert await ml.avalidate(request=request, email=user.email) == user
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_avalidate_wrong_email(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+
+    with pytest.raises(MagicLinkError) as error:
+        await ml.avalidate(request=request, email="fake@email.com")
+
+    error.match("Email address does not match")
+
+    ml = await MagicLink.objects.aget(token=ml.token)
+    assert ml.disabled is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_avalidate_expired(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    ml.expiry = timezone.now() - timedelta(seconds=1)
+    await ml.asave()
+
+    with pytest.raises(MagicLinkError) as error:
+        await ml.avalidate(request=request, email=user.email)
+
+    error.match("Magic link has expired")
+
+    ml = await MagicLink.objects.aget(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_avalidate_superuser(settings, user, magic_link):
+    settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    user.is_superuser = True
+    await user.asave()
+
+    with pytest.raises(MagicLinkError) as error:
+        await ml.avalidate(request=request, email=user.email)
+
+    error.match("You can not login to a super user account using a magic link")
+
+    ml = await MagicLink.objects.aget(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_asend(mocker, rf, user, magic_link):
+    send_mail = mocker.patch("magiclink.models.send_mail")
+    request = rf.get("/")
+    ml = await sync_to_async(magic_link)(request)
+    await ml.asend(request)
+    send_mail.assert_called_once()

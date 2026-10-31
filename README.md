@@ -448,8 +448,30 @@ MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
 
 The `MagicLinkBackend` authentication backend can be used with Django's async authentication functions such as `aauthenticate()`, `alogin()` and `request.auser()`. The django-magiclink views are synchronous but can be used with both WSGI and ASGI.
 
+If you are writing your own async views, there are async versions of the helper functions and `MagicLink` methods:
+
+```python
+from magiclink.helpers import acreate_magiclink
+
+# Returns a newly created magiclink.models.MagicLink instance
+magiclink = await acreate_magiclink(email, request, redirect_url="")
+
+# Generates the magic link url and sends it in an email
+await magiclink.asend(request)
+```
+
+There is also `aget_or_create_user()` in `magiclink.helpers`, and `avalidate()`, `aused()` and `adisable()` on `MagicLink`. Django does not have an async email API so `asend()` runs `send()` in a thread.
+
 
 ## Upgrading
+
+### Upgrading to 2.0.0
+
+Version `2.0.0` does not add any new migrations or settings. If you upgrade from a previous version please note the following changes:
+
+* Django 5.2 or above is required
+* `packaging` is no longer installed as a dependency of django-magiclink
+* If you have subclassed `MagicLinkBackend` and overridden `authenticate()` or `get_user()`, you will also need to override the matching async method (`aauthenticate()` or `aget_user()`). The async methods no longer call the sync methods
 
 ### Upgrading to 1.4.0
 
