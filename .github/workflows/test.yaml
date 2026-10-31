@@ -31,7 +31,6 @@ jobs:
   test:
     name: ${{ matrix.python }}-django${{ matrix.django }}
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +45,6 @@ jobs:
           - { python: "3.12", django: "61" }
           - { python: "3.13", django: "61" }
           - { python: "3.14", django: "61" }
-          - { python: "3.15", django: "61", experimental: true }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -57,3 +55,32 @@ jobs:
           enable-cache: true
 
       - run: uv run --locked tox run -e ${{ matrix.python }}-django${{ matrix.django }}
+
+  test-allowed-to-fail:
+    name: 3.15-django61
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+
+      - run: uv run --locked tox run -e 3.15-django61
+
+  all-checks:
+    name: All checks
+    if: always()
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check lint and tests passed
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          test "$LINT_RESULT" = success
+          test "$TEST_RESULT" = success
