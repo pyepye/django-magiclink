@@ -33,7 +33,7 @@ class MagicLink(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.email} - {self.expiry}'
+        return f"{self.email} - {self.expiry}"
 
     def used(self) -> None:
         self.times_used += 1
@@ -49,15 +49,15 @@ class MagicLink(models.Model):
     def generate_url(self, request: HttpRequest) -> str:
         url_path = reverse(settings.LOGIN_VERIFY_URL)
 
-        params = {'token': self.token}
+        params = {"token": self.token}
         if settings.VERIFY_INCLUDE_EMAIL:
-            params['email'] = self.email
+            params["email"] = self.email
         query = urlencode(params)
 
-        url_path = f'{url_path}?{query}'
+        url_path = f"{url_path}?{query}"
         domain = get_current_site(request).domain
-        scheme = request.is_secure() and 'https' or 'http'
-        url = urljoin(f'{scheme}://{domain}', url_path)
+        scheme = request.is_secure() and "https" or "http"
+        url = urljoin(f"{scheme}://{domain}", url_path)
         return url
 
     def send(self, request: HttpRequest) -> None:
@@ -66,22 +66,21 @@ class MagicLink(models.Model):
         if not settings.IGNORE_UNSUBSCRIBE_IF_USER:
             try:
                 MagicLinkUnsubscribe.objects.get(email=self.email)
-                raise MagicLinkError(
-                    'Email address is on the unsubscribe list')
+                raise MagicLinkError("Email address is on the unsubscribe list")
             except MagicLinkUnsubscribe.DoesNotExist:
                 pass
 
         context = {
-            'subject': settings.EMAIL_SUBJECT,
-            'user': user,
-            'magiclink': self.generate_url(request),
-            'expiry': self.expiry,
-            'ip_address': self.ip_address,
-            'created': self.created,
-            'require_same_ip': settings.REQUIRE_SAME_IP,
-            'require_same_browser': settings.REQUIRE_SAME_BROWSER,
-            'token_uses': settings.TOKEN_USES,
-            'style': settings.EMAIL_STYLES,
+            "subject": settings.EMAIL_SUBJECT,
+            "user": user,
+            "magiclink": self.generate_url(request),
+            "expiry": self.expiry,
+            "ip_address": self.ip_address,
+            "created": self.created,
+            "require_same_ip": settings.REQUIRE_SAME_IP,
+            "require_same_browser": settings.REQUIRE_SAME_BROWSER,
+            "token_uses": settings.TOKEN_USES,
+            "style": settings.EMAIL_STYLES,
         }
         plain = render_to_string(settings.EMAIL_TEMPLATE_NAME_TEXT, context)
         html = render_to_string(settings.EMAIL_TEMPLATE_NAME_HTML, context)
@@ -96,52 +95,61 @@ class MagicLink(models.Model):
     def validate(
         self,
         request: HttpRequest,
-        email: str = '',
+        email: str = "",
     ) -> AbstractUser:
         if settings.EMAIL_IGNORE_CASE and email:
             email = email.lower()
 
         if settings.VERIFY_INCLUDE_EMAIL and self.email != email:
-            raise MagicLinkError('Email address does not match')
+            raise MagicLinkError("Email address does not match")
 
         if timezone.now() > self.expiry:
             self.disable()
-            raise MagicLinkError('Magic link has expired')
+            raise MagicLinkError("Magic link has expired")
 
         if settings.REQUIRE_SAME_IP:
             client_ip = get_client_ip(request)
             if client_ip and settings.ANONYMIZE_IP:
-                client_ip = client_ip[:client_ip.rfind('.')+1] + '0'
+                client_ip = client_ip[: client_ip.rfind(".") + 1] + "0"
             if self.ip_address != client_ip:
                 self.disable()
-                raise MagicLinkError('IP address is different from the IP '
-                                     'address used to request the magic link')
+                raise MagicLinkError(
+                    "IP address is different from the IP "
+                    "address used to request the magic link"
+                )
 
         if settings.REQUIRE_SAME_BROWSER:
-            cookie_name = f'magiclink{self.pk}'
+            cookie_name = f"magiclink{self.pk}"
             if self.cookie_value != request.COOKIES.get(cookie_name):
                 self.disable()
-                raise MagicLinkError('Browser is different from the browser '
-                                     'used to request the magic link')
+                raise MagicLinkError(
+                    "Browser is different from the browser "
+                    "used to request the magic link"
+                )
 
         if self.times_used >= settings.TOKEN_USES:
             self.disable()
-            raise MagicLinkError('Magic link has been used too many times')
+            raise MagicLinkError("Magic link has been used too many times")
 
         user = User.objects.get(email=self.email)
 
         if not settings.ALLOW_SUPERUSER_LOGIN and user.is_superuser:
             self.disable()
             raise MagicLinkError(
-                'You can not login to a super user account using a magic link')
+                "You can not login to a super user account using a magic link"
+            )
 
         if not settings.ALLOW_STAFF_LOGIN and user.is_staff:
             self.disable()
             raise MagicLinkError(
-                'You can not login to a staff account using a magic link')
+                "You can not login to a staff account using a magic link"
+            )
 
         return user
 
 
 class MagicLinkUnsubscribe(models.Model):
     email = models.EmailField()
+
+    def __str__(self):
+        return self.email

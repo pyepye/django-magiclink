@@ -4,26 +4,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='MagicLink',
+            name="MagicLink",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('email', models.EmailField(max_length=254)),
-                ('token', models.TextField()),
-                ('expiry', models.DateTimeField()),
-                ('redirect_url', models.TextField()),
-                ('disabled', models.BooleanField(default=False)),
-                ('times_used', models.IntegerField(default=0)),
-                ('cookie_value', models.TextField(blank=True)),
-                ('ip_address', models.GenericIPAddressField(null=True)),
-                ('created', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("email", models.EmailField(max_length=254)),
+                ("token", models.TextField()),
+                ("expiry", models.DateTimeField()),
+                ("redirect_url", models.TextField()),
+                ("disabled", models.BooleanField(default=False)),
+                ("times_used", models.IntegerField(default=0)),
+                ("cookie_value", models.TextField(blank=True)),
+                ("ip_address", models.GenericIPAddressField(null=True)),
+                ("created", models.DateTimeField(auto_now_add=True)),
             ],
         ),
     ]

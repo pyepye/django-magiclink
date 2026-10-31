@@ -3,7 +3,7 @@ from django.db import models
 
 
 class CustomUserEmailOnly(AbstractUser):
-    email = models.EmailField('email address', unique=True)
+    email = models.EmailField("email address", unique=True)
 
 
 class CustomUserFullName(CustomUserEmailOnly):

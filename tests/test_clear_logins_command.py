@@ -10,35 +10,35 @@ from magiclink.models import MagicLink
 @pytest.mark.django_db
 def test_magiclink_clear_logins():
     # Valid Magic Links
-    for index in range(2):
+    for _ in range(2):
         MagicLink.objects.create(
-            email='test@example.com',
-            token='fake',
+            email="test@example.com",
+            token="fake",
             expiry=timezone.now(),
-            redirect_url='',
+            redirect_url="",
         )
 
     # Magic Links which expired 2 weeks ago so should be removed
     two_weeks_ago = timezone.now() - timedelta(days=14)
-    for index in range(2):
+    for _ in range(2):
         MagicLink.objects.create(
-            email='test@example.com',
-            token='fake',
+            email="test@example.com",
+            token="fake",
             expiry=two_weeks_ago,
-            redirect_url='',
+            redirect_url="",
         )
 
     # Disabled Magic Links which should be removed
-    for index in range(2):
+    for _ in range(2):
         magic_link = MagicLink.objects.create(
-            email='test@example.com',
-            token='fake',
+            email="test@example.com",
+            token="fake",
             expiry=timezone.now(),
-            redirect_url='',
+            redirect_url="",
         )
         magic_link.disable()
 
-    call_command('magiclink_clear_logins')
+    call_command("magiclink_clear_logins")
 
     all_magiclinks = MagicLink.objects.all()
     assert all_magiclinks.count() == 2

@@ -14,6 +14,16 @@ This package was created with a focus on [ease of setup](#steps-to-impliment), [
 pip install django-magiclink
 ```
 
+### Supported versions
+
+django-magiclink is tested against the following versions of Django and Python:
+
+| Django | Python |
+|---|---|
+| 5.2 LTS | 3.11, 3.12, 3.13, 3.14 |
+| 6.0 | 3.12, 3.13, 3.14 |
+| 6.1 | 3.12, 3.13, 3.14 |
+
 ## Setup
 
 The setup of the app is simple but has a few steps and a few templates that need overriding.
@@ -73,17 +83,17 @@ AUTHENTICATION_BACKENDS = (
 Add the following settings to your `settings.py` (you will need to replace the template names in the below steps):
 ```python
 # Set Djangos login URL to the magiclink login page
-LOGIN_URL = 'magiclink:login'
+LOGIN_URL = "magiclink:login"
 
-MAGICLINK_LOGIN_TEMPLATE_NAME = 'magiclink/login.html'
-MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'magiclink/login_sent.html'
-MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = 'magiclink/login_failed.html'
+MAGICLINK_LOGIN_TEMPLATE_NAME = "magiclink/login.html"
+MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = "magiclink/login_sent.html"
+MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = "magiclink/login_failed.html"
 
 # Optional:
 # If this setting is set to False a user account will be created the first
 # time a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
-MAGICLINK_SIGNUP_TEMPLATE_NAME = 'magiclink/signup.html'
+MAGICLINK_SIGNUP_TEMPLATE_NAME = "magiclink/signup.html"
 ```
 
 See [additional configuration settings](#configuration-settings) for all of the different available settings.
@@ -148,11 +158,11 @@ This `MAGICLINK_EMAIL_STYLES` setting should be a dict with the following key va
 
 ```python
 MAGICLINK_EMAIL_STYLES = {
-    'logo_url': 'https://example.com/logo.png',
-    'background-colour': '#ffffff',
-    'main-text-color': '#000000',
-    'button-background-color': '#0078be',
-    'button-text-color': '#ffffff',
+    "logo_url": "https://example.com/logo.png",
+    "background-colour": "#ffffff",
+    "main-text-color": "#000000",
+    "button-background-color": "#0078be",
+    "button-text-color": "#ffffff",
 }
 ```
 *Note: The logo URL must be a full URL. For email client support you should use either a jpeg or png.*
@@ -202,53 +212,52 @@ Below are the different settings that can be overridden. To do so place the sett
 *Note: Each of the url / redirect settings can either be a URL or url name*
 
 ```python
-
 # Override the login page template. See 'Login page' in the Setup section
-MAGICLINK_LOGIN_TEMPLATE_NAME = 'myapp/login.html'
+MAGICLINK_LOGIN_TEMPLATE_NAME = "myapp/login.html"
 
 # Override the login page template. See 'Login sent page' in the Setup section
-MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = 'myapp/login_sent.html'
+MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = "myapp/login_sent.html"
 
 # Override the template that shows when the user tries to login with a
 # magic link that is not valid. See 'Login failed page' in the Setup section
-MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = 'magiclink/login_failed.html'
+MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = "magiclink/login_failed.html"
 
 # If a login failed redirect is specified the user will be redirected to this
 # URL instead of being shown the LOGIN_FAILED_TEMPLATE
-MAGICLINK_LOGIN_FAILED_REDIRECT = ''
+MAGICLINK_LOGIN_FAILED_REDIRECT = ""
 
 # If this setting is set to False a user account will be created the first time
 # a user requests a login link.
 MAGICLINK_REQUIRE_SIGNUP = True
 # Override the login page template. See 'Login sent page' in the Setup section
-MAGICLINK_SIGNUP_TEMPLATE_NAME = 'myapp/signup.html'
+MAGICLINK_SIGNUP_TEMPLATE_NAME = "myapp/signup.html"
 
 # Set Djangos login redirect URL to be used once the user opens the magic link
 # This will be used whenever a ?next parameter is not set on login
-LOGIN_REDIRECT_URL = '/accounts/profile/'
+LOGIN_REDIRECT_URL = "/accounts/profile/"
 
 # If a new user is created via the signup page use this setting to send them to
 # a different url than LOGIN_REDIRECT_URL when clicking the magic link
 # This will fall back to LOGIN_REDIRECT_URL
-MAGICLINK_SIGNUP_LOGIN_REDIRECT = '/welcome/'
+MAGICLINK_SIGNUP_LOGIN_REDIRECT = "/welcome/"
 
 # Change the url a user is redirect to after requesting a magic link
-MAGICLINK_LOGIN_SENT_REDIRECT = 'magiclink:login_sent'
+MAGICLINK_LOGIN_SENT_REDIRECT = "magiclink:login_sent"
 
 # Ensure the branding of the login email is correct. This setting is not needed
 # if you override the `login_email.html` template
 MAGICLINK_EMAIL_STYLES = {
-    'logo_url': '',
-    'background-colour': '#ffffff',
-    'main-text-color': '#000000',
-    'button-background-color': '#0078be',
-    'button-text-color': '#ffffff',
+    "logo_url": "",
+    "background-colour": "#ffffff",
+    "main-text-color": "#000000",
+    "button-background-color": "#0078be",
+    "button-text-color": "#ffffff",
 }
 
 # If you want to use your own email templates you can override the text and
 # html templates used with:
-MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT = 'myapp/login_email.text'
-MAGICLINK_EMAIL_TEMPLATE_NAME_HTML = 'myapp/login_email.html'
+MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT = "myapp/login_email.text"
+MAGICLINK_EMAIL_TEMPLATE_NAME_HTML = "myapp/login_email.html"
 
 # How long a magic link is valid for before returning an error
 MAGICLINK_AUTH_TIMEOUT = 300  # In second - Default is 5 minutes
@@ -316,7 +325,7 @@ MAGICLINK_ANTISPAM_FIELD_TIME = 1
 
 # Override the login verify address. You must inherit from Magiclink LoginVerify
 # view. See Manual usage for more details
-MAGICLINK_LOGIN_VERIFY_URL = 'magiclink:login_verify'
+MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
 
 # If an email address has been added to the unsubscribe table but is also
 # assocaited with a Django user, should a login email be sent
@@ -348,6 +357,8 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 
 *Note: Each of the above settings can be overridden / changed when configuring django-magiclink*
 
+The `?next` parameter on the login and signup pages and the logout URL is only used if it points to an allowed host (see Django's `ALLOWED_HOSTS` setting). This stops these URLs from being used to send users to another site.
+
 
 ## Unsubscribe / stopping email spam
 
@@ -358,7 +369,7 @@ Adding a user to the unsubscribe model is done using the normal Django ORM creat
 ```python
 from magiclink.models import MagicLinkUnsubscribe
 
-MagicLinkUnsubscribe.objects.create(email='test@example.com')
+MagicLinkUnsubscribe.objects.create(email="test@example.com")
 ```
 
 If you are using the Django Magiclink login or signup functionality, the unsubscribe check happens during form validation. This means a new user will never be created if their email address has already been added to the `MagicLinkUnsubscribe` list.
@@ -374,7 +385,7 @@ django-magiclink uses a model to help create, send and validate magic links. A `
 from magiclink.helpers import create_magiclink
 
 # Returns newly created from magiclink.models.MagicLink instance
-magiclink = create_magiclink(email, request, redirect_url='')
+magiclink = create_magiclink(email, request, redirect_url="")
 
 # Generates the magic link url and sends it in an email
 magiclink.send(request)
@@ -398,14 +409,13 @@ from magiclink.views import LoginVerify
 
 
 class CustomLoginVerify(LoginVerify):
-
     def login_complete_action(self):
         if self.request.user.is_superuser:
-            url = reverse('superuser_page')
+            url = reverse("superuser_page")
         elif self.request.user.is_staff:
-            url = reverse('staff_page')
+            url = reverse("staff_page")
         else:
-            url = reverse('normal_page')
+            url = reverse("normal_page")
         return HttpResponseRedirect(url)
 ```
 
@@ -429,15 +439,58 @@ urlpatterns = [
 
 ```python
 ...
-MAGICLINK_LOGIN_VERIFY_URL = 'custom_login_verify'
+MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
 ...
 ```
 
 
+### Async
+
+The `MagicLinkBackend` authentication backend can be used with Django's async authentication functions such as `aauthenticate()`, `alogin()` and `request.auser()`. The django-magiclink views are synchronous but can be used with both WSGI and ASGI.
+
+
 ## Upgrading
+
+### Upgrading to 1.4.0
+
+Version `1.4.0` does not add any new migrations or settings. If you upgrade from a previous version please note the following changes:
+
+* Python 3.11 or above is required
+* The magiclink models always use `AutoField` for their primary keys, whatever `DEFAULT_AUTO_FIELD` is set to. This stops Django 6 asking to create a new migration for magiclink. If you have already changed the magiclink tables to `BigAutoField` with your own migration (for example using `MIGRATION_MODULES`) you will need to subclass `magiclink.apps.MagiclinkConfig`, set `default_auto_field = "django.db.models.BigAutoField"` and use your subclass in `INSTALLED_APPS`
+* The `?next` parameter on the signup page and the logout URL is ignored if it points to a different host. The user is sent to `MAGICLINK_SIGNUP_LOGIN_REDIRECT` or `LOGOUT_REDIRECT_URL` instead
+* If the signup page is posted with a `form_name` which is not one of the four signup forms, the user is redirected back to the signup page
+* If you have overridden the `login_email.txt` template, change `{{ magiclink }}` to `{{ magiclink|safe }}` otherwise the link in the plain text email will not work
+
+### Upgrading to 1.2.0
 
 A new migration was added to version `1.2.0`. If you upgrade to `1.2.0` or above from a previous version please ensure you migrate
 
 ```bash
 python manage.py migrate magiclink
 ```
+
+
+## Development
+
+django-magiclink uses [uv](https://docs.astral.sh/uv/) to manage its dependencies and [tox](https://tox.wiki/) to run the tests against each supported version of Python and Django.
+
+```bash
+# Create a virtual environment with all of the development dependencies
+uv sync
+
+# Run the tests using the latest version of Django
+uv run pytest
+
+# Run the linting, type checks and tests for every supported version
+uv run tox p
+
+# Lint, format and type check the code
+uv run ruff check --fix .
+uv run ruff format .
+uv run mypy magiclink
+
+# Build the package
+uv build
+```
+
+New versions are published to PyPI by GitHub Actions when a version tag such as `1.4.0` is pushed. The tag must match the version in `pyproject.toml`.
