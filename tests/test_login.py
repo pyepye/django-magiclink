@@ -69,7 +69,11 @@ def test_login_post(mocker, client, user, settings):
     assert magiclink
     if mlsettings.REQUIRE_SAME_BROWSER:
         cookie_name = f"magiclink{magiclink.pk}"
-        assert response.cookies[cookie_name].value == magiclink.cookie_value
+        cookie = response.cookies[cookie_name]
+        assert cookie.value == magiclink.cookie_value
+        assert cookie["httponly"] is True
+        assert cookie["samesite"] == "Lax"
+        assert cookie["secure"] == ""
 
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
@@ -161,6 +165,16 @@ def test_login_too_many_tokens(client, user, magic_link):
     assert response.status_code == 200
     error = ["Too many magic login requests"]
     assert response.context_data["login_form"].errors["email"] == error
+
+
+@pytest.mark.django_db
+def test_login_post_secure_cookie(mocker, client, user):
+    mocker.patch("magiclink.models.send_mail")
+
+    url = reverse("magiclink:login")
+    response = client.post(url, {"email": user.email}, secure=True)
+    magiclink = MagicLink.objects.get(email=user.email)
+    assert response.cookies[f"magiclink{magiclink.pk}"]["secure"] is True
 
 
 @pytest.mark.django_db

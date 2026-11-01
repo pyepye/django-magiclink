@@ -80,7 +80,11 @@ def test_signup_post(mocker, client, settings):
     assert magiclink
     if mlsettings.REQUIRE_SAME_BROWSER:
         cookie_name = f"magiclink{magiclink.pk}"
-        assert response.cookies[cookie_name].value == magiclink.cookie_value
+        cookie = response.cookies[cookie_name]
+        assert cookie.value == magiclink.cookie_value
+        assert cookie["httponly"] is True
+        assert cookie["samesite"] == "Lax"
+        assert cookie["secure"] == ""
 
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
