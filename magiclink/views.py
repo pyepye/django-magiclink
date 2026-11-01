@@ -96,6 +96,11 @@ class LoginSent(TemplateView):
 class LoginVerify(TemplateView):
     template_name = settings.LOGIN_FAILED_TEMPLATE_NAME
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response["Referrer-Policy"] = "no-referrer"
+        return response
+
     def get(self, request, *args, **kwargs):
         token = request.GET.get("token")
         email = request.GET.get("email")
