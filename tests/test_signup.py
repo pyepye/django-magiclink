@@ -363,6 +363,30 @@ def test_signup_antispam_url_value(settings, client):
 
 
 @pytest.mark.django_db
+def test_signup_antispam_quiet_reject(mocker, settings, client):
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    send_mail = mocker.patch("magiclink.models.send_mail")
+
+    url = reverse("magiclink:signup")
+    data = {
+        "form_name": "SignupFormEmailOnly",
+        "email": "test@example.com",
+        "url": "test",
+        "load_time": sign_load_time(time() - 10),
+    }
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:login_sent")
+    assert not User.objects.filter(email="test@example.com").exists()
+    send_mail.assert_not_called()
+
+
+@pytest.mark.django_db
 def test_signup_email_in_unsubscribe(client):
     email = "test@example.com"
     MagicLinkUnsubscribe.objects.create(email=email)

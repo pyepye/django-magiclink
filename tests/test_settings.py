@@ -494,6 +494,23 @@ def test_antispam_honeypot_field_bad_value(settings):
         reload(settings)
 
 
+def test_antispam_quiet_reject(settings):
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert mlsettings.ANTISPAM_QUIET_REJECT == settings.MAGICLINK_ANTISPAM_QUIET_REJECT
+
+
+def test_antispam_quiet_reject_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = "Test"
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
 def test_site_url(settings):
     settings.MAGICLINK_SITE_URL = "https://example.com"
     from magiclink import settings as mlsettings

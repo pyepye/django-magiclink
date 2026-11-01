@@ -338,6 +338,44 @@ def test_login_antispam_custom_honeypot_field(settings, client, user):
 
 
 @pytest.mark.django_db
+def test_login_antispam_quiet_reject(mocker, settings, client, user, time_machine):
+    time_machine.move_to("2000-01-01T00:00:00", tick=False)
+
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    send_mail = mocker.patch("magiclink.models.send_mail")
+
+    url = reverse("magiclink:login")
+    data = {"email": user.email, "load_time": sign_load_time(time())}
+
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:login_sent")
+    assert not MagicLink.objects.filter(email=user.email).exists()
+    send_mail.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_login_antispam_quiet_reject_other_errors(settings, client):
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    url = reverse("magiclink:login")
+    data = {"email": "not-an-email", "load_time": sign_load_time(time() - 10)}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    assert "email" in response.context["login_form"].errors
+
+
+@pytest.mark.django_db
 def test_login_post_redirect_url(mocker, client, user, settings):
     from magiclink import settings as mlsettings
 

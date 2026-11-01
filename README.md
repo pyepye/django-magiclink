@@ -339,6 +339,9 @@ MAGICLINK_ANTISPAM_FORM_MAX_AGE = 21600  # In seconds - Default is 6 hours
 # The name of the hidden field that must be left empty. If you change this,
 # also change the CSS that hides its label (label[for="id_url"])
 MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "url"
+# If a form fails the anti spam checks, redirect to the login sent page without
+# sending an email, instead of showing an error that tells a bot what to change
+MAGICLINK_ANTISPAM_QUIET_REJECT = False
 
 # The scheme and domain used for the link in the login email, for example
 # "https://example.com". If this is not set the domain comes from

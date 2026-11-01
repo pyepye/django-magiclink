@@ -165,6 +165,10 @@ if not isinstance(ANTISPAM_HONEYPOT_FIELD, str) or not ANTISPAM_HONEYPOT_FIELD:
         '"MAGICLINK_ANTISPAM_HONEYPOT_FIELD" must be a non-empty string'
     )
 
+ANTISPAM_QUIET_REJECT = getattr(settings, "MAGICLINK_ANTISPAM_QUIET_REJECT", False)
+if not isinstance(ANTISPAM_QUIET_REJECT, bool):
+    raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_QUIET_REJECT" must be a boolean')
+
 SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
 if not isinstance(SITE_URL, str):
     raise ImproperlyConfigured('"MAGICLINK_SITE_URL" must be a string')

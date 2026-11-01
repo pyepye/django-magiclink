@@ -66,6 +66,10 @@ class AntiSpam(forms.Form):
             raise ValidationError("Form filled out too fast - bot detected")
         return load_time
 
+    def is_spam(self) -> bool:
+        spam_fields = ["load_time", settings.ANTISPAM_HONEYPOT_FIELD]
+        return any(name in self.errors for name in spam_fields)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not settings.ANTISPAM_FORMS:

@@ -51,6 +51,8 @@ class Login(TemplateView):
         context["require_signup"] = settings.REQUIRE_SIGNUP
         form = LoginForm(request.POST)
         if not form.is_valid():
+            if settings.ANTISPAM_QUIET_REJECT and form.is_spam():
+                return HttpResponseRedirect(get_url_path(settings.LOGIN_SENT_REDIRECT))
             context["login_form"] = form
             return self.render_to_response(context)
 
@@ -166,6 +168,8 @@ class Signup(TemplateView):
 
         form = form_class(request.POST)
         if not form.is_valid():
+            if settings.ANTISPAM_QUIET_REJECT and form.is_spam():
+                return HttpResponseRedirect(get_url_path(settings.LOGIN_SENT_REDIRECT))
             context[form_name] = form
             return self.render_to_response(context)
 
