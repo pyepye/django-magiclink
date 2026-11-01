@@ -507,6 +507,28 @@ await magiclink.asend(request)
 There is also `aget_or_create_user()` in `magiclink.helpers`, and `avalidate()`, `aused()` and `adisable()` on `MagicLink`. Django does not have an async email API so `asend()` runs `send()` in a thread.
 
 
+## Signals
+
+django-magiclink sends these signals from `magiclink.signals`. Use them to log, count or alert on events. Each signal is sent with the `request`.
+
+| Signal | Sender | Other arguments | Sent when |
+|---|---|---|---|
+| `magiclink_requested` | `MagicLink` | `magiclink` | A magic link is created |
+| `magiclink_sent` | `MagicLink` | `magiclink` | The login email is sent |
+| `login_succeeded` | `MagicLinkBackend` | `user`, `magiclink` | A magic link is used to log in |
+| `login_failed` | `MagicLinkBackend` | `magiclink`, `reason` | A magic link can not be used to log in. `magiclink` is `None` if no magic link has the token |
+| `spam_detected` | The login or signup view | `form` | A form fails the anti spam checks |
+
+```python
+from django.dispatch import receiver
+from magiclink.signals import login_failed
+
+
+@receiver(login_failed)
+def log_failed_login(sender, request, magiclink, reason, **kwargs):
+    print(f"Magic link login failed: {reason}")
+```
+
 ## Upgrading
 
 ### Upgrading to 2.0.0

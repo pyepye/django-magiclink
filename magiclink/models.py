@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from . import settings
+from .signals import magiclink_sent
 from .utils import anonymize_ip, get_client_ip
 
 User = get_user_model()
@@ -106,6 +107,7 @@ class MagicLink(models.Model):
             from_email=djsettings.DEFAULT_FROM_EMAIL,
             html_message=html,
         )
+        magiclink_sent.send(sender=self.__class__, magiclink=self, request=request)
 
     async def asend(self, request: HttpRequest) -> None:
         await sync_to_async(self.send)(request)
