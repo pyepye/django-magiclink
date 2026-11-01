@@ -1,3 +1,5 @@
+from importlib import reload
+
 import pytest
 from asgiref.sync import sync_to_async
 from django.contrib.auth import aauthenticate, aget_user, alogin
@@ -16,6 +18,25 @@ def test_auth_backend_get_user(user):
 @pytest.mark.django_db
 def test_auth_backend_get_user_do_not_exist(user):
     assert MagicLinkBackend().get_user(123456) is None
+
+
+@pytest.mark.django_db
+def test_auth_backend_get_user_inactive(user):
+    user.is_active = False
+    user.save()
+    assert MagicLinkBackend().get_user(user.id) is None
+
+
+@pytest.mark.django_db
+def test_auth_backend_get_user_inactive_ignore_flag(settings, user):
+    settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    user.is_active = False
+    user.save()
+    assert MagicLinkBackend().get_user(user.id) == user
 
 
 @pytest.mark.django_db
@@ -78,6 +99,14 @@ def test_auth_backend_invalid(user, magic_link):
 @pytest.mark.django_db(transaction=True)
 async def test_auth_backend_aget_user(user):
     assert await MagicLinkBackend().aget_user(user.id) == user
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_auth_backend_aget_user_inactive(user):
+    user.is_active = False
+    await user.asave()
+    assert await MagicLinkBackend().aget_user(user.id) is None
 
 
 @pytest.mark.asyncio

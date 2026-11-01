@@ -183,6 +183,9 @@ class MagicLink(models.Model):
         return "", False
 
     def _user_error(self, user: AbstractUser) -> str:
+        if not settings.IGNORE_IS_ACTIVE_FLAG and not getattr(user, "is_active", True):
+            return "This user has been deactivated"
+
         if not settings.ALLOW_SUPERUSER_LOGIN and user.is_superuser:
             return "You can not login to a super user account using a magic link"
 

@@ -290,6 +290,38 @@ def test_validate_staff(settings, user, magic_link):
 
 
 @pytest.mark.django_db
+def test_validate_inactive(user, magic_link):
+    request = HttpRequest()
+    ml = magic_link(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    user.is_active = False
+    user.save()
+    with pytest.raises(MagicLinkError) as error:
+        ml.validate(request=request, email=user.email)
+
+    error.match("This user has been deactivated")
+
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
+
+
+@pytest.mark.django_db
+def test_validate_inactive_ignore_flag(settings, user, magic_link):
+    settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
+    from magiclink import settings
+
+    reload(settings)
+
+    request = HttpRequest()
+    ml = magic_link(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    user.is_active = False
+    user.save()
+    assert ml.validate(request=request, email=user.email) == user
+
+
+@pytest.mark.django_db
 def test_send_text_email_link_not_html_escaped(rf, magic_link, mailoutbox):
     request = rf.get("/")
     ml = magic_link(request)
@@ -364,6 +396,21 @@ async def test_avalidate_superuser(settings, user, magic_link):
     ml = await MagicLink.objects.aget(token=ml.token)
     assert ml.times_used == 1
     assert ml.disabled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_avalidate_inactive(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    user.is_active = False
+    await user.asave()
+
+    with pytest.raises(MagicLinkError) as error:
+        await ml.avalidate(request=request, email=user.email)
+
+    error.match("This user has been deactivated")
 
 
 @pytest.mark.asyncio

@@ -354,6 +354,7 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 * The initial request and its response must take place in the same browser
 * Each one-time link can only be used once
 * Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
+* A user whose `is_active` flag is False can not log in and is logged out of any existing session
 
 *Note: Each of the above settings can be overridden / changed when configuring django-magiclink*
 
