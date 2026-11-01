@@ -458,6 +458,42 @@ def test_trusted_client_ip_header_bad_value(settings):
         reload(settings)
 
 
+def test_antispam_form_max_age(settings):
+    settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE = 60
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert mlsettings.ANTISPAM_FORM_MAX_AGE == settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE
+
+
+def test_antispam_form_max_age_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE = "Test"
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_antispam_honeypot_field(settings):
+    settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "website"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert (
+        mlsettings.ANTISPAM_HONEYPOT_FIELD == settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD
+    )
+
+
+def test_antispam_honeypot_field_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = ""
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
 def test_site_url(settings):
     settings.MAGICLINK_SITE_URL = "https://example.com"
     from magiclink import settings as mlsettings

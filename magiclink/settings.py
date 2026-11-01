@@ -149,6 +149,22 @@ if ANTISPAM_FIELD_TIME is not None:
             '"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float'
         ) from None
 
+try:
+    # In seconds
+    ANTISPAM_FORM_MAX_AGE = int(
+        getattr(settings, "MAGICLINK_ANTISPAM_FORM_MAX_AGE", 6 * 60 * 60)
+    )
+except ValueError:
+    raise ImproperlyConfigured(
+        '"MAGICLINK_ANTISPAM_FORM_MAX_AGE" must be an integer'
+    ) from None
+
+ANTISPAM_HONEYPOT_FIELD = getattr(settings, "MAGICLINK_ANTISPAM_HONEYPOT_FIELD", "url")
+if not isinstance(ANTISPAM_HONEYPOT_FIELD, str) or not ANTISPAM_HONEYPOT_FIELD:
+    raise ImproperlyConfigured(
+        '"MAGICLINK_ANTISPAM_HONEYPOT_FIELD" must be a non-empty string'
+    )
+
 SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
 if not isinstance(SITE_URL, str):
     raise ImproperlyConfigured('"MAGICLINK_SITE_URL" must be a string')

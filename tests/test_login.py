@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.urls import reverse
 
+from magiclink.forms import sign_load_time
 from magiclink.models import MagicLink, MagicLinkUnsubscribe
 
 User = get_user_model()
@@ -174,7 +175,7 @@ def test_login_antispam(settings, client, user, time_machine):
     reload(mlsettings)
 
     url = reverse("magiclink:login")
-    data = {"email": user.email, "load_time": time() - submit_time}
+    data = {"email": user.email, "load_time": sign_load_time(time() - submit_time)}
 
     response = client.post(url, data)
     magiclink = MagicLink.objects.get(email=user.email)
@@ -227,7 +228,7 @@ def test_login_antispam_submit_too_fast(settings, client, user, time_machine):
     reload(mlsettings)
 
     url = reverse("magiclink:login")
-    data = {"email": user.email, "load_time": time()}
+    data = {"email": user.email, "load_time": sign_load_time(time())}
 
     response = client.post(url, data)
     assert response.status_code == 200
@@ -280,7 +281,46 @@ def test_login_antispam_url_value(settings, client, user):
     response = client.post(url, data)
     assert response.status_code == 200
     form_errors = response.context["login_form"].errors
-    assert form_errors["url"] == ["url should be empty"]
+    assert form_errors["url"] == ["This field should be empty"]
+
+
+@pytest.mark.django_db
+def test_login_antispam_expired_load_time(settings, client, user, time_machine):
+    time_machine.move_to("2000-01-01T00:00:00", tick=False)
+
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    url = reverse("magiclink:login")
+    data = {"email": user.email, "load_time": sign_load_time(time())}
+    time_machine.shift(mlsettings.ANTISPAM_FORM_MAX_AGE + 1)
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context["login_form"].errors
+    assert form_errors["load_time"] == ["Form has expired, please reload the page"]
+
+
+@pytest.mark.django_db
+def test_login_antispam_custom_honeypot_field(settings, client, user):
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "website"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    url = reverse("magiclink:login")
+    response = client.get(url)
+    assert "website" in response.context["login_form"].fields
+    assert "url" not in response.context["login_form"].fields
+
+    data = {"email": user.email, "website": "test"}
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context["login_form"].errors
+    assert form_errors["website"] == ["This field should be empty"]
 
 
 @pytest.mark.django_db

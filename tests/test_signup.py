@@ -5,6 +5,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from magiclink.forms import sign_load_time
 from magiclink.models import MagicLink, MagicLinkUnsubscribe
 
 User = get_user_model()
@@ -273,7 +274,7 @@ def test_signup_antispam(settings, client, time_machine):
         "email": email,
         "username": "uname",
         "name": "Fake name",
-        "load_time": time() - (submit_time * 3),
+        "load_time": sign_load_time(time() - (submit_time * 3)),
     }
     response = client.post(url, data)
     assert response.status_code == 302
@@ -291,7 +292,11 @@ def test_signup_antispam_submit_too_fast(settings, client, time_machine):
 
     url = reverse("magiclink:signup")
     signup_form = "SignupFormEmailOnly"
-    data = {"form_name": signup_form, "email": "test@example.com", "load_time": time()}
+    data = {
+        "form_name": signup_form,
+        "email": "test@example.com",
+        "load_time": sign_load_time(time()),
+    }
 
     response = client.post(url, data)
     assert response.status_code == 200
@@ -350,7 +355,7 @@ def test_signup_antispam_url_value(settings, client):
     response = client.post(url, data)
     assert response.status_code == 200
     form_errors = response.context[signup_form].errors
-    assert form_errors["url"] == ["url should be empty"]
+    assert form_errors["url"] == ["This field should be empty"]
 
 
 @pytest.mark.django_db
