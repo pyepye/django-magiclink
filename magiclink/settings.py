@@ -90,6 +90,19 @@ ANONYMIZE_IP = getattr(settings, "MAGICLINK_ANONYMIZE_IP", True)
 if not isinstance(ANONYMIZE_IP, bool):
     raise ImproperlyConfigured('"MAGICLINK_ANONYMIZE_IP" must be a boolean')
 
+try:
+    TRUSTED_PROXY_COUNT = int(getattr(settings, "MAGICLINK_TRUSTED_PROXY_COUNT", 0))
+except ValueError:
+    raise ImproperlyConfigured(
+        '"MAGICLINK_TRUSTED_PROXY_COUNT" must be an integer'
+    ) from None
+if TRUSTED_PROXY_COUNT < 0:
+    raise ImproperlyConfigured('"MAGICLINK_TRUSTED_PROXY_COUNT" must be 0 or more')
+
+TRUSTED_CLIENT_IP_HEADER = getattr(settings, "MAGICLINK_TRUSTED_CLIENT_IP_HEADER", "")
+if not isinstance(TRUSTED_CLIENT_IP_HEADER, str):
+    raise ImproperlyConfigured('"MAGICLINK_TRUSTED_CLIENT_IP_HEADER" must be a string')
+
 ONE_TOKEN_PER_USER = getattr(settings, "MAGICLINK_ONE_TOKEN_PER_USER", True)
 if not isinstance(ONE_TOKEN_PER_USER, bool):
     raise ImproperlyConfigured('"MAGICLINK_ONE_TOKEN_PER_USER" must be a boolean')

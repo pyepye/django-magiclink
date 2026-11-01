@@ -303,6 +303,16 @@ MAGICLINK_REQUIRE_SAME_IP = True
 # is stored
 MAGICLINK_ANONYMIZE_IP = True
 
+# The number of proxies in front of Django that add to the X-Forwarded-For
+# header. The client IP is taken this many places from the right of the header.
+# 0 ignores X-Forwarded-For and uses REMOTE_ADDR. See 'Proxies' in the
+# Security section
+MAGICLINK_TRUSTED_PROXY_COUNT = 0
+
+# A header that your proxy or load balancer sets to the client IP address,
+# for example "X-Real-IP". This is used before MAGICLINK_TRUSTED_PROXY_COUNT
+MAGICLINK_TRUSTED_CLIENT_IP_HEADER = ""
+
 # The number of times a login token can be used before being disabled
 MAGICLINK_TOKEN_USES = 1
 
@@ -357,6 +367,17 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 * A user whose `is_active` flag is False can not log in and is logged out of any existing session
 
 *Note: Each of the above settings can be overridden / changed when configuring django-magiclink*
+
+### Proxies
+
+By default the client IP address comes from `REMOTE_ADDR` and the `X-Forwarded-For` header is ignored, because any client can send this header with any value. If Django runs behind a proxy or load balancer, `REMOTE_ADDR` is the address of the proxy. In this case, do one of the following:
+
+* Set `MAGICLINK_TRUSTED_PROXY_COUNT` to the number of proxies that add to `X-Forwarded-For`. For example, use `1` for a single nginx server
+* Set `MAGICLINK_TRUSTED_CLIENT_IP_HEADER` to a header that your proxy always sets and that clients can not set, for example `X-Real-IP`
+
+If these settings are wrong, `MAGICLINK_REQUIRE_SAME_IP` compares the wrong address, or a client can choose the address it is given.
+
+### Redirects
 
 The `?next` parameter on the login and signup pages and the logout URL is only used if it points to an allowed host (see Django's `ALLOWED_HOSTS` setting). This stops these URLs from being used to send users to another site.
 

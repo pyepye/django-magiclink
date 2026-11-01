@@ -4,14 +4,22 @@ from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from . import settings
 
-def get_client_ip(request: HttpRequest) -> str:
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(",")[0].strip()
-    else:
-        ip = request.META.get("REMOTE_ADDR")
-    return ip
+
+def get_client_ip(request: HttpRequest) -> str | None:
+    if settings.TRUSTED_CLIENT_IP_HEADER:
+        ip = request.headers.get(settings.TRUSTED_CLIENT_IP_HEADER, "").strip()
+        if ip:
+            return ip
+
+    if settings.TRUSTED_PROXY_COUNT:
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        ips = [ip.strip() for ip in x_forwarded_for.split(",") if ip.strip()]
+        if len(ips) >= settings.TRUSTED_PROXY_COUNT:
+            return ips[-settings.TRUSTED_PROXY_COUNT]
+
+    return request.META.get("REMOTE_ADDR")
 
 
 def get_url_path(url: str) -> str:
