@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from magiclink import settings
+from magiclink.helpers import create_magiclink
 from magiclink.models import MagicLink, MagicLinkError, MagicLinkUnsubscribe
 
 User = get_user_model()
@@ -226,6 +227,31 @@ def test_validate_wrong_ip(user, magic_link):
     ml = MagicLink.objects.get(token=ml.token)
     assert ml.times_used == 1
     assert ml.disabled is True
+
+
+@pytest.mark.django_db
+def test_validate_wrong_ipv6_network(user):
+    request = HttpRequest()
+    request.META["REMOTE_ADDR"] = "2001:db8:1::1"
+    ml = create_magiclink(user.email, request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    request.META["REMOTE_ADDR"] = "2001:db8:2::1"
+    with pytest.raises(MagicLinkError) as error:
+        ml.validate(request=request, email=user.email)
+
+    error.match(
+        "IP address is different from the IP address used to request the magic link"
+    )
+
+
+@pytest.mark.django_db
+def test_validate_same_ipv6_network(user):
+    request = HttpRequest()
+    request.META["REMOTE_ADDR"] = "2001:db8:1::1"
+    ml = create_magiclink(user.email, request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    request.META["REMOTE_ADDR"] = "2001:db8:1::2"
+    assert ml.validate(request=request, email=user.email) == user
 
 
 @pytest.mark.django_db

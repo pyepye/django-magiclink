@@ -298,7 +298,8 @@ MAGICLINK_REQUIRE_SAME_BROWSER = True
 # initial login request.
 MAGICLINK_REQUIRE_SAME_IP = True
 
-# Remove the last 8-bit octet of a clients IP address.
+# Store only the network part of a client's IP address: the first 24 bits of
+# an IPv4 address and the first 64 bits of an IPv6 address.
 # Note: This has no effect if MAGICLINK_REQUIRE_SAME_IP as no IP address
 # is stored
 MAGICLINK_ANONYMIZE_IP = True

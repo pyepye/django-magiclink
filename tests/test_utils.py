@@ -2,7 +2,7 @@ from importlib import reload
 
 from django.http import HttpRequest
 
-from magiclink.utils import get_client_ip, get_url_path
+from magiclink.utils import anonymize_ip, get_client_ip, get_url_path
 
 
 def test_get_client_ip_ignores_x_forwarded_for():
@@ -89,3 +89,23 @@ def test_get_url_path_with_path():
     url_name = "/test/"
     url = get_url_path(url_name)
     assert url == "/test/"
+
+
+def test_anonymize_ip_v4():
+    assert anonymize_ip("192.168.1.55") == "192.168.1.0"
+
+
+def test_anonymize_ip_v6():
+    assert anonymize_ip("2001:db8:abcd:12:1:2:3:4") == "2001:db8:abcd:12::"
+
+
+def test_anonymize_ip_v6_different_networks():
+    assert anonymize_ip("2001:db8:1::1") != anonymize_ip("2001:db8:2::1")
+
+
+def test_anonymize_ip_v4_mapped_v6():
+    assert anonymize_ip("::ffff:192.168.1.55") == "192.168.1.0"
+
+
+def test_anonymize_ip_invalid():
+    assert anonymize_ip("unknown") == "unknown"

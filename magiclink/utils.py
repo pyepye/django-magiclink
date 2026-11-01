@@ -1,3 +1,5 @@
+import ipaddress
+
 from django.conf import settings as django_settings
 from django.http import HttpRequest
 from django.urls import reverse
@@ -20,6 +22,19 @@ def get_client_ip(request: HttpRequest) -> str | None:
             return ips[-settings.TRUSTED_PROXY_COUNT]
 
     return request.META.get("REMOTE_ADDR")
+
+
+def anonymize_ip(ip: str) -> str:
+    try:
+        address = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
+        address = address.ipv4_mapped
+    prefix = 24 if address.version == 4 else 64
+    network = ipaddress.ip_network(f"{address}/{prefix}", strict=False)
+    return str(network.network_address)
 
 
 def get_url_path(url: str) -> str:
