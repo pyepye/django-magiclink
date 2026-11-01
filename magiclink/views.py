@@ -3,6 +3,7 @@ import logging
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -68,6 +69,8 @@ class Login(TemplateView):
         try:
             magiclink = create_magiclink(email, request, redirect_url=redirect_url)
         except MagicLinkError as e:
+            if self.has_live_magiclink(email):
+                return HttpResponseRedirect(get_url_path(settings.LOGIN_SENT_REDIRECT))
             form.add_error("email", str(e))
             context["login_form"] = form
             return self.render_to_response(context)
@@ -90,6 +93,11 @@ class Login(TemplateView):
 
     def login_redirect_url(self, next_url) -> str:
         return get_safe_redirect_url(self.request, next_url)
+
+    def has_live_magiclink(self, email: str) -> bool:
+        return MagicLink.objects.filter(
+            email=email, disabled=False, expiry__gt=timezone.now()
+        ).exists()
 
 
 class LoginSent(TemplateView):

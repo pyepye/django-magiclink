@@ -155,9 +155,25 @@ def test_login_post_invalid(client, user):
 
 
 @pytest.mark.django_db
+def test_login_too_many_tokens_live_link(mocker, client, user, magic_link):
+    send_mail = mocker.patch("magiclink.models.send_mail")
+    request = HttpRequest()
+    ml = magic_link(request)
+
+    url = reverse("magiclink:login")
+    data = {"email": ml.email}
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:login_sent")
+    assert MagicLink.objects.filter(email=ml.email).count() == 1
+    send_mail.assert_not_called()
+
+
+@pytest.mark.django_db
 def test_login_too_many_tokens(client, user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
+    ml.disable()
 
     url = reverse("magiclink:login")
     data = {"email": ml.email}

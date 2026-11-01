@@ -318,6 +318,8 @@ MAGICLINK_TRUSTED_CLIENT_IP_HEADER = ""
 MAGICLINK_TOKEN_USES = 1
 
 # How often a user can request a new login token (basic rate limiting).
+# If the user asks again while their last magic link can still be used, the
+# login page redirects to the login sent page and does not send a new email.
 MAGICLINK_LOGIN_REQUEST_TIME_LIMIT = 30  # In seconds
 
 # Disable all other tokens for a user when a new token is requested
