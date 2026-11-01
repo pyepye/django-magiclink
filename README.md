@@ -333,6 +333,12 @@ MAGICLINK_ANTISPAM_FORMS = False
 # 3 seconds to fill out a form.
 MAGICLINK_ANTISPAM_FIELD_TIME = 1
 
+# The scheme and domain used for the link in the login email, for example
+# "https://example.com". If this is not set the domain comes from
+# django.contrib.sites or the request's Host header. See 'Host header' in the
+# Security section
+MAGICLINK_SITE_URL = ""
+
 # Override the login verify address. You must inherit from Magiclink LoginVerify
 # view. See Manual usage for more details
 MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
@@ -376,6 +382,12 @@ By default the client IP address comes from `REMOTE_ADDR` and the `X-Forwarded-F
 * Set `MAGICLINK_TRUSTED_CLIENT_IP_HEADER` to a header that your proxy always sets and that clients can not set, for example `X-Real-IP`
 
 If these settings are wrong, `MAGICLINK_REQUIRE_SAME_IP` compares the wrong address, or a client can choose the address it is given.
+
+### Host header
+
+If `MAGICLINK_SITE_URL` is not set and `django.contrib.sites` is not installed, the domain of the link in the login email comes from the request's `Host` header. If `ALLOWED_HOSTS` is `["*"]` or a broad wildcard, an attacker can request a login link for another person with `Host: evil.example`. That person then gets a real email with a link to the attacker's site, and the attacker gets the token when they click it.
+
+Set `MAGICLINK_SITE_URL`, or set `ALLOWED_HOSTS` to only the domains your site uses.
 
 ### Redirects
 

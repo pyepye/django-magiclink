@@ -67,6 +67,9 @@ class MagicLink(models.Model):
         query = urlencode(params)
 
         url_path = f"{url_path}?{query}"
+        if settings.SITE_URL:
+            return urljoin(settings.SITE_URL, url_path)
+
         domain = get_current_site(request).domain
         scheme = request.is_secure() and "https" or "http"
         url = urljoin(f"{scheme}://{domain}", url_path)

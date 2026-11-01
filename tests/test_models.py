@@ -67,6 +67,21 @@ def test_generate_url_custom_verify(settings, magic_link):
 
 
 @pytest.mark.django_db
+def test_generate_url_site_url(settings, magic_link):
+    settings.MAGICLINK_SITE_URL = "https://example.com"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    request = HttpRequest()
+    request.META["HTTP_HOST"] = "evil.example"
+    login_url = reverse("magiclink:login_verify")
+    ml = magic_link(request)
+    url = f"https://example.com{login_url}?token={ml.token}&email={quote(ml.email)}"
+    assert ml.generate_url(request) == url
+
+
+@pytest.mark.django_db
 def test_send_email(mocker, settings, magic_link):
     from magiclink import settings as mlsettings
 

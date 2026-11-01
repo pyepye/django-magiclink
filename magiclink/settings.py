@@ -149,6 +149,14 @@ if ANTISPAM_FIELD_TIME is not None:
             '"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float'
         ) from None
 
+SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
+if not isinstance(SITE_URL, str):
+    raise ImproperlyConfigured('"MAGICLINK_SITE_URL" must be a string')
+if SITE_URL and not SITE_URL.startswith(("http://", "https://")):
+    raise ImproperlyConfigured(
+        '"MAGICLINK_SITE_URL" must start with "http://" or "https://"'
+    )
+
 LOGIN_VERIFY_URL = getattr(
     settings, "MAGICLINK_LOGIN_VERIFY_URL", "magiclink:login_verify"
 )

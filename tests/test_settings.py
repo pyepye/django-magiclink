@@ -458,6 +458,32 @@ def test_trusted_client_ip_header_bad_value(settings):
         reload(settings)
 
 
+def test_site_url(settings):
+    settings.MAGICLINK_SITE_URL = "https://example.com"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert mlsettings.SITE_URL == settings.MAGICLINK_SITE_URL
+
+
+def test_site_url_bad_value(settings):
+    settings.MAGICLINK_SITE_URL = 1
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_site_url_no_scheme(settings):
+    settings.MAGICLINK_SITE_URL = "example.com"
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
 def test_login_verify_url(settings):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
     from magiclink import settings as mlsettings
