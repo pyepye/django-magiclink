@@ -395,6 +395,10 @@ By default the client IP address comes from `REMOTE_ADDR` and the `X-Forwarded-F
 
 If these settings are wrong, `MAGICLINK_REQUIRE_SAME_IP` compares the wrong address, or a client can choose the address it is given.
 
+Some proxies add a port to the address, so `203.0.113.9:5678` is read as `203.0.113.9`. A value that is not an IP address is ignored and the next source is used.
+
+If no IP address is found, a warning is logged and `MAGICLINK_REQUIRE_SAME_IP` has no address to compare, so the check passes if the link also has no address. For example, `REMOTE_ADDR` is empty if gunicorn runs on a unix socket. Set one of the settings above to use the check.
+
 ### Host header
 
 If `MAGICLINK_SITE_URL` is not set and `django.contrib.sites` is not installed, the domain of the link in the login email comes from the request's `Host` header. If `ALLOWED_HOSTS` is `["*"]` or a broad wildcard, an attacker can request a login link for another person with `Host: evil.example`. That person then gets a real email with a link to the attacker's site, and the attacker gets the token when they click it.

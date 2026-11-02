@@ -1,27 +1,48 @@
 import ipaddress
+import logging
 
 from django.conf import settings as django_settings
 from django.http import HttpRequest
+from django.http.request import split_domain_port
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from . import settings
 
+log = logging.getLogger(__name__)
+
+
+def clean_ip(value: str) -> str | None:
+    """
+    Return the IP address in value without a port, or None if it is not valid
+    """
+    value = value.strip()
+    host, _ = split_domain_port(value)
+    try:
+        return str(ipaddress.ip_address(host.strip("[]") or value)).split("%")[0]
+    except ValueError:
+        return None
+
 
 def get_client_ip(request: HttpRequest) -> str | None:
+    ip = None
     if settings.TRUSTED_CLIENT_IP_HEADER:
-        ip = request.headers.get(settings.TRUSTED_CLIENT_IP_HEADER, "").strip()
-        if ip:
-            return ip
+        ip = clean_ip(request.headers.get(settings.TRUSTED_CLIENT_IP_HEADER, ""))
 
-    if settings.TRUSTED_PROXY_COUNT:
+    if not ip and settings.TRUSTED_PROXY_COUNT:
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
-        ips = [ip.strip() for ip in x_forwarded_for.split(",") if ip.strip()]
+        ips = [value for value in x_forwarded_for.split(",") if value.strip()]
         if len(ips) >= settings.TRUSTED_PROXY_COUNT:
-            return ips[-settings.TRUSTED_PROXY_COUNT]
+            ip = clean_ip(ips[-settings.TRUSTED_PROXY_COUNT])
 
-    return request.META.get("REMOTE_ADDR")
+    ip = ip or clean_ip(request.META.get("REMOTE_ADDR", ""))
+    if not ip:
+        log.warning(
+            "Could not find the client IP address. If Django runs behind a proxy, set "
+            "MAGICLINK_TRUSTED_PROXY_COUNT or MAGICLINK_TRUSTED_CLIENT_IP_HEADER"
+        )
+    return ip
 
 
 def anonymize_ip(ip: str) -> str:
