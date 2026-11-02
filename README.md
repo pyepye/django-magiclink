@@ -335,14 +335,18 @@ MAGICLINK_ANTISPAM_FORMS = False
 # This means if the form has 3 fields and the user will need to make more than
 # 3 seconds to fill out a form.
 MAGICLINK_ANTISPAM_FIELD_TIME = 1
-# How long a login or signup form is valid for after the page loads. Do not
-# cache the login and signup pages, otherwise the forms will expire
+# How long a login or signup form is valid for after the page loads. An
+# expired form is shown again with an error and can be sent again. It is not
+# treated as spam. Do not cache the login and signup pages, otherwise the
+# forms will expire
 MAGICLINK_ANTISPAM_FORM_MAX_AGE = 21600  # In seconds - Default is 6 hours
 # The name of the hidden field that must be left empty. If you change this,
 # also change the CSS that hides its label (label[for="id_url"])
 MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "url"
 # If a form fails the anti spam checks, redirect to the login sent page without
-# sending an email, instead of showing an error that tells a bot what to change
+# sending an email, instead of showing an error that tells a bot what to change.
+# A person who sends the form faster than MAGICLINK_ANTISPAM_FIELD_TIME allows,
+# for example after their browser fills in the email address, also gets no email
 MAGICLINK_ANTISPAM_QUIET_REJECT = False
 
 # The scheme and domain used for the link in the login email, for example

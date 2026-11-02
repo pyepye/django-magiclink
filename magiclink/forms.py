@@ -4,11 +4,14 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.http import QueryDict
 
 from . import settings
 from .models import MagicLinkUnsubscribe
 
 User = get_user_model()
+
+FORM_EXPIRED = "Form has expired, please send it again"
 
 
 def sign_load_time(load_time: float) -> str:
@@ -43,7 +46,7 @@ class AntiSpam(forms.Form):
         ),
     )
 
-    def clean_load_time(self) -> float:
+    def clean_load_time(self) -> float | None:
         signed_load_time: str = self.cleaned_data.get("load_time", "")
         signer = TimestampSigner(salt="magiclink.antispam")
         try:
@@ -51,7 +54,13 @@ class AntiSpam(forms.Form):
                 signer.unsign(signed_load_time, max_age=settings.ANTISPAM_FORM_MAX_AGE)
             )
         except SignatureExpired:
-            raise ValidationError("Form has expired, please reload the page") from None
+            # A page left open too long is not spam, so re-show it with a new load time
+            data = QueryDict(mutable=True)
+            data.update(self.data)
+            data[self.add_prefix("load_time")] = sign_load_time(time())
+            self.data = data
+            self.add_error(None, ValidationError(FORM_EXPIRED, code="expired"))
+            return None
         except BadSignature:
             raise ValidationError("Invalid value") from None
 
