@@ -395,6 +395,8 @@ By default the client IP address comes from `REMOTE_ADDR` and the `X-Forwarded-F
 
 If these settings are wrong, `MAGICLINK_REQUIRE_SAME_IP` compares the wrong address, or a client can choose the address it is given.
 
+If neither setting is set, logins can fail behind a load balancer or CDN with more than one node, for example AWS ALB, Google Cloud load balancing, Cloudflare or Heroku. The request for a link and the click on it can reach Django through different nodes, so `REMOTE_ADDR` changes and `MAGICLINK_REQUIRE_SAME_IP` disables the link. A warning is logged once if a request has `X-Forwarded-For` and neither setting is set.
+
 Some proxies add a port to the address, so `203.0.113.9:5678` is read as `203.0.113.9`. A value that is not an IP address is ignored and the next source is used.
 
 If no IP address is found, a warning is logged and `MAGICLINK_REQUIRE_SAME_IP` has no address to compare, so the check passes if the link also has no address. For example, `REMOTE_ADDR` is empty if gunicorn runs on a unix socket. Set one of the settings above to use the check.

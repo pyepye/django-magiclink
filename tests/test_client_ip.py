@@ -6,10 +6,15 @@ from django.http import HttpRequest
 from django.urls import reverse
 
 from magiclink.models import MagicLink
-from magiclink.utils import clean_ip, get_client_ip
+from magiclink.utils import clean_ip, get_client_ip, warn_once
 
 PROXY_COUNT = "magiclink.settings.TRUSTED_PROXY_COUNT"
 IP_HEADER = "magiclink.settings.TRUSTED_CLIENT_IP_HEADER"
+
+
+@pytest.fixture(autouse=True)
+def reset_warn_once():
+    warn_once.cache_clear()
 
 
 def make_request(**meta):
@@ -91,6 +96,24 @@ def test_get_client_ip_warns_if_no_ip(caplog, meta):
 def test_get_client_ip_does_not_warn_if_ip_found(caplog):
     caplog.set_level(logging.WARNING, logger="magiclink")
     assert get_client_ip(make_request(REMOTE_ADDR="10.0.0.1")) == "10.0.0.1"
+    assert not caplog.text
+
+
+def test_get_client_ip_warns_once_if_forwarded_ip_is_ignored(caplog):
+    caplog.set_level(logging.WARNING, logger="magiclink")
+    request = make_request(REMOTE_ADDR="10.0.0.1", HTTP_X_FORWARDED_FOR="1.2.3.4")
+    assert get_client_ip(request) == "10.0.0.1"
+    assert get_client_ip(request) == "10.0.0.1"
+    assert caplog.text.count("X-Forwarded-For is ignored") == 1
+
+
+@pytest.mark.parametrize(
+    ("setting", "value"), [(PROXY_COUNT, 1), (IP_HEADER, "X-Real-IP")]
+)
+def test_get_client_ip_does_not_warn_if_a_proxy_is_set(mocker, caplog, setting, value):
+    mocker.patch(setting, value)
+    caplog.set_level(logging.WARNING, logger="magiclink")
+    get_client_ip(make_request(REMOTE_ADDR="10.0.0.1", HTTP_X_FORWARDED_FOR="1.2.3.4"))
     assert not caplog.text
 
 

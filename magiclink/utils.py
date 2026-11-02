@@ -1,5 +1,6 @@
 import ipaddress
 import logging
+from functools import cache
 
 from django.conf import settings as django_settings
 from django.http import HttpRequest
@@ -25,7 +26,23 @@ def clean_ip(value: str) -> str | None:
         return None
 
 
+@cache
+def warn_once(message: str) -> None:
+    log.warning(message)
+
+
 def get_client_ip(request: HttpRequest) -> str | None:
+    if (
+        not settings.TRUSTED_CLIENT_IP_HEADER
+        and not settings.TRUSTED_PROXY_COUNT
+        and request.META.get("HTTP_X_FORWARDED_FOR")
+    ):
+        warn_once(
+            "X-Forwarded-For is ignored, so the client IP address comes from "
+            "REMOTE_ADDR. If Django runs behind a proxy or load balancer, set "
+            "MAGICLINK_TRUSTED_PROXY_COUNT or MAGICLINK_TRUSTED_CLIENT_IP_HEADER"
+        )
+
     ip = None
     if settings.TRUSTED_CLIENT_IP_HEADER:
         ip = clean_ip(request.headers.get(settings.TRUSTED_CLIENT_IP_HEADER, ""))
