@@ -355,6 +355,14 @@ MAGICLINK_ANTISPAM_QUIET_REJECT = False
 # Security section
 MAGICLINK_SITE_URL = ""
 
+# Limit requests by IP, by email and for the whole site. See 'Rate limits' in
+# the Security section. There are no limits by default
+MAGICLINK_RATE_LIMITS = {
+    "request": "5/h/ip,3/10m/email",
+    "request_site": "100/m",
+    "verify_failed": "10/m/ip",
+}
+
 # Functions that can reject a request for a magic link. See 'Spam checks'
 MAGICLINK_SPAM_CHECKS = ["myproject.checks.no_tor"]
 
@@ -417,6 +425,29 @@ If no IP address is found, a warning is logged and `MAGICLINK_REQUIRE_SAME_IP` h
 If `MAGICLINK_SITE_URL` is not set and `django.contrib.sites` is not installed, the domain of the link in the login email comes from the request's `Host` header. If `ALLOWED_HOSTS` is `["*"]` or a broad wildcard, an attacker can request a login link for another person with `Host: evil.example`. That person then gets a real email with a link to the attacker's site, and the attacker gets the token when they click it.
 
 Set `MAGICLINK_SITE_URL`, or set `ALLOWED_HOSTS` to only the domains your site uses.
+
+### Rate limits
+
+`MAGICLINK_LOGIN_REQUEST_TIME_LIMIT` limits how often one email address can ask for a link. It does not stop bots that enter many other people's addresses into your forms, so you should also set `MAGICLINK_RATE_LIMITS`. It is a dict of these rule sets:
+
+| Name | What it counts | What happens over the limit |
+|---|---|---|
+| `request` | Every POST to the login and signup pages, including invalid forms | The form shows an error, or if `MAGICLINK_ANTISPAM_QUIET_REJECT` is on, the user is redirected to the login sent page. `spam_detected` is sent. No email is sent |
+| `request_site` | Requests that pass the form and spam checks. This protects your email sending reputation | The same as `request` |
+| `verify_failed` | Failed logins with a magic link | The login failed page is shown and the token is not checked. `login_failed` is sent with no `magiclink` |
+
+Each rule set is a comma separated string of `count/period` or `count/period/key` rules:
+
+* The period is a number and a unit, or only a unit: `s`, `m`, `h` or `d`. For example `h`, `10m`
+* `ip` counts per IP address, using the adapter's `get_client_ip`. IPv4 addresses are grouped by /24 and IPv6 addresses by /64, because one person can often use a whole IPv6 /64. If no IP address is found, the rule is not used
+* `email` counts per email address. The address is converted to lowercase and any `+tag` is removed, so `name+1@example.com` counts as `name@example.com`
+* With no key, the rule counts for the whole site
+
+Rate limits use Django's cache, with a fixed time window. All your workers must share the cache, so `LocMemCache` and `DummyCache` do not work in production.
+
+Anyone can use up the limit for an email address, which stops the real owner getting a link until the window ends. Keep `email` limits low enough to stop abuse, but not so low that this is easy to do.
+
+If you write your own views, use `hit`, `is_limited`, `ahit` and `ais_limited` from `magiclink.ratelimit`.
 
 ### Redirects
 
@@ -592,8 +623,8 @@ django-magiclink sends these signals from `magiclink.signals`. Use them to log, 
 | `magiclink_requested` | `MagicLink` | `magiclink` | A magic link is created |
 | `magiclink_sent` | `MagicLink` | `magiclink` | The login email is sent, or passed to the task that sends it |
 | `login_succeeded` | `MagicLinkBackend` | `user`, `magiclink` | A magic link is used to log in |
-| `login_failed` | `MagicLinkBackend` | `magiclink`, `reason` | A magic link can not be used to log in. `magiclink` is `None` if no magic link has the token |
-| `spam_detected` | The login or signup view | `form`, `reason` | A form fails the anti spam checks, or the adapter rejects the request |
+| `login_failed` | `MagicLinkBackend`, or `LoginVerify` over a rate limit | `magiclink`, `reason` | A magic link can not be used to log in. `magiclink` is `None` if no magic link has the token or the rate limit stopped the check |
+| `spam_detected` | The login or signup view | `form`, `reason` | A form fails the anti spam checks, the adapter rejects the request or a rate limit is reached |
 
 ```python
 from django.dispatch import receiver

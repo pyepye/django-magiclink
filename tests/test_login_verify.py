@@ -168,3 +168,19 @@ def test_login_verify_failed_no_referrer(client):
     response = client.get(f"{url}?token=fake&email=test@example.com")
     assert response.status_code == 200
     assert response["Referrer-Policy"] == "no-referrer"
+
+
+@pytest.mark.django_db
+def test_login_verify_disabled_link_has_no_other_error(client, magic_link):
+    request = HttpRequest()
+    ml = magic_link(request)
+    ml.ip_address = "127.0.0.0"
+    ml.disabled = True
+    ml.save()
+    client.cookies = SimpleCookie({f"magiclink{ml.pk}": ml.cookie_value})
+
+    query = urlencode({"token": ml.token, "email": ml.email})
+    response = client.get(f"{reverse('magiclink:login_verify')}?{query}")
+
+    assert response.status_code == 200
+    assert response.context["login_error"] == ""

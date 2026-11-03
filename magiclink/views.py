@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
-from . import settings
+from . import ratelimit, settings
 from .adapter import get_adapter
 from .forms import (
     LoginForm,
@@ -21,13 +21,14 @@ from .forms import (
 )
 from .helpers import create_magiclink, get_or_create_user
 from .models import MagicLink, MagicLinkError
-from .signals import spam_detected
+from .signals import login_failed, spam_detected
 from .utils import get_safe_redirect_url, get_url_path
 
 User = get_user_model()
 log = logging.getLogger(__name__)
 
 FORM_SPAM = "The form failed the anti spam checks"
+TOO_MANY_REQUESTS = "Too many requests, please try again later"
 
 SIGNUP_FORMS = {
     form.__name__: form
@@ -50,6 +51,11 @@ class SpamCheckedView(TemplateView):
         context[form_key] = form
         return self.render_to_response(context)
 
+    def rate_limited_response(self, context, form_key, form) -> HttpResponse:
+        form.errors.clear()
+        form.add_error("email", TOO_MANY_REQUESTS)
+        return self.spam_response(context, form_key, form, TOO_MANY_REQUESTS)
+
 
 @method_decorator(csrf_protect, name="dispatch")
 class Login(SpamCheckedView):
@@ -66,6 +72,9 @@ class Login(SpamCheckedView):
         context = self.get_context_data(**kwargs)
         context["require_signup"] = settings.REQUIRE_SIGNUP
         form = LoginForm(request.POST)
+        if ratelimit.hit("request", request, request.POST.get("email", "")):
+            return self.rate_limited_response(context, "login_form", form)
+
         if not form.is_valid():
             if form.is_spam():
                 return self.spam_response(context, "login_form", form, FORM_SPAM)
@@ -77,6 +86,9 @@ class Login(SpamCheckedView):
         if reason:
             form.add_error("email", reason)
             return self.spam_response(context, "login_form", form, reason)
+
+        if ratelimit.hit("request_site", request):
+            return self.rate_limited_response(context, "login_form", form)
 
         if not settings.REQUIRE_SIGNUP:
             get_or_create_user(email)
@@ -132,36 +144,19 @@ class LoginVerify(TemplateView):
     def get(self, request, *args, **kwargs):
         token = request.GET.get("token")
         email = request.GET.get("email")
+        if ratelimit.is_limited("verify_failed", request, email or ""):
+            login_failed.send(
+                sender=self.__class__,
+                request=request,
+                magiclink=None,
+                reason=TOO_MANY_REQUESTS,
+            )
+            return self.failed_response(TOO_MANY_REQUESTS, **kwargs)
+
         user = authenticate(request, token=token, email=email)
         if not user:
-            if settings.LOGIN_FAILED_REDIRECT:
-                redirect_url = get_url_path(settings.LOGIN_FAILED_REDIRECT)
-                return HttpResponseRedirect(redirect_url)
-
-            if not settings.LOGIN_FAILED_TEMPLATE_NAME:
-                raise Http404()
-
-            context = self.get_context_data(**kwargs)
-            # The below settings are left in for backward compatibility
-            context["ONE_TOKEN_PER_USER"] = settings.ONE_TOKEN_PER_USER
-            context["REQUIRE_SAME_BROWSER"] = settings.REQUIRE_SAME_BROWSER
-            context["REQUIRE_SAME_IP"] = settings.REQUIRE_SAME_IP
-            context["ALLOW_SUPERUSER_LOGIN"] = settings.ALLOW_SUPERUSER_LOGIN
-            context["ALLOW_STAFF_LOGIN"] = settings.ALLOW_STAFF_LOGIN
-
-            try:
-                magiclink = MagicLink.objects.get(token=token)
-            except MagicLink.DoesNotExist:
-                error = "A magic link with that token could not be found"
-                context["login_error"] = error
-                return self.render_to_response(context)
-
-            try:
-                magiclink.validate(request, email)
-            except MagicLinkError as error:
-                context["login_error"] = str(error)
-
-            return self.render_to_response(context)
+            ratelimit.hit("verify_failed", request, email or "")
+            return self.failed_response(**kwargs)
 
         login(request, user)
         log.info(f"Login successful for {email}")
@@ -172,6 +167,38 @@ class LoginVerify(TemplateView):
             cookie_name = f"magiclink{magiclink.pk}"
             response.delete_cookie(cookie_name)
         return response
+
+    def failed_response(self, login_error=None, **kwargs) -> HttpResponse:
+        if settings.LOGIN_FAILED_REDIRECT:
+            redirect_url = get_url_path(settings.LOGIN_FAILED_REDIRECT)
+            return HttpResponseRedirect(redirect_url)
+
+        if not settings.LOGIN_FAILED_TEMPLATE_NAME:
+            raise Http404()
+
+        context = self.get_context_data(**kwargs)
+        # The below settings are left in for backward compatibility
+        context["ONE_TOKEN_PER_USER"] = settings.ONE_TOKEN_PER_USER
+        context["REQUIRE_SAME_BROWSER"] = settings.REQUIRE_SAME_BROWSER
+        context["REQUIRE_SAME_IP"] = settings.REQUIRE_SAME_IP
+        context["ALLOW_SUPERUSER_LOGIN"] = settings.ALLOW_SUPERUSER_LOGIN
+        context["ALLOW_STAFF_LOGIN"] = settings.ALLOW_STAFF_LOGIN
+        context["login_error"] = login_error or self.link_error()
+        return self.render_to_response(context)
+
+    def link_error(self) -> str:
+        token = self.request.GET.get("token")
+        email = self.request.GET.get("email", "")
+        try:
+            magiclink = MagicLink.objects.get(token=token)
+        except MagicLink.DoesNotExist:
+            return "A magic link with that token could not be found"
+
+        try:
+            magiclink.validate(self.request, email)
+        except MagicLinkError as error:
+            return str(error)
+        return ""
 
     def login_complete_action(self) -> HttpResponse:
         token = self.request.GET.get("token")
@@ -200,6 +227,9 @@ class Signup(SpamCheckedView):
             return HttpResponseRedirect(self.request.path_info)
 
         form = form_class(request.POST)
+        if ratelimit.hit("request", request, request.POST.get("email", "")):
+            return self.rate_limited_response(context, form_name, form)
+
         if not form.is_valid():
             if form.is_spam():
                 return self.spam_response(context, form_name, form, FORM_SPAM)
@@ -211,6 +241,9 @@ class Signup(SpamCheckedView):
         if reason:
             form.add_error("email", reason)
             return self.spam_response(context, form_name, form, reason)
+
+        if ratelimit.hit("request_site", request):
+            return self.rate_limited_response(context, form_name, form)
 
         full_name = form.cleaned_data.get("name", "")
         try:

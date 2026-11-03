@@ -1,7 +1,35 @@
+import re
 import warnings
+from typing import NamedTuple
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+RATE_LIMIT_NAMES = ("request", "request_site", "verify_failed")
+RATE_LIMIT_PERIODS = {"s": 1, "m": 60, "h": 60 * 60, "d": 24 * 60 * 60}
+RATE_LIMIT_RULE = re.compile(r"(\d+)/(\d*)([smhd])(?:/(ip|email))?")
+
+
+class RateLimitRule(NamedTuple):
+    limit: int
+    seconds: int
+    key: str | None
+
+
+def parse_rate_limit_rules(rules: str) -> list[RateLimitRule]:
+    parsed = []
+    for rule in filter(None, (part.strip() for part in rules.split(","))):
+        match = RATE_LIMIT_RULE.fullmatch(rule)
+        seconds = 0
+        if match:
+            seconds = int(match[2] or 1) * RATE_LIMIT_PERIODS[match[3]]
+        if not match or not seconds:
+            raise ImproperlyConfigured(
+                f'"MAGICLINK_RATE_LIMITS" has an invalid rule: "{rule}"'
+            )
+        parsed.append(RateLimitRule(int(match[1]), seconds, match[4]))
+    return parsed
+
 
 LOGIN_SENT_REDIRECT = getattr(
     settings, "MAGICLINK_LOGIN_SENT_REDIRECT", "magiclink:login_sent"
@@ -178,6 +206,18 @@ if not isinstance(SPAM_CHECKS, list | tuple) or not all(
     isinstance(check, str) for check in SPAM_CHECKS
 ):
     raise ImproperlyConfigured('"MAGICLINK_SPAM_CHECKS" must be a list of strings')
+
+RATE_LIMITS = getattr(settings, "MAGICLINK_RATE_LIMITS", {})
+if not isinstance(RATE_LIMITS, dict):
+    raise ImproperlyConfigured('"MAGICLINK_RATE_LIMITS" must be a dict')
+for name, rules in RATE_LIMITS.items():
+    if name not in RATE_LIMIT_NAMES or not isinstance(rules, str):
+        raise ImproperlyConfigured(
+            f'"MAGICLINK_RATE_LIMITS" has an invalid entry: "{name}"'
+        )
+RATE_LIMITS = {
+    name: parse_rate_limit_rules(rules) for name, rules in RATE_LIMITS.items()
+}
 
 SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
 if not isinstance(SITE_URL, str):
