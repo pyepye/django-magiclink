@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
 from . import settings
+from .adapter import get_adapter
 from .forms import (
     LoginForm,
     SignupForm,
@@ -26,6 +27,8 @@ from .utils import get_safe_redirect_url, get_url_path
 User = get_user_model()
 log = logging.getLogger(__name__)
 
+FORM_SPAM = "The form failed the anti spam checks"
+
 SIGNUP_FORMS = {
     form.__name__: form
     for form in (
@@ -37,8 +40,19 @@ SIGNUP_FORMS = {
 }
 
 
+class SpamCheckedView(TemplateView):
+    def spam_response(self, context, form_key, form, reason) -> HttpResponse:
+        spam_detected.send(
+            sender=self.__class__, request=self.request, form=form, reason=reason
+        )
+        if settings.ANTISPAM_QUIET_REJECT:
+            return HttpResponseRedirect(get_url_path(settings.LOGIN_SENT_REDIRECT))
+        context[form_key] = form
+        return self.render_to_response(context)
+
+
 @method_decorator(csrf_protect, name="dispatch")
-class Login(TemplateView):
+class Login(SpamCheckedView):
     template_name = settings.LOGIN_TEMPLATE_NAME
 
     def get(self, request, *args, **kwargs):
@@ -54,14 +68,16 @@ class Login(TemplateView):
         form = LoginForm(request.POST)
         if not form.is_valid():
             if form.is_spam():
-                spam_detected.send(sender=self.__class__, request=request, form=form)
-                if settings.ANTISPAM_QUIET_REJECT:
-                    sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
-                    return HttpResponseRedirect(sent_url)
+                return self.spam_response(context, "login_form", form, FORM_SPAM)
             context["login_form"] = form
             return self.render_to_response(context)
 
         email = form.cleaned_data["email"]
+        reason = get_adapter().check_request(request, email, form)
+        if reason:
+            form.add_error("email", reason)
+            return self.spam_response(context, "login_form", form, reason)
+
         if not settings.REQUIRE_SIGNUP:
             get_or_create_user(email)
 
@@ -164,7 +180,7 @@ class LoginVerify(TemplateView):
 
 
 @method_decorator(csrf_protect, name="dispatch")
-class Signup(TemplateView):
+class Signup(SpamCheckedView):
     template_name = settings.SIGNUP_TEMPLATE_NAME
 
     def get(self, request, *args, **kwargs):
@@ -186,14 +202,16 @@ class Signup(TemplateView):
         form = form_class(request.POST)
         if not form.is_valid():
             if form.is_spam():
-                spam_detected.send(sender=self.__class__, request=request, form=form)
-                if settings.ANTISPAM_QUIET_REJECT:
-                    sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
-                    return HttpResponseRedirect(sent_url)
+                return self.spam_response(context, form_name, form, FORM_SPAM)
             context[form_name] = form
             return self.render_to_response(context)
 
         email = form.cleaned_data["email"]
+        reason = get_adapter().check_request(request, email, form)
+        if reason:
+            form.add_error("email", reason)
+            return self.spam_response(context, form_name, form, reason)
+
         full_name = form.cleaned_data.get("name", "")
         try:
             first_name, last_name = full_name.split(" ", 1)

@@ -169,6 +169,10 @@ ANTISPAM_QUIET_REJECT = getattr(settings, "MAGICLINK_ANTISPAM_QUIET_REJECT", Fal
 if not isinstance(ANTISPAM_QUIET_REJECT, bool):
     raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_QUIET_REJECT" must be a boolean')
 
+ADAPTER = getattr(settings, "MAGICLINK_ADAPTER", "magiclink.adapter.MagicLinkAdapter")
+if not isinstance(ADAPTER, str):
+    raise ImproperlyConfigured('"MAGICLINK_ADAPTER" must be a string')
+
 SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
 if not isinstance(SITE_URL, str):
     raise ImproperlyConfigured('"MAGICLINK_SITE_URL" must be a string')

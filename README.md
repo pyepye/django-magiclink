@@ -355,6 +355,10 @@ MAGICLINK_ANTISPAM_QUIET_REJECT = False
 # Security section
 MAGICLINK_SITE_URL = ""
 
+# The class used to get the client IP, check login requests and send the login
+# email. See 'Adapter'
+MAGICLINK_ADAPTER = "magiclink.adapter.MagicLinkAdapter"
+
 # Override the login verify address. You must inherit from Magiclink LoginVerify
 # view. See Manual usage for more details
 MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
@@ -516,7 +520,47 @@ magiclink = await acreate_magiclink(email, request, redirect_url="")
 await magiclink.asend(request)
 ```
 
-There is also `aget_or_create_user()` in `magiclink.helpers`, and `avalidate()`, `aused()` and `adisable()` on `MagicLink`. Django does not have an async email API so `asend()` runs `send()` in a thread.
+There is also `aget_or_create_user()` in `magiclink.helpers`, and `avalidate()`, `aused()` and `adisable()` on `MagicLink`. `asend()` calls the adapter's `asend_email()`. Django does not have an async email API, so by default this runs `send_email()` in a thread.
+
+
+## Adapter
+
+The adapter is one class that you can override to change how django-magiclink behaves. Subclass `magiclink.adapter.MagicLinkAdapter` and set `MAGICLINK_ADAPTER` to its path.
+
+| Method | Default | Purpose |
+|---|---|---|
+| `get_client_ip(request)` | Uses `MAGICLINK_TRUSTED_PROXY_COUNT` and `MAGICLINK_TRUSTED_CLIENT_IP_HEADER` | Returns the client IP address |
+| `check_request(request, email, form)` | Returns `None` | Returns a reason to reject a request for a magic link, or `None`. The login and signup views call this after the form is valid |
+| `send_email(magiclink, request)` | Sends the email with `send_mail` | Sends the login email |
+
+`check_request` and `send_email` can do I/O, so they have async versions (`acheck_request` and `asend_email`). By default these call the sync method in a thread. The django-magiclink views are synchronous and call `check_request`. If you write your own async view, call `await get_adapter().acheck_request(request, email, form)` before `acreate_magiclink`.
+
+If `check_request` returns a reason, `spam_detected` is sent and no email is sent. The form shows the reason as an error, or if `MAGICLINK_ANTISPAM_QUIET_REJECT` is on, the user is redirected to the login sent page.
+
+Use the adapter for anything that changes behaviour or returns a value. Use [signals](#signals) for anything that only observes.
+
+### Sending email in the background
+
+Override `send_email` to send the email with Django 6.0 Tasks, Celery, RQ or similar. Create the URL in `send_email`, because the task does not have the request:
+
+```python
+from magiclink.adapter import MagicLinkAdapter
+from myapp.tasks import send_login_email
+
+
+class MyAdapter(MagicLinkAdapter):
+    def send_email(self, magiclink, request):
+        send_login_email.delay(magiclink.pk, magiclink.generate_url(request))
+```
+
+```python
+from magiclink.models import MagicLink
+
+
+@shared_task
+def send_login_email(magiclink_id, url):
+    MagicLink.objects.get(pk=magiclink_id).deliver_email(url)
+```
 
 
 ## Signals
@@ -526,10 +570,10 @@ django-magiclink sends these signals from `magiclink.signals`. Use them to log, 
 | Signal | Sender | Other arguments | Sent when |
 |---|---|---|---|
 | `magiclink_requested` | `MagicLink` | `magiclink` | A magic link is created |
-| `magiclink_sent` | `MagicLink` | `magiclink` | The login email is sent |
+| `magiclink_sent` | `MagicLink` | `magiclink` | The login email is sent, or passed to the task that sends it |
 | `login_succeeded` | `MagicLinkBackend` | `user`, `magiclink` | A magic link is used to log in |
 | `login_failed` | `MagicLinkBackend` | `magiclink`, `reason` | A magic link can not be used to log in. `magiclink` is `None` if no magic link has the token |
-| `spam_detected` | The login or signup view | `form` | A form fails the anti spam checks |
+| `spam_detected` | The login or signup view | `form`, `reason` | A form fails the anti spam checks, or the adapter rejects the request |
 
 ```python
 from django.dispatch import receiver

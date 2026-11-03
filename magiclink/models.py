@@ -1,6 +1,5 @@
 from urllib.parse import urlencode, urljoin
 
-from asgiref.sync import sync_to_async
 from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -13,8 +12,9 @@ from django.urls import reverse
 from django.utils import timezone
 
 from . import settings
+from .adapter import get_adapter
 from .signals import magiclink_sent
-from .utils import anonymize_ip, get_client_ip
+from .utils import anonymize_ip
 
 User = get_user_model()
 
@@ -77,19 +77,31 @@ class MagicLink(models.Model):
         return url
 
     def send(self, request: HttpRequest) -> None:
-        user = User.objects.get(email=self.email)
-
         if not settings.IGNORE_UNSUBSCRIBE_IF_USER:
-            try:
-                MagicLinkUnsubscribe.objects.get(email=self.email)
+            unsubscribed = MagicLinkUnsubscribe.objects.filter(email=self.email)
+            if unsubscribed.exists():
                 raise MagicLinkError("Email address is on the unsubscribe list")
-            except MagicLinkUnsubscribe.DoesNotExist:
-                pass
 
+        get_adapter().send_email(self, request)
+        magiclink_sent.send(sender=self.__class__, magiclink=self, request=request)
+
+    async def asend(self, request: HttpRequest) -> None:
+        if not settings.IGNORE_UNSUBSCRIBE_IF_USER:
+            unsubscribed = MagicLinkUnsubscribe.objects.filter(email=self.email)
+            if await unsubscribed.aexists():
+                raise MagicLinkError("Email address is on the unsubscribe list")
+
+        await get_adapter().asend_email(self, request)
+        await magiclink_sent.asend(
+            sender=self.__class__, magiclink=self, request=request
+        )
+
+    def deliver_email(self, url: str) -> None:
+        user = User.objects.get(email=self.email)
         context = {
             "subject": settings.EMAIL_SUBJECT,
             "user": user,
-            "magiclink": self.generate_url(request),
+            "magiclink": url,
             "expiry": self.expiry,
             "ip_address": self.ip_address,
             "created": self.created,
@@ -107,10 +119,6 @@ class MagicLink(models.Model):
             from_email=djsettings.DEFAULT_FROM_EMAIL,
             html_message=html,
         )
-        magiclink_sent.send(sender=self.__class__, magiclink=self, request=request)
-
-    async def asend(self, request: HttpRequest) -> None:
-        await sync_to_async(self.send)(request)
 
     def validate(
         self,
@@ -165,7 +173,7 @@ class MagicLink(models.Model):
             return "Magic link has expired", True
 
         if settings.REQUIRE_SAME_IP:
-            client_ip = get_client_ip(request)
+            client_ip = get_adapter().get_client_ip(request)
             if client_ip and settings.ANONYMIZE_IP:
                 client_ip = anonymize_ip(client_ip)
             if self.ip_address != client_ip:
