@@ -355,6 +355,9 @@ MAGICLINK_ANTISPAM_QUIET_REJECT = False
 # Security section
 MAGICLINK_SITE_URL = ""
 
+# Functions that can reject a request for a magic link. See 'Spam checks'
+MAGICLINK_SPAM_CHECKS = ["myproject.checks.no_tor"]
+
 # The class used to get the client IP, check login requests and send the login
 # email. See 'Adapter'
 MAGICLINK_ADAPTER = "magiclink.adapter.MagicLinkAdapter"
@@ -530,7 +533,7 @@ The adapter is one class that you can override to change how django-magiclink be
 | Method | Default | Purpose |
 |---|---|---|
 | `get_client_ip(request)` | Uses `MAGICLINK_TRUSTED_PROXY_COUNT` and `MAGICLINK_TRUSTED_CLIENT_IP_HEADER` | Returns the client IP address |
-| `check_request(request, email, form)` | Returns `None` | Returns a reason to reject a request for a magic link, or `None`. The login and signup views call this after the form is valid |
+| `check_request(request, email, form)` | Runs `MAGICLINK_SPAM_CHECKS` | Returns a reason to reject a request for a magic link, or `None`. The login and signup views call this after the form is valid |
 | `send_email(magiclink, request)` | Sends the email with `send_mail` | Sends the login email |
 
 `check_request` and `send_email` can do I/O, so they have async versions (`acheck_request` and `asend_email`). By default these call the sync method in a thread. The django-magiclink views are synchronous and call `check_request`. If you write your own async view, call `await get_adapter().acheck_request(request, email, form)` before `acreate_magiclink`.
@@ -538,6 +541,23 @@ The adapter is one class that you can override to change how django-magiclink be
 If `check_request` returns a reason, `spam_detected` is sent and no email is sent. The form shows the reason as an error, or if `MAGICLINK_ANTISPAM_QUIET_REJECT` is on, the user is redirected to the login sent page.
 
 Use the adapter for anything that changes behaviour or returns a value. Use [signals](#signals) for anything that only observes.
+
+### Spam checks
+
+`MAGICLINK_SPAM_CHECKS` is a list of paths to functions. Each function gets `(request, email, form)` and returns a reason string to reject the request, or `None`. The checks run in order and the first reason stops the request. This lets you add captcha checks, IP reputation services or anything else without a subclass of the adapter.
+
+```python
+# myproject/checks.py
+from myproject.tor import is_tor_exit_node
+
+
+def no_tor(request, email, form):
+    if is_tor_exit_node(request.META["REMOTE_ADDR"]):
+        return "Requests from Tor are not allowed"
+    return None
+```
+
+If you override `check_request`, call `super().check_request(request, email, form)` to keep these checks.
 
 ### Sending email in the background
 

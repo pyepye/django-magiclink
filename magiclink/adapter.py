@@ -21,6 +21,10 @@ class MagicLinkAdapter:
         """
         Return the reason to reject a request for a magic link, or None
         """
+        for path in settings.SPAM_CHECKS:
+            reason = import_string(path)(request, email, form)
+            if reason:
+                return reason
         return None
 
     async def acheck_request(

@@ -173,6 +173,12 @@ ADAPTER = getattr(settings, "MAGICLINK_ADAPTER", "magiclink.adapter.MagicLinkAda
 if not isinstance(ADAPTER, str):
     raise ImproperlyConfigured('"MAGICLINK_ADAPTER" must be a string')
 
+SPAM_CHECKS = getattr(settings, "MAGICLINK_SPAM_CHECKS", [])
+if not isinstance(SPAM_CHECKS, list | tuple) or not all(
+    isinstance(check, str) for check in SPAM_CHECKS
+):
+    raise ImproperlyConfigured('"MAGICLINK_SPAM_CHECKS" must be a list of strings')
+
 SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
 if not isinstance(SITE_URL, str):
     raise ImproperlyConfigured('"MAGICLINK_SITE_URL" must be a string')
