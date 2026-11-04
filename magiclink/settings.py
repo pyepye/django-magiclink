@@ -1,5 +1,4 @@
 import re
-import warnings
 from collections.abc import Callable
 from typing import Any, NamedTuple
 
@@ -222,13 +221,6 @@ def __dir__() -> list[str]:
 def validate() -> None:
     for name in _SETTINGS:
         __getattr__(name)
-
-    if __getattr__("TOKEN_LENGTH") < 20:
-        warning = (
-            "Shorter MAGICLINK_TOKEN_LENGTH values make your login more "
-            "susceptible to brute force attacks"
-        )
-        warnings.warn(warning, RuntimeWarning, stacklevel=2)
 
 
 validate()

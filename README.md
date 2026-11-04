@@ -502,6 +502,17 @@ Anyone can use up the limit for an email address, which stops the real owner get
 
 If you write your own views, use `hit`, `is_limited`, `ahit` and `ais_limited` from `magiclink.ratelimit`.
 
+### System checks
+
+django-magiclink adds these warnings to Django's system checks, which run with commands such as `migrate` and `runserver`. To turn one off, add its ID to `SILENCED_SYSTEM_CHECKS`.
+
+| ID | Warning | Fix |
+|---|---|---|
+| `magiclink.W001` | `ALLOWED_HOSTS` is `["*"]` with no `MAGICLINK_SITE_URL` and no `django.contrib.sites` | See 'Host header' |
+| `magiclink.W002` | `MAGICLINK_RATE_LIMITS` is set and the default cache is `LocMemCache` or `DummyCache` | Use a cache that all workers share |
+| `magiclink.W003` | `SECURE_PROXY_SSL_HEADER`, `USE_X_FORWARDED_HOST` or `USE_X_FORWARDED_PORT` is set, the client IP address is used, and no proxy settings are set | See 'Proxies' |
+| `magiclink.W004` | `MAGICLINK_TOKEN_LENGTH` is below 20 | Use a longer token |
+
 ### Redirects
 
 The `?next` parameter on the login and signup pages and the logout URL is only used if it points to an allowed host (see Django's `ALLOWED_HOSTS` setting). This stops these URLs from being used to send users to another site.

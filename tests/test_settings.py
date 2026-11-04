@@ -106,15 +106,6 @@ def test_token_length_bad_value(settings):
         reload(settings)
 
 
-def test_token_length_low_value_warning(settings):
-    settings.MAGICLINK_TOKEN_LENGTH = 1
-
-    with pytest.warns(RuntimeWarning):
-        from magiclink import settings
-
-        reload(settings)
-
-
 def test_auth_timeout(settings):
     settings.MAGICLINK_AUTH_TIMEOUT = 100
     from magiclink import settings as mlsettings
