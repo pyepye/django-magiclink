@@ -1,5 +1,4 @@
 from datetime import timedelta
-from importlib import reload
 from types import SimpleNamespace
 
 import pytest
@@ -51,9 +50,6 @@ def test_create_magiclink_ipv6():
 @pytest.mark.django_db
 def test_create_magiclink_require_same_ip_off_no_ip(settings):
     settings.MAGICLINK_REQUIRE_SAME_IP = False
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     request.META["REMOTE_ADDR"] = "127.0.0.1"
@@ -64,9 +60,6 @@ def test_create_magiclink_require_same_ip_off_no_ip(settings):
 @pytest.mark.django_db
 def test_create_magiclink_none_anonymized_ip(settings):
     settings.MAGICLINK_ANONYMIZE_IP = False
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     ip_address = "127.0.0.1"
@@ -97,8 +90,6 @@ def test_create_magiclink_email_ignore_case():
 def test_create_magiclink_email_ignore_case_off(settings):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = False
     from magiclink import settings
-
-    reload(settings)
 
     email = "TEST@example.com"
     request = HttpRequest()
@@ -143,8 +134,6 @@ def test_get_or_create_user_exists_ignore_case(settings, user):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = True
     from magiclink import settings
 
-    reload(settings)
-
     usr = get_or_create_user(email=user.email.upper())
     assert usr == user
     assert User.objects.count() == 1
@@ -162,8 +151,6 @@ def test_get_or_create_user_email_as_username():
 def test_get_or_create_user_random_username(settings):
     settings.MAGICLINK_EMAIL_AS_USERNAME = False
     from magiclink import settings
-
-    reload(settings)
 
     email = "test@example.com"
     usr = get_or_create_user(email=email)
@@ -265,7 +252,6 @@ async def test_acreate_magiclink_login_request_time_limit():
 @pytest.mark.django_db(transaction=True)
 async def test_acreate_magiclink_one_token_per_user(settings):
     settings.MAGICLINK_LOGIN_REQUEST_TIME_LIMIT = 0
-    reload(mlsettings)
 
     email = "test@example.com"
     request = HttpRequest()
@@ -290,7 +276,6 @@ async def test_aget_or_create_user():
 @pytest.mark.django_db(transaction=True)
 async def test_aget_or_create_user_random_username(settings):
     settings.MAGICLINK_EMAIL_AS_USERNAME = False
-    reload(mlsettings)
 
     email = "test@example.com"
     usr = await aget_or_create_user(email=email)

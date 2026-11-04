@@ -52,7 +52,6 @@ class AsyncAdapter(MagicLinkAdapter):
 def use_adapter(settings):
     def _use(name):
         settings.MAGICLINK_ADAPTER = f"{ADAPTER_PATH}.{name}"
-        reload(mlsettings)
 
     return _use
 
@@ -174,7 +173,6 @@ def test_check_request_rejects_signup(client, use_adapter, spam_receiver):
 @pytest.mark.django_db
 def test_form_spam_sends_reason(client, settings, user, spam_receiver):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    reload(mlsettings)
     data = {"email": user.email, "load_time": sign_load_time(time()), "url": "bot"}
     client.post(reverse("magiclink:login"), data)
     assert spam_receiver.call_args.kwargs["reason"]

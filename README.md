@@ -211,6 +211,8 @@ Below are the different settings that can be overridden. To do so place the sett
 
 *Note: Each of the url / redirect settings can either be a URL or url name*
 
+*Note: Settings are read when they are used, so `override_settings` works in your tests. A bad value in `settings.py` raises `ImproperlyConfigured` when Django starts*
+
 ```python
 # Override the login page template. See 'Login page' in the Setup section
 MAGICLINK_LOGIN_TEMPLATE_NAME = "myapp/login.html"

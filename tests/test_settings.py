@@ -2,13 +2,16 @@ from importlib import reload
 
 import pytest
 from django.core.exceptions import ImproperlyConfigured
+from django.test import override_settings
+from django.urls import reverse
+
+from magiclink.views import Login
 
 
 def test_login_sent_redirect(settings):
     settings.MAGICLINK_LOGIN_SENT_REDIRECT = "/sent"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.LOGIN_SENT_REDIRECT == settings.MAGICLINK_LOGIN_SENT_REDIRECT
 
 
@@ -16,7 +19,6 @@ def test_login_template_name(settings):
     settings.MAGICLINK_LOGIN_TEMPLATE_NAME = "login.html"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.LOGIN_TEMPLATE_NAME == settings.MAGICLINK_LOGIN_TEMPLATE_NAME
 
 
@@ -24,7 +26,6 @@ def test_login_sent_template_name(settings):
     settings.MAGICLINK_LOGIN_SENT_TEMPLATE_NAME = "login_sent.html"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.LOGIN_SENT_TEMPLATE_NAME
         == settings.MAGICLINK_LOGIN_SENT_TEMPLATE_NAME
@@ -35,7 +36,6 @@ def test_login_failed_template_name(settings):
     settings.MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = "login_failed.html"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.LOGIN_FAILED_TEMPLATE_NAME
         == settings.MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME
@@ -46,7 +46,6 @@ def test_login_failed_redirect(settings):
     settings.MAGICLINK_LOGIN_FAILED_REDIRECT = "/loginfailed"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.LOGIN_FAILED_REDIRECT == settings.MAGICLINK_LOGIN_FAILED_REDIRECT
 
 
@@ -54,7 +53,6 @@ def test_signup_template_name(settings):
     settings.MAGICLINK_SIGNUP_TEMPLATE_NAME = "signup.html"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.SIGNUP_TEMPLATE_NAME == settings.MAGICLINK_SIGNUP_TEMPLATE_NAME
 
 
@@ -62,7 +60,6 @@ def test_signup_login_redirect(settings):
     settings.MAGICLINK_SIGNUP_LOGIN_REDIRECT = "/loggedin"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.SIGNUP_LOGIN_REDIRECT == settings.MAGICLINK_SIGNUP_LOGIN_REDIRECT
 
 
@@ -70,7 +67,6 @@ def test_email_subject(settings):
     settings.MAGICLINK_EMAIL_SUBJECT = "Test Email subject"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.EMAIL_SUBJECT == settings.MAGICLINK_EMAIL_SUBJECT
 
 
@@ -78,7 +74,6 @@ def test_email_template_name_text(settings):
     settings.MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT = "email.txt"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.EMAIL_TEMPLATE_NAME_TEXT
         == settings.MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT
@@ -89,7 +84,6 @@ def test_email_template_name_html(settings):
     settings.MAGICLINK_EMAIL_TEMPLATE_NAME_HTML = "email.html"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.EMAIL_TEMPLATE_NAME_HTML
         == settings.MAGICLINK_EMAIL_TEMPLATE_NAME_HTML
@@ -100,7 +94,6 @@ def test_token_length(settings):
     settings.MAGICLINK_TOKEN_LENGTH = 100
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.TOKEN_LENGTH == settings.MAGICLINK_TOKEN_LENGTH
 
 
@@ -126,7 +119,6 @@ def test_auth_timeout(settings):
     settings.MAGICLINK_AUTH_TIMEOUT = 100
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.AUTH_TIMEOUT == settings.MAGICLINK_AUTH_TIMEOUT
 
 
@@ -143,7 +135,6 @@ def test_token_uses(settings):
     settings.MAGICLINK_TOKEN_USES = 100
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.TOKEN_USES == settings.MAGICLINK_TOKEN_USES
 
 
@@ -160,7 +151,6 @@ def test_email_ignore_case(settings):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.EMAIL_IGNORE_CASE == settings.MAGICLINK_EMAIL_IGNORE_CASE
 
 
@@ -177,7 +167,6 @@ def test_require_signup(settings):
     settings.MAGICLINK_REQUIRE_SIGNUP = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.REQUIRE_SIGNUP == settings.MAGICLINK_REQUIRE_SIGNUP
 
 
@@ -194,7 +183,6 @@ def test_email_as_username(settings):
     settings.MAGICLINK_EMAIL_AS_USERNAME = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.EMAIL_AS_USERNAME == settings.MAGICLINK_EMAIL_AS_USERNAME
 
 
@@ -211,7 +199,6 @@ def test_allow_superuser_login(settings):
     settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ALLOW_SUPERUSER_LOGIN == settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN
 
 
@@ -228,7 +215,6 @@ def test_allow_staff_login(settings):
     settings.MAGICLINK_ALLOW_STAFF_LOGIN = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ALLOW_STAFF_LOGIN == settings.MAGICLINK_ALLOW_STAFF_LOGIN
 
 
@@ -254,7 +240,6 @@ def test_verify_include_email(settings):
     settings.MAGICLINK_VERIFY_INCLUDE_EMAIL = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.VERIFY_INCLUDE_EMAIL == settings.MAGICLINK_VERIFY_INCLUDE_EMAIL
 
 
@@ -271,7 +256,6 @@ def test_require_same_browser(settings):
     settings.MAGICLINK_REQUIRE_SAME_BROWSER = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.REQUIRE_SAME_BROWSER == settings.MAGICLINK_REQUIRE_SAME_BROWSER
 
 
@@ -288,7 +272,6 @@ def test_require_same_ip(settings):
     settings.MAGICLINK_REQUIRE_SAME_IP = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.REQUIRE_SAME_IP == settings.MAGICLINK_REQUIRE_SAME_IP
 
 
@@ -305,7 +288,6 @@ def test_anonymize_ip(settings):
     settings.MAGICLINK_ANONYMIZE_IP = False
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ANONYMIZE_IP == settings.MAGICLINK_ANONYMIZE_IP
 
 
@@ -322,7 +304,6 @@ def test_one_token_per_user(settings):
     settings.MAGICLINK_ONE_TOKEN_PER_USER = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ONE_TOKEN_PER_USER == settings.MAGICLINK_ONE_TOKEN_PER_USER
 
 
@@ -339,7 +320,6 @@ def test_token_request_time_limit(settings):
     settings.MAGICLINK_LOGIN_REQUEST_TIME_LIMIT = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.LOGIN_REQUEST_TIME_LIMIT
         == settings.MAGICLINK_LOGIN_REQUEST_TIME_LIMIT
@@ -365,7 +345,6 @@ def test_email_styles(settings):
     }
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.EMAIL_STYLES == settings.MAGICLINK_EMAIL_STYLES
 
 
@@ -382,7 +361,6 @@ def test_antispam_forms(settings):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ANTISPAM_FORMS == settings.MAGICLINK_ANTISPAM_FORMS
 
 
@@ -399,7 +377,6 @@ def test_antispam_form_submit_time(settings):
     settings.MAGICLINK_ANTISPAM_FIELD_TIME = 5
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ANTISPAM_FIELD_TIME == settings.MAGICLINK_ANTISPAM_FIELD_TIME
 
 
@@ -416,7 +393,6 @@ def test_trusted_proxy_count(settings):
     settings.MAGICLINK_TRUSTED_PROXY_COUNT = 2
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.TRUSTED_PROXY_COUNT == settings.MAGICLINK_TRUSTED_PROXY_COUNT
 
 
@@ -442,7 +418,6 @@ def test_trusted_client_ip_header(settings):
     settings.MAGICLINK_TRUSTED_CLIENT_IP_HEADER = "X-Real-IP"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.TRUSTED_CLIENT_IP_HEADER
         == settings.MAGICLINK_TRUSTED_CLIENT_IP_HEADER
@@ -462,7 +437,6 @@ def test_antispam_form_max_age(settings):
     settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE = 60
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ANTISPAM_FORM_MAX_AGE == settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE
 
 
@@ -479,7 +453,6 @@ def test_antispam_honeypot_field(settings):
     settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "website"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.ANTISPAM_HONEYPOT_FIELD == settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD
     )
@@ -498,7 +471,6 @@ def test_antispam_quiet_reject(settings):
     settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.ANTISPAM_QUIET_REJECT == settings.MAGICLINK_ANTISPAM_QUIET_REJECT
 
 
@@ -515,7 +487,6 @@ def test_site_url(settings):
     settings.MAGICLINK_SITE_URL = "https://example.com"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.SITE_URL == settings.MAGICLINK_SITE_URL
 
 
@@ -541,7 +512,6 @@ def test_login_verify_url(settings):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert mlsettings.LOGIN_VERIFY_URL == settings.MAGICLINK_LOGIN_VERIFY_URL
 
 
@@ -549,7 +519,6 @@ def test_ignore_unsubscribe_if_user(settings):
     settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     assert (
         mlsettings.IGNORE_UNSUBSCRIBE_IF_USER
         == settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER
@@ -563,3 +532,73 @@ def test_ignore_unsubscribe_if_user_bad_value(settings):
         from magiclink import settings
 
         reload(settings)
+
+
+@pytest.mark.django_db
+def test_override_settings_needs_no_reload(client):
+    url = reverse("magiclink:login")
+    assert client.get(url).template_name == ["magiclink/login.html"]
+    with override_settings(MAGICLINK_LOGIN_TEMPLATE_NAME="magiclink/login_sent.html"):
+        assert client.get(url).template_name == ["magiclink/login_sent.html"]
+    assert client.get(url).template_name == ["magiclink/login.html"]
+
+
+@pytest.mark.parametrize(
+    ("setting", "url_name", "template"),
+    [
+        ("LOGIN_SENT_TEMPLATE_NAME", "login_sent", "magiclink/login.html"),
+        ("SIGNUP_TEMPLATE_NAME", "signup", "magiclink/login_sent.html"),
+        ("LOGIN_FAILED_TEMPLATE_NAME", "login_verify", "magiclink/login_sent.html"),
+    ],
+)
+@pytest.mark.django_db
+def test_view_templates_use_the_current_setting(
+    client, settings, setting, url_name, template
+):
+    setattr(settings, f"MAGICLINK_{setting}", template)
+    response = client.get(reverse(f"magiclink:{url_name}"))
+    assert response.template_name == [template]
+
+
+@pytest.mark.django_db
+def test_template_name_on_the_view_is_used_before_the_setting(rf, settings):
+    settings.MAGICLINK_LOGIN_TEMPLATE_NAME = "magiclink/login_sent.html"
+    view = Login.as_view(template_name="magiclink/signup.html")
+    response = view(rf.get("/"))
+    assert response.template_name == ["magiclink/signup.html"]
+
+
+def test_bad_value_raises_when_used(settings):
+    from magiclink import settings as mlsettings
+
+    settings.MAGICLINK_REQUIRE_SIGNUP = "Test"
+    with pytest.raises(ImproperlyConfigured):
+        _ = mlsettings.REQUIRE_SIGNUP
+
+
+def test_unknown_setting():
+    from magiclink import settings as mlsettings
+
+    with pytest.raises(AttributeError):
+        _ = mlsettings.NOT_A_SETTING
+
+
+def test_antispam_field_time_none(settings):
+    from magiclink import settings as mlsettings
+
+    settings.MAGICLINK_ANTISPAM_FIELD_TIME = None
+    assert mlsettings.ANTISPAM_FIELD_TIME is None
+
+
+def test_dir_lists_settings():
+    from magiclink import settings as mlsettings
+
+    assert "REQUIRE_SIGNUP" in dir(mlsettings)
+
+
+@pytest.mark.django_db
+def test_override_settings_applies_to_a_login(client, user):
+    with override_settings(MAGICLINK_REQUIRE_SAME_BROWSER=False):
+        response = client.post(reverse("magiclink:login"), {"email": user.email})
+    assert response.status_code == 302
+    assert not [name for name in client.cookies if name.startswith("magiclink")]

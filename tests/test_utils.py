@@ -1,5 +1,3 @@
-from importlib import reload
-
 from django.http import HttpRequest
 
 from magiclink.utils import anonymize_ip, get_client_ip, get_url_path
@@ -14,9 +12,6 @@ def test_get_client_ip_ignores_x_forwarded_for():
 
 def test_get_client_ip_trusted_proxy_count(settings):
     settings.MAGICLINK_TRUSTED_PROXY_COUNT = 1
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     request.META["REMOTE_ADDR"] = "10.0.0.1"
@@ -26,9 +21,6 @@ def test_get_client_ip_trusted_proxy_count(settings):
 
 def test_get_client_ip_trusted_proxy_count_two(settings):
     settings.MAGICLINK_TRUSTED_PROXY_COUNT = 2
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     request.META["REMOTE_ADDR"] = "10.0.0.1"
@@ -38,9 +30,6 @@ def test_get_client_ip_trusted_proxy_count_two(settings):
 
 def test_get_client_ip_too_few_forwarded_ips(settings):
     settings.MAGICLINK_TRUSTED_PROXY_COUNT = 2
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     request.META["REMOTE_ADDR"] = "10.0.0.1"
@@ -50,9 +39,6 @@ def test_get_client_ip_too_few_forwarded_ips(settings):
 
 def test_get_client_ip_trusted_header(settings):
     settings.MAGICLINK_TRUSTED_CLIENT_IP_HEADER = "X-Real-IP"
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     request.META["REMOTE_ADDR"] = "10.0.0.1"
@@ -62,9 +48,6 @@ def test_get_client_ip_trusted_header(settings):
 
 def test_get_client_ip_trusted_header_missing(settings):
     settings.MAGICLINK_TRUSTED_CLIENT_IP_HEADER = "X-Real-IP"
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     request.META["REMOTE_ADDR"] = "10.0.0.1"

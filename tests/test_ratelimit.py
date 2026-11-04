@@ -30,7 +30,6 @@ def clear_cache():
 def limits(settings):
     def _set(**rules):
         settings.MAGICLINK_RATE_LIMITS = rules
-        reload(mlsettings)
 
     return _set
 

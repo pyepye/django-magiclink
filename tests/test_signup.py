@@ -1,4 +1,3 @@
-from importlib import reload
 from time import time
 
 import pytest
@@ -143,9 +142,6 @@ def test_signup_form_user_exists_inactive(mocker, client):
 @pytest.mark.django_db
 def test_signup_form_user_exists_ignore_active_flag(mocker, client, settings):
     settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     email = "test@example.com"
     User.objects.create(email=email, is_active=False)
@@ -266,9 +262,6 @@ def test_signup_antispam(settings, client, time_machine):
     submit_time = 1
     settings.MAGICLINK_ANTISPAM_FORMS = True
     settings.MAGICLINK_ANTISPAM_FIELD_TIME = submit_time
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:signup")
     signup_form = "SignupFormFull"
@@ -290,9 +283,6 @@ def test_signup_antispam_submit_too_fast(settings, client, time_machine):
     time_machine.move_to("2000-01-01T00:00:00", tick=False)
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:signup")
     signup_form = "SignupFormEmailOnly"
@@ -311,9 +301,6 @@ def test_signup_antispam_submit_too_fast(settings, client, time_machine):
 @pytest.mark.django_db
 def test_signup_antispam_missing_load_time(settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:signup")
     signup_form = "SignupFormEmailOnly"
@@ -328,9 +315,6 @@ def test_signup_antispam_missing_load_time(settings, client):
 @pytest.mark.django_db
 def test_signup_antispam_invalid_load_time(settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:signup")
     signup_form = "SignupFormEmailOnly"
@@ -345,9 +329,6 @@ def test_signup_antispam_invalid_load_time(settings, client):
 @pytest.mark.django_db
 def test_signup_antispam_url_value(settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:signup")
     signup_form = "SignupFormEmailOnly"
@@ -366,9 +347,6 @@ def test_signup_antispam_url_value(settings, client):
 def test_signup_antispam_quiet_reject(mocker, settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     send_mail = mocker.patch("magiclink.models.send_mail")
 

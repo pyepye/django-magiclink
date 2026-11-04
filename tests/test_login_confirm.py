@@ -18,7 +18,6 @@ User = get_user_model()
 @pytest.fixture
 def confirm_on(settings):
     settings.MAGICLINK_LOGIN_CONFIRM = True
-    reload(mlsettings)
 
 
 def request_link(client, user):
@@ -62,7 +61,6 @@ def test_get_shows_confirm_page_and_does_not_use_the_link(client, confirm_on, us
 @pytest.mark.django_db
 def test_confirm_template_setting(client, settings, confirm_on, user):
     settings.MAGICLINK_LOGIN_CONFIRM_TEMPLATE_NAME = "magiclink/login_sent.html"
-    reload(mlsettings)
     response = client.get(request_link(client, user))
     assert response.template_name == ["magiclink/login_sent.html"]
 
@@ -122,7 +120,6 @@ def test_post_from_another_browser_fails(client, confirm_on, user):
 @pytest.mark.django_db
 def test_custom_verify_view_with_confirm(client, settings, confirm_on, user):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
-    reload(mlsettings)
     link = request_link(client, user)
     assert client.get(link).status_code == 200
     response = client.post(link)

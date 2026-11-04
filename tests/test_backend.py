@@ -1,5 +1,3 @@
-from importlib import reload
-
 import pytest
 from asgiref.sync import sync_to_async
 from django.contrib.auth import aauthenticate, aget_user, alogin
@@ -30,9 +28,6 @@ def test_auth_backend_get_user_inactive(user):
 @pytest.mark.django_db
 def test_auth_backend_get_user_inactive_ignore_flag(settings, user):
     settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     user.is_active = False
     user.save()

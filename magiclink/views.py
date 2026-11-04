@@ -41,7 +41,14 @@ SIGNUP_FORMS = {
 }
 
 
-class SpamCheckedView(TemplateView):
+class SettingTemplateView(TemplateView):
+    template_setting = ""
+
+    def get_template_names(self) -> list[str]:
+        return [self.template_name or getattr(settings, self.template_setting)]
+
+
+class SpamCheckedView(SettingTemplateView):
     def spam_response(self, context, form_key, form, reason) -> HttpResponse:
         spam_detected.send(
             sender=self.__class__, request=self.request, form=form, reason=reason
@@ -59,7 +66,7 @@ class SpamCheckedView(TemplateView):
 
 @method_decorator(csrf_protect, name="dispatch")
 class Login(SpamCheckedView):
-    template_name = settings.LOGIN_TEMPLATE_NAME
+    template_setting = "LOGIN_TEMPLATE_NAME"
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -128,14 +135,14 @@ class Login(SpamCheckedView):
         ).exists()
 
 
-class LoginSent(TemplateView):
-    template_name = settings.LOGIN_SENT_TEMPLATE_NAME
+class LoginSent(SettingTemplateView):
+    template_setting = "LOGIN_SENT_TEMPLATE_NAME"
 
 
 @method_decorator(csrf_protect, name="dispatch")
 @method_decorator(never_cache, name="dispatch")
-class LoginVerify(TemplateView):
-    template_name = settings.LOGIN_FAILED_TEMPLATE_NAME
+class LoginVerify(SettingTemplateView):
+    template_setting = "LOGIN_FAILED_TEMPLATE_NAME"
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
@@ -230,7 +237,7 @@ class LoginVerify(TemplateView):
 
 @method_decorator(csrf_protect, name="dispatch")
 class Signup(SpamCheckedView):
-    template_name = settings.SIGNUP_TEMPLATE_NAME
+    template_setting = "SIGNUP_TEMPLATE_NAME"
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)

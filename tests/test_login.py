@@ -1,5 +1,4 @@
 import re
-from importlib import reload
 from time import time
 
 import pytest
@@ -98,9 +97,6 @@ def test_login_post_no_user(client):
 @pytest.mark.django_db
 def test_login_email_wrong_case(settings, client, user):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = False
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email.upper()}
@@ -113,9 +109,6 @@ def test_login_email_wrong_case(settings, client, user):
 @pytest.mark.django_db
 def test_login_email_ignore_case(settings, client, user):
     settings.MAGICLINK_EMAIL_IGNORE_CASE = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email.upper()}
@@ -129,9 +122,6 @@ def test_login_email_ignore_case(settings, client, user):
 @pytest.mark.django_db
 def test_login_post_no_user_require_signup_false(settings, client):
     settings.MAGICLINK_REQUIRE_SIGNUP = False
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     email = "fake@example.com"
     url = reverse("magiclink:login")
@@ -201,9 +191,6 @@ def test_login_antispam(settings, client, user, time_machine):
     submit_time = 1
     settings.MAGICLINK_ANTISPAM_FORMS = True
     settings.MAGICLINK_ANTISPAM_FIELD_TIME = submit_time
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email, "load_time": sign_load_time(time() - submit_time)}
@@ -232,9 +219,6 @@ def test_login_not_active(settings, client, user):
 @pytest.mark.django_db
 def test_login_not_active_ignore_flag(settings, client, user):
     settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     user.is_active = False
     user.save()
@@ -254,9 +238,6 @@ def test_login_antispam_submit_too_fast(settings, client, user, time_machine):
     time_machine.move_to("2000-01-01T00:00:00", tick=False)
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email, "load_time": sign_load_time(time())}
@@ -270,9 +251,6 @@ def test_login_antispam_submit_too_fast(settings, client, user, time_machine):
 @pytest.mark.django_db
 def test_login_antispam_missing_load_time(settings, client, user):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email}
@@ -286,9 +264,6 @@ def test_login_antispam_missing_load_time(settings, client, user):
 @pytest.mark.django_db
 def test_login_antispam_invalid_load_time(settings, client, user):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email, "load_time": "test"}
@@ -302,9 +277,6 @@ def test_login_antispam_invalid_load_time(settings, client, user):
 @pytest.mark.django_db
 def test_login_antispam_url_value(settings, client, user):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email, "url": "test"}
@@ -321,8 +293,6 @@ def test_login_antispam_expired_load_time(settings, client, user, time_machine):
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
     from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": user.email, "load_time": sign_load_time(time())}
@@ -344,7 +314,6 @@ def test_login_antispam_expired_form_is_not_quietly_rejected(
     settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
     from magiclink import settings as mlsettings
 
-    reload(mlsettings)
     send_mail = mocker.patch("magiclink.models.send_mail")
 
     url = reverse("magiclink:login")
@@ -372,9 +341,6 @@ def test_login_antispam_expired_form_is_not_quietly_rejected(
 def test_login_antispam_custom_honeypot_field(settings, client, user):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "website"
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     response = client.get(url)
@@ -394,9 +360,6 @@ def test_login_antispam_quiet_reject(mocker, settings, client, user, time_machin
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
     settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     send_mail = mocker.patch("magiclink.models.send_mail")
 
@@ -414,9 +377,6 @@ def test_login_antispam_quiet_reject(mocker, settings, client, user, time_machin
 def test_login_antispam_quiet_reject_other_errors(settings, client):
     settings.MAGICLINK_ANTISPAM_FORMS = True
     settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     data = {"email": "not-an-email", "load_time": sign_load_time(time() - 10)}
@@ -428,9 +388,6 @@ def test_login_antispam_quiet_reject_other_errors(settings, client):
 
 @pytest.mark.django_db
 def test_login_post_redirect_url(mocker, client, user, settings):
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     redirect_url = reverse("no_login")
@@ -447,9 +404,6 @@ def test_login_post_redirect_url(mocker, client, user, settings):
 
 @pytest.mark.django_db
 def test_login_post_redirect_url_unsafe(mocker, client, user, settings):
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login")
     url = f"{url}?next=https://test.com/"
@@ -479,9 +433,6 @@ def test_login_error_email_in_unsubscribe(client, user):
 @pytest.mark.django_db
 def test_login_pass_email_in_unsubscribe(settings, client, user):
     settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     MagicLinkUnsubscribe.objects.create(email=user.email)
 

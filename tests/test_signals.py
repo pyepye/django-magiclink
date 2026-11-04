@@ -1,4 +1,3 @@
-from importlib import reload
 from time import time
 
 import pytest
@@ -181,9 +180,6 @@ def test_spam_detected_login(settings, client, receiver, user, time_machine):
     time_machine.move_to("2000-01-01T00:00:00", tick=False)
 
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     handler = receiver(spam_detected)
     url = reverse("magiclink:login")
@@ -198,9 +194,6 @@ def test_spam_detected_login(settings, client, receiver, user, time_machine):
 @pytest.mark.django_db
 def test_spam_detected_signup(settings, client, receiver):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     handler = receiver(spam_detected)
     url = reverse("magiclink:signup")
@@ -219,9 +212,6 @@ def test_spam_detected_signup(settings, client, receiver):
 @pytest.mark.django_db
 def test_spam_detected_not_sent_for_other_errors(settings, client, receiver):
     settings.MAGICLINK_ANTISPAM_FORMS = True
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     handler = receiver(spam_detected)
     url = reverse("magiclink:login")

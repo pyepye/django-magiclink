@@ -41,7 +41,6 @@ def clear_calls():
 def use_checks(settings):
     def _use(*names):
         settings.MAGICLINK_SPAM_CHECKS = [f"tests.test_spam_checks.{n}" for n in names]
-        reload(mlsettings)
 
     return _use
 
@@ -63,7 +62,6 @@ def test_spam_checks_bad_value(settings, value):
 def test_checks_get_request_email_and_form(settings, mocker):
     check = mocker.patch("tests.test_spam_checks.allow", return_value=None)
     settings.MAGICLINK_SPAM_CHECKS = ["tests.test_spam_checks.allow"]
-    reload(mlsettings)
     request = HttpRequest()
     form = object()
     assert get_adapter().check_request(request, "a@example.com", form) is None
