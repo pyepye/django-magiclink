@@ -101,7 +101,22 @@ class AntiSpam(forms.Form):
             }
 
 
-class LoginForm(AntiSpam):
+class AccountForm(AntiSpam):
+    send_email = True
+    create_user = True
+
+    def account_error(self, email: str, message: str) -> str:
+        """
+        Raise an error that shows the state of an account, or if this must stay
+        hidden, return the email address and mark that no email should be sent
+        """
+        if not settings.PREVENT_ENUMERATION:
+            raise ValidationError(message)
+        self.send_email = False
+        return email
+
+
+class LoginForm(AccountForm):
     email = forms.EmailField(
         widget=forms.EmailInput(
             attrs={"autofocus": "autofocus", "placeholder": "Enter your email"}
@@ -121,24 +136,24 @@ class LoginForm(AntiSpam):
         except User.DoesNotExist:
             if settings.REQUIRE_SIGNUP:
                 error = "We could not find a user with that email address"
-                raise forms.ValidationError(error) from None
+                return self.account_error(email, error)
         else:
             is_active = getattr(user, "is_active", True)
             if not settings.IGNORE_IS_ACTIVE_FLAG and not is_active:
-                raise forms.ValidationError("This user has been deactivated")
+                return self.account_error(email, "This user has been deactivated")
 
         if not settings.IGNORE_UNSUBSCRIBE_IF_USER:
             try:
                 MagicLinkUnsubscribe.objects.get(email=email)
                 error = "Email address is on the unsubscribe list"
-                raise forms.ValidationError(error)
+                return self.account_error(email, error)
             except MagicLinkUnsubscribe.DoesNotExist:
                 pass
 
         return email
 
 
-class SignupFormEmailOnly(AntiSpam):
+class SignupFormEmailOnly(AccountForm):
     form_name = forms.CharField(
         initial="SignupFormEmailOnly", widget=forms.HiddenInput()
     )
@@ -156,8 +171,9 @@ class SignupFormEmailOnly(AntiSpam):
 
         try:
             MagicLinkUnsubscribe.objects.get(email=email)
+            self.create_user = False
             error = "Email address is on the unsubscribe list"
-            raise forms.ValidationError(error)
+            return self.account_error(email, error)
         except MagicLinkUnsubscribe.DoesNotExist:
             pass
 
@@ -165,12 +181,14 @@ class SignupFormEmailOnly(AntiSpam):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return email
-        else:
-            error = "Email address is already linked to an account"
-            is_active = getattr(user, "is_active", True)
-            if not settings.IGNORE_IS_ACTIVE_FLAG and not is_active:
-                error = "This user has been deactivated"
-            raise forms.ValidationError(error)
+
+        self.create_user = False
+        is_active = getattr(user, "is_active", True)
+        if not settings.IGNORE_IS_ACTIVE_FLAG and not is_active:
+            return self.account_error(email, "This user has been deactivated")
+        if settings.PREVENT_ENUMERATION:
+            return email
+        raise forms.ValidationError("Email address is already linked to an account")
 
 
 class SignupForm(SignupFormEmailOnly):

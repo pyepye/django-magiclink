@@ -11,7 +11,7 @@
 <body>
   <h1>Check your email</h1>
   <p>
-      We have sent you a magic link to your email address<br />
+      {% if prevent_enumeration %}If there is an account for this email address we have sent you a magic link{% else %}We have sent you a magic link to your email address{% endif %}<br />
       Click the link to login automatically
   </p>
 

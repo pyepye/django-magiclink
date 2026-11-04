@@ -112,20 +112,21 @@ class Login(SpamCheckedView):
         if ratelimit.hit("request_site", request):
             return self.rate_limited_response(context, "login_form", form)
 
-        if not settings.REQUIRE_SIGNUP:
+        if not settings.REQUIRE_SIGNUP and form.send_email:
             get_or_create_user(email)
 
         redirect_url = self.login_redirect_url(request.GET.get("next", ""))
         try:
             magiclink = create_magiclink(email, request, redirect_url=redirect_url)
         except MagicLinkError as e:
-            if self.has_live_magiclink(email):
+            if settings.PREVENT_ENUMERATION or self.has_live_magiclink(email):
                 return HttpResponseRedirect(get_url_path(settings.LOGIN_SENT_REDIRECT))
             form.add_error("email", str(e))
             context["login_form"] = form
             return self.render_to_response(context)
 
-        magiclink.send(request)
+        if form.send_email:
+            magiclink.send(request)
 
         sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
         response = HttpResponseRedirect(sent_url)
@@ -152,6 +153,11 @@ class Login(SpamCheckedView):
 
 class LoginSent(SettingTemplateView):
     template_setting = "LOGIN_SENT_TEMPLATE_NAME"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["prevent_enumeration"] = settings.PREVENT_ENUMERATION
+        return context
 
 
 @method_decorator(csrf_protect, name="dispatch")
@@ -303,17 +309,25 @@ class Signup(SpamCheckedView):
             first_name = full_name
             last_name = ""
 
-        get_or_create_user(
-            email=email,
-            username=form.cleaned_data.get("username", ""),
-            first_name=first_name,
-            last_name=last_name,
-        )
+        if form.create_user:
+            get_or_create_user(
+                email=email,
+                username=form.cleaned_data.get("username", ""),
+                first_name=first_name,
+                last_name=last_name,
+            )
         next_url = get_safe_redirect_url(request, request.GET.get("next", ""))
         if not next_url:
             next_url = get_url_path(settings.SIGNUP_LOGIN_REDIRECT)
-        magiclink = create_magiclink(email, request, redirect_url=next_url)
-        magiclink.send(request)
+        try:
+            magiclink = create_magiclink(email, request, redirect_url=next_url)
+        except MagicLinkError:
+            if not settings.PREVENT_ENUMERATION:
+                raise
+            return HttpResponseRedirect(get_url_path(settings.LOGIN_SENT_REDIRECT))
+
+        if form.send_email:
+            magiclink.send(request)
 
         sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
         response = HttpResponseRedirect(sent_url)

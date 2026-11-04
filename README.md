@@ -281,6 +281,10 @@ MAGICLINK_ALLOW_STAFF_LOGIN = True
 # Ignore the Django user model's is_active flag for login requests
 MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
 
+# Do not show if an email address has an account on the login and signup pages.
+# See 'Account enumeration' in the Security section
+MAGICLINK_PREVENT_ENUMERATION = False
+
 # Override the default magic link length
 # Warning: Overriding this setting has security implications, shorter tokens
 # are much more susceptible to brute force attacks*
@@ -445,6 +449,20 @@ If no IP address is found, a warning is logged and `MAGICLINK_REQUIRE_SAME_IP` h
 If `MAGICLINK_SITE_URL` is not set and `django.contrib.sites` is not installed, the domain of the link in the login email comes from the request's `Host` header. If `ALLOWED_HOSTS` is `["*"]` or a broad wildcard, an attacker can request a login link for another person with `Host: evil.example`. That person then gets a real email with a link to the attacker's site, and the attacker gets the token when they click it.
 
 Set `MAGICLINK_SITE_URL`, or set `ALLOWED_HOSTS` to only the domains your site uses.
+
+### Account enumeration
+
+By default the login page shows "We could not find a user with that email address" and the signup page shows "Email address is already linked to an account". Bots use these messages to build lists of real accounts.
+
+Set `MAGICLINK_PREVENT_ENUMERATION = True` to hide this:
+
+* The login and signup pages always redirect to the login sent page if the account is the reason a link can not be sent. This covers an unknown email address, a deactivated user and an email address on the unsubscribe list
+* If someone signs up with the email address of an existing account, that account gets a login link. The account is not changed
+* The same cookie is set and a `MagicLink` row is created in every case, so the response does not show which case it is. If no email is sent, the token in the row is never shown to anyone
+
+If you use this setting, change your login sent page so it says "If there is an account for this email address we have sent you a magic link". The default template does this using the `{{ prevent_enumeration }}` context variable.
+
+Sending an email takes time, so a slow response can still show that an email was sent. To stop this, send the email in the background (see 'Sending email in the background'). The `SignupFormWithUsername` and `SignupFormFull` forms still show if a username is in use.
 
 ### Email scanners
 

@@ -188,6 +188,7 @@ _SETTINGS: dict[str, tuple[Callable[[str, object], object], object]] = {
     "EMAIL_SUBJECT": (_value, "Your login magic link"),
     "EMAIL_TEMPLATE_NAME_TEXT": (_value, "magiclink/login_email.txt"),
     "EMAIL_TEMPLATE_NAME_HTML": (_value, "magiclink/login_email.html"),
+    "PREVENT_ENUMERATION": (_boolean, False),
     "ANTISPAM_FORMS": (_boolean, False),
     "ANTISPAM_FIELD_TIME": (_antispam_field_time, 1),
     # In seconds
