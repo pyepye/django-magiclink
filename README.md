@@ -370,6 +370,13 @@ MAGICLINK_RATE_LIMITS = {
     "verify_failed": "10/m/ip",
 }
 
+# Only allow email addresses from these domains, for example for an internal
+# tool. Subdomains are included. An empty list allows all domains
+MAGICLINK_ALLOWED_EMAIL_DOMAINS = []
+# Do not allow email addresses from these domains, for example disposable mail
+# domains. Subdomains are included. This is checked before the allowed list
+MAGICLINK_BLOCKED_EMAIL_DOMAINS = []
+
 # Use your own login and signup forms. See 'Custom forms'
 MAGICLINK_FORMS = {
     "login": "myapp.forms.MyLoginForm",

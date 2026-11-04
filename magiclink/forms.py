@@ -8,6 +8,7 @@ from django.http import QueryDict
 
 from . import settings
 from .models import MagicLinkUnsubscribe
+from .utils import email_domain_allowed
 
 User = get_user_model()
 
@@ -16,6 +17,11 @@ FORM_EXPIRED = "Form has expired, please send it again"
 
 def sign_load_time(load_time: float) -> str:
     return TimestampSigner(salt="magiclink.antispam").sign(str(load_time))
+
+
+def validate_email_domain(email: str) -> None:
+    if not email_domain_allowed(email):
+        raise ValidationError("This email address can not be used")
 
 
 def validate_empty(value: str) -> None:
@@ -108,6 +114,8 @@ class LoginForm(AntiSpam):
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
 
+        validate_email_domain(email)
+
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -143,6 +151,8 @@ class SignupFormEmailOnly(AntiSpam):
 
         if settings.EMAIL_IGNORE_CASE:
             email = email.lower()
+
+        validate_email_domain(email)
 
         try:
             MagicLinkUnsubscribe.objects.get(email=email)

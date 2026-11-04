@@ -75,6 +75,19 @@ def anonymize_ip(ip: str) -> str:
     return str(network.network_address)
 
 
+def email_domain_allowed(email: str) -> bool:
+    """
+    Check the domain of an email address and its parent domains against the
+    allowed and blocked lists
+    """
+    parts = email.rpartition("@")[2].lower().split(".")
+    domains = {".".join(parts[index:]) for index in range(len(parts))}
+    if domains.intersection(settings.BLOCKED_EMAIL_DOMAINS):
+        return False
+    allowed = settings.ALLOWED_EMAIL_DOMAINS
+    return not allowed or bool(domains.intersection(allowed))
+
+
 def get_url_path(url: str) -> str:
     """
     url can either be a url name or a url path. First try and reverse a URL,

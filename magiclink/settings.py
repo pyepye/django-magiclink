@@ -98,6 +98,15 @@ def _spam_checks(name: str, default: object) -> list[str]:
     return list(value)
 
 
+def _email_domains(name: str, default: object) -> list[str]:
+    value = _value(name, default)
+    if not isinstance(value, list | tuple) or not all(
+        isinstance(domain, str) for domain in value
+    ):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a list of strings')
+    return [domain.lower() for domain in value]
+
+
 def _rate_limits(name: str, default: object) -> dict[str, list[RateLimitRule]]:
     value = _value(name, default)
     if not isinstance(value, dict):
@@ -188,6 +197,8 @@ _SETTINGS: dict[str, tuple[Callable[[str, object], object], object]] = {
     "ADAPTER": (_string, "magiclink.adapter.MagicLinkAdapter"),
     "SPAM_CHECKS": (_spam_checks, []),
     "FORMS": (_forms, {}),
+    "ALLOWED_EMAIL_DOMAINS": (_email_domains, []),
+    "BLOCKED_EMAIL_DOMAINS": (_email_domains, []),
     "RATE_LIMITS": (_rate_limits, {}),
     "SITE_URL": (_site_url, ""),
     "LOGIN_VERIFY_URL": (_value, "magiclink:login_verify"),
