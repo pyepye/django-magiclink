@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+FORM_NAMES = ("login", "signup")
 RATE_LIMIT_NAMES = ("request", "request_site", "verify_failed")
 RATE_LIMIT_PERIODS = {"s": 1, "m": 60, "h": 60 * 60, "d": 24 * 60 * 60}
 RATE_LIMIT_RULE = re.compile(r"(\d+)/(\d*)([smhd])(?:/(ip|email))?")
@@ -111,6 +112,18 @@ def _rate_limits(name: str, default: object) -> dict[str, list[RateLimitRule]]:
     }
 
 
+def _forms(name: str, default: object) -> dict[str, str]:
+    value = _value(name, default)
+    if not isinstance(value, dict):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a dict')
+    for form_name, path in value.items():
+        if form_name not in FORM_NAMES or not isinstance(path, str):
+            raise ImproperlyConfigured(
+                f'"MAGICLINK_{name}" has an invalid entry: "{form_name}"'
+            )
+    return value
+
+
 def _site_url(name: str, default: object) -> str:
     value = _string(name, default)
     if value and not value.startswith(("http://", "https://")):
@@ -174,6 +187,7 @@ _SETTINGS: dict[str, tuple[Callable[[str, object], object], object]] = {
     "ANTISPAM_QUIET_REJECT": (_boolean, False),
     "ADAPTER": (_string, "magiclink.adapter.MagicLinkAdapter"),
     "SPAM_CHECKS": (_spam_checks, []),
+    "FORMS": (_forms, {}),
     "RATE_LIMITS": (_rate_limits, {}),
     "SITE_URL": (_site_url, ""),
     "LOGIN_VERIFY_URL": (_value, "magiclink:login_verify"),

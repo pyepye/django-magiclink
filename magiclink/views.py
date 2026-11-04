@@ -1,10 +1,12 @@
 import logging
 
+from django import forms
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.module_loading import import_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
@@ -49,6 +51,15 @@ class SettingTemplateView(TemplateView):
 
 
 class SpamCheckedView(SettingTemplateView):
+    form_class: type[forms.Form] | None = None
+    form_setting_key = ""
+
+    def custom_form_class(self):
+        if self.form_class:
+            return self.form_class
+        path = settings.FORMS.get(self.form_setting_key)
+        return import_string(path) if path else None
+
     def spam_response(self, context, form_key, form, reason) -> HttpResponse:
         spam_detected.send(
             sender=self.__class__, request=self.request, form=form, reason=reason
@@ -67,10 +78,14 @@ class SpamCheckedView(SettingTemplateView):
 @method_decorator(csrf_protect, name="dispatch")
 class Login(SpamCheckedView):
     template_setting = "LOGIN_TEMPLATE_NAME"
+    form_setting_key = "login"
+
+    def get_form_class(self):
+        return self.custom_form_class() or LoginForm
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        context["login_form"] = LoginForm()
+        context["login_form"] = self.get_form_class()()
         context["require_signup"] = settings.REQUIRE_SIGNUP
         return self.render_to_response(context)
 
@@ -78,7 +93,7 @@ class Login(SpamCheckedView):
         logout(request)
         context = self.get_context_data(**kwargs)
         context["require_signup"] = settings.REQUIRE_SIGNUP
-        form = LoginForm(request.POST)
+        form = self.get_form_class()(request.POST)
         if ratelimit.hit("request", request, request.POST.get("email", "")):
             return self.rate_limited_response(context, "login_form", form)
 
@@ -238,24 +253,31 @@ class LoginVerify(SettingTemplateView):
 @method_decorator(csrf_protect, name="dispatch")
 class Signup(SpamCheckedView):
     template_setting = "SIGNUP_TEMPLATE_NAME"
+    form_setting_key = "signup"
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        context["SignupForm"] = SignupForm()
-        context["SignupFormEmailOnly"] = SignupFormEmailOnly()
-        context["SignupFormWithUsername"] = SignupFormWithUsername()
-        context["SignupFormFull"] = SignupFormFull()
+        custom_form_class = self.custom_form_class()
+        for name, form_class in SIGNUP_FORMS.items():
+            context[name] = (custom_form_class or form_class)()
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
         logout(request)
         context = self.get_context_data(**kwargs)
         form_name = request.POST.get("form_name")
-        form_class = SIGNUP_FORMS.get(form_name)
+        # A custom form handles every POST, so a bot can not name a default form
+        # to avoid the fields the custom form adds.
+        custom_form_class = self.custom_form_class()
+        form_class = custom_form_class or SIGNUP_FORMS.get(form_name)
         if form_class is None:
             return HttpResponseRedirect(self.request.path_info)
 
         form = form_class(request.POST)
+        if custom_form_class:
+            form_name = "SignupForm"
+            context.update(dict.fromkeys(SIGNUP_FORMS, form))
+
         if ratelimit.hit("request", request, request.POST.get("email", "")):
             return self.rate_limited_response(context, form_name, form)
 

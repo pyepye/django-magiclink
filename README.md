@@ -370,6 +370,12 @@ MAGICLINK_RATE_LIMITS = {
     "verify_failed": "10/m/ip",
 }
 
+# Use your own login and signup forms. See 'Custom forms'
+MAGICLINK_FORMS = {
+    "login": "myapp.forms.MyLoginForm",
+    "signup": "myapp.forms.MySignupForm",
+}
+
 # Functions that can reject a request for a magic link. See 'Spam checks'
 MAGICLINK_SPAM_CHECKS = ["myproject.checks.no_tor"]
 
@@ -510,6 +516,33 @@ magiclink.send(request)
 #  send the email you can you can use:
 magic_link_url = magiclink.generate_url(request)
 ```
+
+### Custom forms
+
+To add a field to the login or signup form, such as a captcha, subclass the form and set `MAGICLINK_FORMS`. You can also set `form_class` on a subclass of the `Login` or `Signup` view, or pass it to `as_view()`.
+
+```python
+from magiclink.forms import LoginForm, SignupForm
+
+from myapp.fields import CaptchaField
+
+
+class MyLoginForm(LoginForm):
+    captcha = CaptchaField()
+
+
+class MySignupForm(SignupForm):
+    captcha = CaptchaField()
+```
+
+```python
+MAGICLINK_FORMS = {
+    "login": "myapp.forms.MyLoginForm",
+    "signup": "myapp.forms.MySignupForm",
+}
+```
+
+Your form must subclass one of the forms in `magiclink.forms`. If you set a custom signup form, the view uses it for every signup POST, whatever `form_name` is sent, and it is the value of all four signup form names in the template context.
 
 ### Custom Login verify flow
 
