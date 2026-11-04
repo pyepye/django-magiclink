@@ -288,6 +288,11 @@ MAGICLINK_TOKEN_LENGTH = 50
 # Warning: If this is set to false tokens are more vulnerable to brute force
 MAGICLINK_VERIFY_INCLUDE_EMAIL = True
 
+# Show a page with a "Log in" button when the magic link is opened, and only log
+# in when the button is pressed. See 'Email scanners' in the Security section
+MAGICLINK_LOGIN_CONFIRM = False
+MAGICLINK_LOGIN_CONFIRM_TEMPLATE_NAME = "magiclink/login_confirm.html"
+
 # Ensure the user who clicked magic link used the same browser as the
 # initial login request.
 # Note: This can cause issues on devices where the default browser is
@@ -425,6 +430,21 @@ If no IP address is found, a warning is logged and `MAGICLINK_REQUIRE_SAME_IP` h
 If `MAGICLINK_SITE_URL` is not set and `django.contrib.sites` is not installed, the domain of the link in the login email comes from the request's `Host` header. If `ALLOWED_HOSTS` is `["*"]` or a broad wildcard, an attacker can request a login link for another person with `Host: evil.example`. That person then gets a real email with a link to the attacker's site, and the attacker gets the token when they click it.
 
 Set `MAGICLINK_SITE_URL`, or set `ALLOWED_HOSTS` to only the domains your site uses.
+
+### Email scanners
+
+Outlook Safe Links, Proofpoint, Mimecast and similar tools open the links in an email before the user does. A scanner has a different IP address and does not have the same browser cookie, so the link is disabled and the user sees an error when they click it.
+
+To stop this, set `MAGICLINK_LOGIN_CONFIRM = True`. Opening the link then shows a page with a "Log in" button and does not check or use the token. Only the POST from the button logs the user in, and scanners do not submit forms. This also stops a crafted link from logging a person in to an attacker's account without them pressing a button.
+
+If you override `MAGICLINK_LOGIN_CONFIRM_TEMPLATE_NAME`, include the form below. It has no `action` so that it posts to the URL with the token. Do not load scripts or other files from other sites on this page.
+
+```html
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Log in</button>
+</form>
+```
 
 ### Rate limits
 

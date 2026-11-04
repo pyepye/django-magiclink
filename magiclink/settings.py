@@ -44,6 +44,9 @@ LOGIN_SENT_TEMPLATE_NAME = getattr(
 LOGIN_FAILED_TEMPLATE_NAME = getattr(
     settings, "MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME", "magiclink/login_failed.html"
 )
+LOGIN_CONFIRM_TEMPLATE_NAME = getattr(
+    settings, "MAGICLINK_LOGIN_CONFIRM_TEMPLATE_NAME", "magiclink/login_confirm.html"
+)
 # If LOGIN_FAILED_REDIRECT has a value the user will be redirected to this
 # URL instead of being shown the LOGIN_FAILED_TEMPLATE
 LOGIN_FAILED_REDIRECT = getattr(settings, "MAGICLINK_LOGIN_FAILED_REDIRECT", "")
@@ -105,6 +108,10 @@ if not isinstance(IGNORE_IS_ACTIVE_FLAG, bool):
 VERIFY_INCLUDE_EMAIL = getattr(settings, "MAGICLINK_VERIFY_INCLUDE_EMAIL", True)
 if not isinstance(VERIFY_INCLUDE_EMAIL, bool):
     raise ImproperlyConfigured('"MAGICLINK_VERIFY_INCLUDE_EMAIL" must be a boolean')
+
+LOGIN_CONFIRM = getattr(settings, "MAGICLINK_LOGIN_CONFIRM", False)
+if not isinstance(LOGIN_CONFIRM, bool):
+    raise ImproperlyConfigured('"MAGICLINK_LOGIN_CONFIRM" must be a boolean')
 
 REQUIRE_SAME_BROWSER = getattr(settings, "MAGICLINK_REQUIRE_SAME_BROWSER", True)
 if not isinstance(REQUIRE_SAME_BROWSER, bool):

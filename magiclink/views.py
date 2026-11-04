@@ -132,16 +132,38 @@ class LoginSent(TemplateView):
     template_name = settings.LOGIN_SENT_TEMPLATE_NAME
 
 
+@method_decorator(csrf_protect, name="dispatch")
 @method_decorator(never_cache, name="dispatch")
 class LoginVerify(TemplateView):
     template_name = settings.LOGIN_FAILED_TEMPLATE_NAME
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        response["Referrer-Policy"] = "no-referrer"
+        response.setdefault("Referrer-Policy", "no-referrer")
         return response
 
     def get(self, request, *args, **kwargs):
+        if settings.LOGIN_CONFIRM:
+            return self.confirm_response(**kwargs)
+        return self.verify(request, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not settings.LOGIN_CONFIRM:
+            return self.http_method_not_allowed(request, *args, **kwargs)
+        return self.verify(request, **kwargs)
+
+    def confirm_response(self, **kwargs) -> HttpResponse:
+        response = self.response_class(
+            request=self.request,
+            template=[settings.LOGIN_CONFIRM_TEMPLATE_NAME],
+            context=self.get_context_data(**kwargs),
+        )
+        # no-referrer makes browsers send "Origin: null" with the form, which
+        # fails Django's CSRF check. strict-origin still keeps the token private.
+        response["Referrer-Policy"] = "strict-origin"
+        return response
+
+    def verify(self, request, **kwargs) -> HttpResponse:
         token = request.GET.get("token")
         email = request.GET.get("email")
         if ratelimit.is_limited("verify_failed", request, email or ""):
