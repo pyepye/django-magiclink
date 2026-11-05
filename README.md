@@ -518,6 +518,15 @@ django-magiclink adds these warnings to Django's system checks, which run with c
 The `?next` parameter on the login and signup pages and the logout URL is only used if it points to an allowed host (see Django's `ALLOWED_HOSTS` setting). This stops these URLs from being used to send users to another site.
 
 
+## Admin
+
+If `django.contrib.admin` is installed, `MagicLink` and `MagicLinkUnsubscribe` appear in the admin. This is the easiest way to see a pattern of bot requests.
+
+* Search magic links by email address or IP address, and filter them by date and status (live, expired or disabled)
+* Use the "Unsubscribe the selected email addresses" action to add the selected addresses to `MagicLinkUnsubscribe`. This action needs the permission to add `MagicLinkUnsubscribe` rows
+* Magic links are read-only in the admin, and the token and cookie value are not shown, because anyone who can read them could log in as that user
+
+
 ## Unsubscribe / stopping email spam
 
 Sadly bots like to go around the internet and fill out any forms they can with random email addresses that don't belong to them. Because of this, if an email is added to the `MagicLinkUnsubscribe` model they will no longer receive a login or welcome email, even if the email has a user associated with it. This behaviour can be changed for existing users using the `MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER` setting.

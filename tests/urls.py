@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import include, path, reverse
@@ -31,6 +32,7 @@ class CustomLoginVerify(LoginVerify):
 
 
 urlpatterns = [
+    path("admin/", admin.site.urls),
     path("no-login/", no_login, name="no_login"),
     path("needs-login/", needs_login, name="needs_login"),
     path(
