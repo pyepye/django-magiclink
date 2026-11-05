@@ -81,7 +81,7 @@ def _rule_keys(
 def _rule_value(rule: RateLimitRule, request: HttpRequest, email: str) -> str:
     if rule.key == "ip":
         ip = get_adapter().get_client_ip(request)
-        return anonymize_ip(ip) if ip else ""
+        return anonymize_ip(ip, ipv4_prefix=32) if ip else ""
     if rule.key == "email":
         return normalise_email(email) if email else ""
     return "site"

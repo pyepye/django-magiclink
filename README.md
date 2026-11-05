@@ -370,7 +370,7 @@ MAGICLINK_SITE_URL = ""
 # Limit requests by IP, by email and for the whole site. See 'Rate limits' in
 # the Security section. There are no limits by default
 MAGICLINK_RATE_LIMITS = {
-    "request": "5/h/ip,3/10m/email",
+    "request": "20/h/ip,3/10m/email",
     "request_site": "100/m",
     "verify_failed": "10/m/ip",
 }
@@ -498,7 +498,7 @@ If you override `MAGICLINK_LOGIN_CONFIRM_TEMPLATE_NAME`, include the form below.
 Each rule set is a comma separated string of `count/period` or `count/period/key` rules:
 
 * The period is a number and a unit, or only a unit: `s`, `m`, `h` or `d`. For example `h`, `10m`
-* `ip` counts per IP address, using the adapter's `get_client_ip`. IPv4 addresses are grouped by /24 and IPv6 addresses by /64, because one person can often use a whole IPv6 /64. If no IP address is found, the rule is not used
+* `ip` counts per IP address, using the adapter's `get_client_ip`. Each IPv4 address counts on its own. IPv6 addresses are grouped by /64, because one person can often use a whole /64. If no IP address is found, the rule is not used. Many people can share one IPv4 address, for example in an office, a university or on a mobile network, so do not set `ip` limits too low
 * `email` counts per email address. The address is converted to lowercase and any `+tag` is removed, so `name+1@example.com` counts as `name@example.com`
 * With no key, the rule counts for the whole site
 

@@ -90,5 +90,10 @@ def test_anonymize_ip_v4_mapped_v6():
     assert anonymize_ip("::ffff:192.168.1.55") == "192.168.1.0"
 
 
+def test_anonymize_ip_ipv4_prefix():
+    assert anonymize_ip("192.168.1.55", ipv4_prefix=32) == "192.168.1.55"
+    assert anonymize_ip("2001:db8::1", ipv4_prefix=32) == "2001:db8::"
+
+
 def test_anonymize_ip_invalid():
     assert anonymize_ip("unknown") == "unknown"

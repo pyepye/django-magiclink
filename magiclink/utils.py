@@ -62,7 +62,7 @@ def get_client_ip(request: HttpRequest) -> str | None:
     return ip
 
 
-def anonymize_ip(ip: str) -> str:
+def anonymize_ip(ip: str, ipv4_prefix: int = 24) -> str:
     try:
         address = ipaddress.ip_address(ip)
     except ValueError:
@@ -70,7 +70,7 @@ def anonymize_ip(ip: str) -> str:
 
     if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
         address = address.ipv4_mapped
-    prefix = 24 if address.version == 4 else 64
+    prefix = ipv4_prefix if address.version == 4 else 64
     network = ipaddress.ip_network(f"{address}/{prefix}", strict=False)
     return str(network.network_address)
 

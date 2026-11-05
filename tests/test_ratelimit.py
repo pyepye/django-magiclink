@@ -105,10 +105,17 @@ def test_hit_limit_per_ip(limits):
     assert not ratelimit.hit("request", make_request("10.0.1.1"))
 
 
-def test_ipv4_grouped_by_24(limits):
+def test_each_ipv4_address_counts_on_its_own(limits):
     limits(request="1/m/ip")
     assert not ratelimit.hit("request", make_request("10.0.0.1"))
-    assert ratelimit.hit("request", make_request("10.0.0.200"))
+    assert not ratelimit.hit("request", make_request("10.0.0.200"))
+    assert ratelimit.hit("request", make_request("10.0.0.1"))
+
+
+def test_ipv4_mapped_address_counts_as_ipv4(limits):
+    limits(request="1/m/ip")
+    assert not ratelimit.hit("request", make_request("10.0.0.1"))
+    assert ratelimit.hit("request", make_request("::ffff:10.0.0.1"))
 
 
 def test_ipv6_grouped_by_64(limits):
