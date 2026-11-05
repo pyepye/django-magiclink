@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Django MagicLink Unsubscribe - Please override this template</title>
+  <meta name="description" content="Django MagicLink">
+  <meta name="author" content="Django MagicLink">
+</head>
+
+<body>
+  {% if invalid_link %}
+    <h1>This link is not valid</h1>
+    <p>Please use the full link from the email.</p>
+  {% elif unsubscribed %}
+    <h1>You have been unsubscribed</h1>
+    <p>We will not send any more login emails to {{ email }}.</p>
+  {% else %}
+    <h1>Stop these emails</h1>
+    <p>We will not send any more login emails to {{ email }}. You will not be able to log in using a magic link with this email address.</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit">Stop these emails</button>
+    </form>
+  {% endif %}
+
+  <p>If you are seeing this you have not yet overridden the 'MAGICLINK_UNSUBSCRIBE_TEMPLATE_NAME' setting yet.</p>
+  <p>Please see the <a href="https://github.com/pyepye/django-magiclink">README on Github</a> for more details on setting up django-magiclink correctly</p>
+</body>
+</html>

@@ -4,6 +4,7 @@ from django.conf import settings as djsettings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.sites.shortcuts import get_current_site
+from django.core import signing
 from django.core.mail import send_mail
 from django.db import models
 from django.http import HttpRequest
@@ -19,8 +20,22 @@ from .utils import anonymize_ip
 User = get_user_model()
 
 
+UNSUBSCRIBE_SALT = "magiclink.unsubscribe"
+
+
 class MagicLinkError(Exception):
     pass
+
+
+def sign_unsubscribe_email(email: str) -> str:
+    return signing.dumps(email, salt=UNSUBSCRIBE_SALT)
+
+
+def unsign_unsubscribe_email(value: str) -> str:
+    """
+    Return the email address in a signed value, or raise signing.BadSignature
+    """
+    return signing.loads(value, salt=UNSUBSCRIBE_SALT)
 
 
 class MagicLink(models.Model):
@@ -67,14 +82,27 @@ class MagicLink(models.Model):
             params["email"] = self.email
         query = urlencode(params)
 
-        url_path = f"{url_path}?{query}"
+        return self._absolute_url(request, f"{url_path}?{query}")
+
+    def generate_unsubscribe_url(self, request: HttpRequest) -> str:
+        """
+        Return an empty string if login emails do not include an unsubscribe link.
+        All login emails go to users, so with IGNORE_UNSUBSCRIBE_IF_USER the link
+        would have no effect.
+        """
+        if not settings.UNSUBSCRIBE_LINK or settings.IGNORE_UNSUBSCRIBE_IF_USER:
+            return ""
+        query = urlencode({"email": sign_unsubscribe_email(self.email)})
+        url_path = f"{reverse('magiclink:unsubscribe')}?{query}"
+        return self._absolute_url(request, url_path)
+
+    def _absolute_url(self, request: HttpRequest, url_path: str) -> str:
         if settings.SITE_URL:
             return urljoin(settings.SITE_URL, url_path)
 
         domain = get_current_site(request).domain
         scheme = request.is_secure() and "https" or "http"
-        url = urljoin(f"{scheme}://{domain}", url_path)
-        return url
+        return urljoin(f"{scheme}://{domain}", url_path)
 
     def send(self, request: HttpRequest) -> None:
         if not settings.IGNORE_UNSUBSCRIBE_IF_USER:
@@ -96,12 +124,13 @@ class MagicLink(models.Model):
             sender=self.__class__, magiclink=self, request=request
         )
 
-    def deliver_email(self, url: str) -> None:
+    def deliver_email(self, url: str, unsubscribe_url: str = "") -> None:
         user = User.objects.get(email=self.email)
         context = {
             "subject": settings.EMAIL_SUBJECT,
             "user": user,
             "magiclink": url,
+            "unsubscribe_url": unsubscribe_url,
             "expiry": self.expiry,
             "ip_address": self.ip_address,
             "created": self.created,

@@ -33,7 +33,10 @@ class MagicLinkAdapter:
         return await sync_to_async(self.check_request)(request, email, form)
 
     def send_email(self, magiclink: "MagicLink", request: HttpRequest) -> None:
-        magiclink.deliver_email(magiclink.generate_url(request))
+        magiclink.deliver_email(
+            magiclink.generate_url(request),
+            magiclink.generate_unsubscribe_url(request),
+        )
 
     async def asend_email(self, magiclink: "MagicLink", request: HttpRequest) -> None:
         await sync_to_async(self.send_email)(magiclink, request)

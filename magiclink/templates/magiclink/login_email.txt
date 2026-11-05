@@ -5,4 +5,6 @@ Click to confirm and sign in. This link will expire in {{ expiry|timeuntil }}
 Please do not forward this message to anyone else, if you do they will be able to access your account
 
 If you did not request this link, you can safely ignore this email.
-
+{% if unsubscribe_url %}
+Did not request this? Stop these emails: {{ unsubscribe_url|safe }}
+{% endif %}

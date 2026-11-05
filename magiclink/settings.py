@@ -202,6 +202,8 @@ _SETTINGS: dict[str, tuple[Callable[[str, object], object], object]] = {
     "RATE_LIMITS": (_rate_limits, {}),
     "SITE_URL": (_site_url, ""),
     "LOGIN_VERIFY_URL": (_value, "magiclink:login_verify"),
+    "UNSUBSCRIBE_LINK": (_boolean, False),
+    "UNSUBSCRIBE_TEMPLATE_NAME": (_value, "magiclink/unsubscribe.html"),
     "IGNORE_UNSUBSCRIBE_IF_USER": (_boolean, False),
 }
 

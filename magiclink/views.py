@@ -3,6 +3,7 @@ import logging
 from django import forms
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.core.signing import BadSignature
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -22,7 +23,12 @@ from .forms import (
     SignupFormWithUsername,
 )
 from .helpers import create_magiclink, get_or_create_user
-from .models import MagicLink, MagicLinkError
+from .models import (
+    MagicLink,
+    MagicLinkError,
+    MagicLinkUnsubscribe,
+    unsign_unsubscribe_email,
+)
 from .signals import login_failed, spam_detected
 from .utils import get_safe_redirect_url, get_url_path
 
@@ -342,6 +348,34 @@ class Signup(SpamCheckedView):
             )
             log.info(f"Cookie {cookie_name} set for {email}")
         return response
+
+
+@method_decorator(csrf_protect, name="dispatch")
+@method_decorator(never_cache, name="dispatch")
+class Unsubscribe(SettingTemplateView):
+    template_setting = "UNSUBSCRIBE_TEMPLATE_NAME"
+
+    def get(self, request, *args, **kwargs):
+        return self.unsubscribe_response(unsubscribe=False, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.unsubscribe_response(unsubscribe=True, **kwargs)
+
+    def unsubscribe_response(self, unsubscribe: bool, **kwargs) -> HttpResponse:
+        context = self.get_context_data(**kwargs)
+        try:
+            email = unsign_unsubscribe_email(self.request.GET.get("email", ""))
+        except BadSignature:
+            context["invalid_link"] = True
+            return self.render_to_response(context, status=400)
+
+        context["email"] = email
+        if unsubscribe:
+            if not MagicLinkUnsubscribe.objects.filter(email=email).exists():
+                MagicLinkUnsubscribe.objects.create(email=email)
+            MagicLink.objects.filter(email=email, disabled=False).update(disabled=True)
+            context["unsubscribed"] = True
+        return self.render_to_response(context)
 
 
 class Logout(RedirectView):

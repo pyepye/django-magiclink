@@ -91,6 +91,7 @@ def test_send_email(mocker, settings, magic_link):
         "subject": mlsettings.EMAIL_SUBJECT,
         "user": usr,
         "magiclink": ml.generate_url(request),
+        "unsubscribe_url": "",
         "expiry": ml.expiry,
         "ip_address": ml.ip_address,
         "created": ml.created,

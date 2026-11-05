@@ -178,6 +178,7 @@ If this email template is not to your liking you can override the email template
 * `{{ require_same_ip }}` - The value of `MAGICLINK_REQUIRE_SAME_IP`
 * `{{ require_same_browser }}` - The value of `MAGICLINK_REQUIRE_SAME_BROWSER`
 * `{{ token_uses }}` - The value of `MAGICLINK_TOKEN_USES`
+* `{{ unsubscribe_url }}` - The link to stop these emails, or an empty string. See 'Unsubscribe / stopping email spam'
 
 
 #### Signup page
@@ -401,6 +402,11 @@ MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
 # If an email address has been added to the unsubscribe table but is also
 # assocaited with a Django user, should a login email be sent
 MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = False
+
+# Add a link to the login email that adds the email address to the unsubscribe
+# table. See 'Unsubscribe / stopping email spam'
+MAGICLINK_UNSUBSCRIBE_LINK = False
+MAGICLINK_UNSUBSCRIBE_TEMPLATE_NAME = "magiclink/unsubscribe.html"
 ```
 
 ## Magic Link cleanup
@@ -540,6 +546,12 @@ MagicLinkUnsubscribe.objects.create(email="test@example.com")
 ```
 
 If you are using the Django Magiclink login or signup functionality, the unsubscribe check happens during form validation. This means a new user will never be created if their email address has already been added to the `MagicLinkUnsubscribe` list.
+
+People whose address a bot enters can stop the emails themselves if you set `MAGICLINK_UNSUBSCRIBE_LINK = True`. The login email then includes "Did not request this? Stop these emails." with a signed link. The link opens a page with a button, and only the POST from the button adds the address to `MagicLinkUnsubscribe` and disables its magic links, so email scanners that open links do not unsubscribe anyone.
+
+Before you turn this on, note that a user who presses the button can not log in with a magic link until you remove their address from `MagicLinkUnsubscribe`. The link is not added to the email if `MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER` is `True`, because it would have no effect.
+
+If you override `MAGICLINK_UNSUBSCRIBE_TEMPLATE_NAME` the context variables are `{{ email }}`, `{{ invalid_link }}` and `{{ unsubscribed }}`. See the [default unsubscribe template](https://github.com/pyepye/django-magiclink/blob/master/magiclink/templates/magiclink/unsubscribe.html) for the form to include. If you override the email templates, add `{{ unsubscribe_url }}`.
 
 
 ## Manual usage
@@ -701,7 +713,11 @@ from myapp.tasks import send_login_email
 
 class MyAdapter(MagicLinkAdapter):
     def send_email(self, magiclink, request):
-        send_login_email.delay(magiclink.pk, magiclink.generate_url(request))
+        send_login_email.delay(
+            magiclink.pk,
+            magiclink.generate_url(request),
+            magiclink.generate_unsubscribe_url(request),
+        )
 ```
 
 ```python
@@ -709,8 +725,8 @@ from magiclink.models import MagicLink
 
 
 @shared_task
-def send_login_email(magiclink_id, url):
-    MagicLink.objects.get(pk=magiclink_id).deliver_email(url)
+def send_login_email(magiclink_id, url, unsubscribe_url):
+    MagicLink.objects.get(pk=magiclink_id).deliver_email(url, unsubscribe_url)
 ```
 
 
