@@ -24,7 +24,7 @@ class MagicLinkBackend:
         try:
             magiclink = MagicLink.objects.get(token=token)
         except MagicLink.DoesNotExist:
-            log.warning(f'MagicLink with token "{token}" not found')
+            log.warning(f"MagicLink not found for {email}")
             login_failed.send(
                 sender=self.__class__,
                 request=request,
@@ -74,7 +74,7 @@ class MagicLinkBackend:
         try:
             magiclink = await MagicLink.objects.aget(token=token)
         except MagicLink.DoesNotExist:
-            log.warning(f'MagicLink with token "{token}" not found')
+            log.warning(f"MagicLink not found for {email}")
             await login_failed.asend(
                 sender=self.__class__,
                 request=request,
@@ -132,7 +132,7 @@ class MagicLinkBackend:
         return getattr(user, "is_active", True)
 
     def _credentials_given(self, token: str, email: str) -> bool:
-        log.debug(f"MagicLink authenticate token: {token} - email: {email}")
+        log.debug(f"MagicLink authenticate for {email}")
 
         if not token:
             log.warning("Token missing from authentication")

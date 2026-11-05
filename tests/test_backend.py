@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from asgiref.sync import sync_to_async
 from django.contrib.auth import aauthenticate, aget_user, alogin
@@ -185,3 +187,22 @@ async def test_aauthenticate_invalid(user, magic_link):
         request=request, token=ml.token, email="fake@email.com"
     )
     assert authed is None
+
+
+@pytest.mark.django_db
+def test_auth_backend_does_not_log_token(caplog, user):
+    caplog.set_level(logging.DEBUG, logger="magiclink")
+    MagicLinkBackend().authenticate(
+        request=HttpRequest(), token="secret-token", email=user.email
+    )
+    assert "secret-token" not in caplog.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate_does_not_log_token(caplog, user):
+    caplog.set_level(logging.DEBUG, logger="magiclink")
+    await MagicLinkBackend().aauthenticate(
+        request=HttpRequest(), token="secret-token", email=user.email
+    )
+    assert "secret-token" not in caplog.text

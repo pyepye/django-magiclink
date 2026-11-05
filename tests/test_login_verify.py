@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlencode
 
 import pytest
@@ -169,3 +170,25 @@ def test_login_verify_disabled_link_has_no_other_error(client, magic_link):
 
     assert response.status_code == 200
     assert response.context["login_error"] == ""
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("email", "status_code"),
+    [("test@example.com", 302), ("fake@example.com", 200)],
+)
+def test_login_verify_does_not_log_token(
+    caplog, client, magic_link, email, status_code
+):
+    caplog.set_level(logging.DEBUG, logger="magiclink")
+    ml = magic_link(HttpRequest())
+    ml.ip_address = "127.0.0.0"
+    ml.save()
+    query = urlencode({"token": ml.token, "email": email})
+    client.cookies = SimpleCookie({f"magiclink{ml.pk}": ml.cookie_value})
+
+    response = client.get(f"{reverse('magiclink:login_verify')}?{query}")
+
+    assert response.status_code == status_code
+    assert caplog.text
+    assert ml.token not in caplog.text
