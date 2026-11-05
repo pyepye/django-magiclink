@@ -415,3 +415,11 @@ def test_signup_form_name_not_a_signup_form(client, form_name):
     response = client.post(url, data)
     assert response.status_code == 302
     assert response.url == reverse("magiclink:signup")
+
+
+@pytest.mark.django_db
+def test_signup_form_name_not_a_signup_form_keeps_script_prefix(client):
+    url = reverse("magiclink:signup")
+    response = client.post(url, {"form_name": "time"}, SCRIPT_NAME="/app")
+    assert response.status_code == 302
+    assert response.url == f"/app{url}"

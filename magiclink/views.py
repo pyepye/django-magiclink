@@ -283,7 +283,7 @@ class Signup(SpamCheckedView):
         custom_form_class = self.custom_form_class()
         form_class = custom_form_class or SIGNUP_FORMS.get(form_name)
         if form_class is None:
-            return HttpResponseRedirect(self.request.path_info)
+            return HttpResponseRedirect(self.request.path)
 
         form = form_class(request.POST)
         if custom_form_class:
