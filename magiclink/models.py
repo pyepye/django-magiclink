@@ -52,17 +52,32 @@ class MagicLink(models.Model):
     def __str__(self):
         return f"{self.email} - {self.expiry}"
 
-    def used(self) -> None:
-        self.times_used += 1
-        if self.times_used >= settings.TOKEN_USES:
-            self.disabled = True
-        self.save()
+    def used(self) -> bool:
+        """
+        Count one use of the link. Return False and count nothing if another
+        request used or disabled the link after this instance was loaded.
+        """
+        times_used = self.times_used + 1
+        disabled = times_used >= settings.TOKEN_USES
+        claimed = self._unchanged().update(times_used=times_used, disabled=disabled)
+        if claimed:
+            self.times_used, self.disabled = times_used, disabled
+        return bool(claimed)
 
-    async def aused(self) -> None:
-        self.times_used += 1
-        if self.times_used >= settings.TOKEN_USES:
-            self.disabled = True
-        await self.asave()
+    async def aused(self) -> bool:
+        times_used = self.times_used + 1
+        disabled = times_used >= settings.TOKEN_USES
+        claimed = await self._unchanged().aupdate(
+            times_used=times_used, disabled=disabled
+        )
+        if claimed:
+            self.times_used, self.disabled = times_used, disabled
+        return bool(claimed)
+
+    def _unchanged(self) -> "models.QuerySet[MagicLink]":
+        return MagicLink.objects.filter(
+            pk=self.pk, disabled=False, times_used=self.times_used
+        )
 
     def disable(self) -> None:
         self.times_used += 1

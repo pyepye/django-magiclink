@@ -442,3 +442,53 @@ async def test_asend(mocker, rf, user, magic_link):
     ml = await sync_to_async(magic_link)(request)
     await ml.asend(request)
     send_mail.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_used_fails_if_another_request_used_the_link(magic_link):
+    ml = magic_link(HttpRequest())
+    other_request_ml = MagicLink.objects.get(pk=ml.pk)
+    assert other_request_ml.used()
+
+    assert not ml.used()
+    ml.refresh_from_db()
+    assert ml.times_used == 1
+    assert ml.disabled
+
+
+@pytest.mark.django_db
+def test_used_fails_if_link_disabled_after_load(magic_link):
+    ml = magic_link(HttpRequest())
+    MagicLink.objects.filter(pk=ml.pk).update(disabled=True)
+
+    assert not ml.used()
+    ml.refresh_from_db()
+    assert ml.times_used == 0
+
+
+@pytest.mark.django_db
+def test_used_counts_each_use_up_to_token_uses(settings, magic_link):
+    settings.MAGICLINK_TOKEN_USES = 2
+    ml = magic_link(HttpRequest())
+    stale_ml = MagicLink.objects.get(pk=ml.pk)
+
+    assert ml.used()
+    assert not ml.disabled
+    assert not stale_ml.used()
+    assert ml.used()
+    assert ml.disabled
+    ml.refresh_from_db()
+    assert ml.times_used == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aused_fails_if_another_request_used_the_link(magic_link):
+    ml = await sync_to_async(magic_link)(HttpRequest())
+    other_request_ml = await MagicLink.objects.aget(pk=ml.pk)
+    assert await other_request_ml.aused()
+
+    assert not await ml.aused()
+    await ml.arefresh_from_db()
+    assert ml.times_used == 1
+    assert ml.disabled
