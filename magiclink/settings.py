@@ -90,6 +90,19 @@ ANONYMIZE_IP = getattr(settings, "MAGICLINK_ANONYMIZE_IP", True)
 if not isinstance(ANONYMIZE_IP, bool):
     raise ImproperlyConfigured('"MAGICLINK_ANONYMIZE_IP" must be a boolean')
 
+try:
+    TRUSTED_PROXY_COUNT = int(getattr(settings, "MAGICLINK_TRUSTED_PROXY_COUNT", 0))
+except ValueError:
+    raise ImproperlyConfigured(
+        '"MAGICLINK_TRUSTED_PROXY_COUNT" must be an integer'
+    ) from None
+if TRUSTED_PROXY_COUNT < 0:
+    raise ImproperlyConfigured('"MAGICLINK_TRUSTED_PROXY_COUNT" must be 0 or more')
+
+TRUSTED_CLIENT_IP_HEADER = getattr(settings, "MAGICLINK_TRUSTED_CLIENT_IP_HEADER", "")
+if not isinstance(TRUSTED_CLIENT_IP_HEADER, str):
+    raise ImproperlyConfigured('"MAGICLINK_TRUSTED_CLIENT_IP_HEADER" must be a string')
+
 ONE_TOKEN_PER_USER = getattr(settings, "MAGICLINK_ONE_TOKEN_PER_USER", True)
 if not isinstance(ONE_TOKEN_PER_USER, bool):
     raise ImproperlyConfigured('"MAGICLINK_ONE_TOKEN_PER_USER" must be a boolean')
@@ -135,6 +148,34 @@ if ANTISPAM_FIELD_TIME is not None:
         raise ImproperlyConfigured(
             '"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float'
         ) from None
+
+try:
+    # In seconds
+    ANTISPAM_FORM_MAX_AGE = int(
+        getattr(settings, "MAGICLINK_ANTISPAM_FORM_MAX_AGE", 6 * 60 * 60)
+    )
+except ValueError:
+    raise ImproperlyConfigured(
+        '"MAGICLINK_ANTISPAM_FORM_MAX_AGE" must be an integer'
+    ) from None
+
+ANTISPAM_HONEYPOT_FIELD = getattr(settings, "MAGICLINK_ANTISPAM_HONEYPOT_FIELD", "url")
+if not isinstance(ANTISPAM_HONEYPOT_FIELD, str) or not ANTISPAM_HONEYPOT_FIELD:
+    raise ImproperlyConfigured(
+        '"MAGICLINK_ANTISPAM_HONEYPOT_FIELD" must be a non-empty string'
+    )
+
+ANTISPAM_QUIET_REJECT = getattr(settings, "MAGICLINK_ANTISPAM_QUIET_REJECT", False)
+if not isinstance(ANTISPAM_QUIET_REJECT, bool):
+    raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_QUIET_REJECT" must be a boolean')
+
+SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
+if not isinstance(SITE_URL, str):
+    raise ImproperlyConfigured('"MAGICLINK_SITE_URL" must be a string')
+if SITE_URL and not SITE_URL.startswith(("http://", "https://")):
+    raise ImproperlyConfigured(
+        '"MAGICLINK_SITE_URL" must start with "http://" or "https://"'
+    )
 
 LOGIN_VERIFY_URL = getattr(
     settings, "MAGICLINK_LOGIN_VERIFY_URL", "magiclink:login_verify"

@@ -3,6 +3,7 @@ import logging
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -19,6 +20,7 @@ from .forms import (
 )
 from .helpers import create_magiclink, get_or_create_user
 from .models import MagicLink, MagicLinkError
+from .signals import spam_detected
 from .utils import get_safe_redirect_url, get_url_path
 
 User = get_user_model()
@@ -51,6 +53,11 @@ class Login(TemplateView):
         context["require_signup"] = settings.REQUIRE_SIGNUP
         form = LoginForm(request.POST)
         if not form.is_valid():
+            if form.is_spam():
+                spam_detected.send(sender=self.__class__, request=request, form=form)
+                if settings.ANTISPAM_QUIET_REJECT:
+                    sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
+                    return HttpResponseRedirect(sent_url)
             context["login_form"] = form
             return self.render_to_response(context)
 
@@ -62,6 +69,8 @@ class Login(TemplateView):
         try:
             magiclink = create_magiclink(email, request, redirect_url=redirect_url)
         except MagicLinkError as e:
+            if self.has_live_magiclink(email):
+                return HttpResponseRedirect(get_url_path(settings.LOGIN_SENT_REDIRECT))
             form.add_error("email", str(e))
             context["login_form"] = form
             return self.render_to_response(context)
@@ -72,12 +81,23 @@ class Login(TemplateView):
         response = HttpResponseRedirect(sent_url)
         if settings.REQUIRE_SAME_BROWSER:
             cookie_name = f"magiclink{magiclink.pk}"
-            response.set_cookie(cookie_name, magiclink.cookie_value)
+            response.set_cookie(
+                cookie_name,
+                magiclink.cookie_value,
+                httponly=True,
+                secure=request.is_secure(),
+                samesite="Lax",
+            )
             log.info(f"Cookie {cookie_name} set for {email}")
         return response
 
     def login_redirect_url(self, next_url) -> str:
         return get_safe_redirect_url(self.request, next_url)
+
+    def has_live_magiclink(self, email: str) -> bool:
+        return MagicLink.objects.filter(
+            email=email, disabled=False, expiry__gt=timezone.now()
+        ).exists()
 
 
 class LoginSent(TemplateView):
@@ -87,6 +107,11 @@ class LoginSent(TemplateView):
 @method_decorator(never_cache, name="dispatch")
 class LoginVerify(TemplateView):
     template_name = settings.LOGIN_FAILED_TEMPLATE_NAME
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response["Referrer-Policy"] = "no-referrer"
+        return response
 
     def get(self, request, *args, **kwargs):
         token = request.GET.get("token")
@@ -160,6 +185,11 @@ class Signup(TemplateView):
 
         form = form_class(request.POST)
         if not form.is_valid():
+            if form.is_spam():
+                spam_detected.send(sender=self.__class__, request=request, form=form)
+                if settings.ANTISPAM_QUIET_REJECT:
+                    sent_url = get_url_path(settings.LOGIN_SENT_REDIRECT)
+                    return HttpResponseRedirect(sent_url)
             context[form_name] = form
             return self.render_to_response(context)
 
@@ -187,7 +217,13 @@ class Signup(TemplateView):
         response = HttpResponseRedirect(sent_url)
         if settings.REQUIRE_SAME_BROWSER:
             cookie_name = f"magiclink{magiclink.pk}"
-            response.set_cookie(cookie_name, magiclink.cookie_value)
+            response.set_cookie(
+                cookie_name,
+                magiclink.cookie_value,
+                httponly=True,
+                secure=request.is_secure(),
+                samesite="Lax",
+            )
             log.info(f"Cookie {cookie_name} set for {email}")
         return response
 

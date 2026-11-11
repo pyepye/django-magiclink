@@ -13,7 +13,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from . import settings
-from .utils import get_client_ip
+from .signals import magiclink_sent
+from .utils import anonymize_ip, get_client_ip
 
 User = get_user_model()
 
@@ -67,6 +68,9 @@ class MagicLink(models.Model):
         query = urlencode(params)
 
         url_path = f"{url_path}?{query}"
+        if settings.SITE_URL:
+            return urljoin(settings.SITE_URL, url_path)
+
         domain = get_current_site(request).domain
         scheme = request.is_secure() and "https" or "http"
         url = urljoin(f"{scheme}://{domain}", url_path)
@@ -103,6 +107,7 @@ class MagicLink(models.Model):
             from_email=djsettings.DEFAULT_FROM_EMAIL,
             html_message=html,
         )
+        magiclink_sent.send(sender=self.__class__, magiclink=self, request=request)
 
     async def asend(self, request: HttpRequest) -> None:
         await sync_to_async(self.send)(request)
@@ -162,7 +167,7 @@ class MagicLink(models.Model):
         if settings.REQUIRE_SAME_IP:
             client_ip = get_client_ip(request)
             if client_ip and settings.ANONYMIZE_IP:
-                client_ip = client_ip[: client_ip.rfind(".") + 1] + "0"
+                client_ip = anonymize_ip(client_ip)
             if self.ip_address != client_ip:
                 return (
                     "IP address is different from the IP "
@@ -183,6 +188,9 @@ class MagicLink(models.Model):
         return "", False
 
     def _user_error(self, user: AbstractUser) -> str:
+        if not settings.IGNORE_IS_ACTIVE_FLAG and not getattr(user, "is_active", True):
+            return "This user has been deactivated"
+
         if not settings.ALLOW_SUPERUSER_LOGIN and user.is_superuser:
             return "You can not login to a super user account using a magic link"
 

@@ -298,15 +298,28 @@ MAGICLINK_REQUIRE_SAME_BROWSER = True
 # initial login request.
 MAGICLINK_REQUIRE_SAME_IP = True
 
-# Remove the last 8-bit octet of a clients IP address.
+# Store only the network part of a client's IP address: the first 24 bits of
+# an IPv4 address and the first 64 bits of an IPv6 address.
 # Note: This has no effect if MAGICLINK_REQUIRE_SAME_IP as no IP address
 # is stored
 MAGICLINK_ANONYMIZE_IP = True
+
+# The number of proxies in front of Django that add to the X-Forwarded-For
+# header. The client IP is taken this many places from the right of the header.
+# 0 ignores X-Forwarded-For and uses REMOTE_ADDR. See 'Proxies' in the
+# Security section
+MAGICLINK_TRUSTED_PROXY_COUNT = 0
+
+# A header that your proxy or load balancer sets to the client IP address,
+# for example "X-Real-IP". This is used before MAGICLINK_TRUSTED_PROXY_COUNT
+MAGICLINK_TRUSTED_CLIENT_IP_HEADER = ""
 
 # The number of times a login token can be used before being disabled
 MAGICLINK_TOKEN_USES = 1
 
 # How often a user can request a new login token (basic rate limiting).
+# If the user asks again while their last magic link can still be used, the
+# login page redirects to the login sent page and does not send a new email.
 MAGICLINK_LOGIN_REQUEST_TIME_LIMIT = 30  # In seconds
 
 # Disable all other tokens for a user when a new token is requested
@@ -322,6 +335,25 @@ MAGICLINK_ANTISPAM_FORMS = False
 # This means if the form has 3 fields and the user will need to make more than
 # 3 seconds to fill out a form.
 MAGICLINK_ANTISPAM_FIELD_TIME = 1
+# How long a login or signup form is valid for after the page loads. An
+# expired form is shown again with an error and can be sent again. It is not
+# treated as spam. Do not cache the login and signup pages, otherwise the
+# forms will expire
+MAGICLINK_ANTISPAM_FORM_MAX_AGE = 21600  # In seconds - Default is 6 hours
+# The name of the hidden field that must be left empty. If you change this,
+# also change the CSS that hides its label (label[for="id_url"])
+MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "url"
+# If a form fails the anti spam checks, redirect to the login sent page without
+# sending an email, instead of showing an error that tells a bot what to change.
+# A person who sends the form faster than MAGICLINK_ANTISPAM_FIELD_TIME allows,
+# for example after their browser fills in the email address, also gets no email
+MAGICLINK_ANTISPAM_QUIET_REJECT = False
+
+# The scheme and domain used for the link in the login email, for example
+# "https://example.com". If this is not set the domain comes from
+# django.contrib.sites or the request's Host header. See 'Host header' in the
+# Security section
+MAGICLINK_SITE_URL = ""
 
 # Override the login verify address. You must inherit from Magiclink LoginVerify
 # view. See Manual usage for more details
@@ -354,8 +386,32 @@ Using magic links can be dangerous as poorly implemented login links can be brut
 * The initial request and its response must take place in the same browser
 * Each one-time link can only be used once
 * Only the last one-time link issued will be accepted. Once the latest one is issued, any others are invalidated.
+* A user whose `is_active` flag is False can not log in and is logged out of any existing session
 
 *Note: Each of the above settings can be overridden / changed when configuring django-magiclink*
+
+### Proxies
+
+By default the client IP address comes from `REMOTE_ADDR` and the `X-Forwarded-For` header is ignored, because any client can send this header with any value. If Django runs behind a proxy or load balancer, `REMOTE_ADDR` is the address of the proxy. In this case, do one of the following:
+
+* Set `MAGICLINK_TRUSTED_PROXY_COUNT` to the number of proxies that add to `X-Forwarded-For`. For example, use `1` for a single nginx server
+* Set `MAGICLINK_TRUSTED_CLIENT_IP_HEADER` to a header that your proxy always sets and that clients can not set, for example `X-Real-IP`
+
+If these settings are wrong, `MAGICLINK_REQUIRE_SAME_IP` compares the wrong address, or a client can choose the address it is given.
+
+If neither setting is set, logins can fail behind a load balancer or CDN with more than one node, for example AWS ALB, Google Cloud load balancing, Cloudflare or Heroku. The request for a link and the click on it can reach Django through different nodes, so `REMOTE_ADDR` changes and `MAGICLINK_REQUIRE_SAME_IP` disables the link. A warning is logged once if a request has `X-Forwarded-For` and neither setting is set.
+
+Some proxies add a port to the address, so `203.0.113.9:5678` is read as `203.0.113.9`. A value that is not an IP address is ignored and the next source is used.
+
+If no IP address is found, a warning is logged and `MAGICLINK_REQUIRE_SAME_IP` has no address to compare, so the check passes if the link also has no address. For example, `REMOTE_ADDR` is empty if gunicorn runs on a unix socket. Set one of the settings above to use the check.
+
+### Host header
+
+If `MAGICLINK_SITE_URL` is not set and `django.contrib.sites` is not installed, the domain of the link in the login email comes from the request's `Host` header. If `ALLOWED_HOSTS` is `["*"]` or a broad wildcard, an attacker can request a login link for another person with `Host: evil.example`. That person then gets a real email with a link to the attacker's site, and the attacker gets the token when they click it.
+
+Set `MAGICLINK_SITE_URL`, or set `ALLOWED_HOSTS` to only the domains your site uses.
+
+### Redirects
 
 The `?next` parameter on the login and signup pages and the logout URL is only used if it points to an allowed host (see Django's `ALLOWED_HOSTS` setting). This stops these URLs from being used to send users to another site.
 
@@ -462,6 +518,28 @@ await magiclink.asend(request)
 
 There is also `aget_or_create_user()` in `magiclink.helpers`, and `avalidate()`, `aused()` and `adisable()` on `MagicLink`. Django does not have an async email API so `asend()` runs `send()` in a thread.
 
+
+## Signals
+
+django-magiclink sends these signals from `magiclink.signals`. Use them to log, count or alert on events. Each signal is sent with the `request`.
+
+| Signal | Sender | Other arguments | Sent when |
+|---|---|---|---|
+| `magiclink_requested` | `MagicLink` | `magiclink` | A magic link is created |
+| `magiclink_sent` | `MagicLink` | `magiclink` | The login email is sent |
+| `login_succeeded` | `MagicLinkBackend` | `user`, `magiclink` | A magic link is used to log in |
+| `login_failed` | `MagicLinkBackend` | `magiclink`, `reason` | A magic link can not be used to log in. `magiclink` is `None` if no magic link has the token |
+| `spam_detected` | The login or signup view | `form` | A form fails the anti spam checks |
+
+```python
+from django.dispatch import receiver
+from magiclink.signals import login_failed
+
+
+@receiver(login_failed)
+def log_failed_login(sender, request, magiclink, reason, **kwargs):
+    print(f"Magic link login failed: {reason}")
+```
 
 ## Upgrading
 

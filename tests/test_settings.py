@@ -412,6 +412,131 @@ def test_antispam_form_submit_time_bad_value(settings):
         reload(settings)
 
 
+def test_trusted_proxy_count(settings):
+    settings.MAGICLINK_TRUSTED_PROXY_COUNT = 2
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert mlsettings.TRUSTED_PROXY_COUNT == settings.MAGICLINK_TRUSTED_PROXY_COUNT
+
+
+def test_trusted_proxy_count_bad_value(settings):
+    settings.MAGICLINK_TRUSTED_PROXY_COUNT = "Test"
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_trusted_proxy_count_negative(settings):
+    settings.MAGICLINK_TRUSTED_PROXY_COUNT = -1
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_trusted_client_ip_header(settings):
+    settings.MAGICLINK_TRUSTED_CLIENT_IP_HEADER = "X-Real-IP"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert (
+        mlsettings.TRUSTED_CLIENT_IP_HEADER
+        == settings.MAGICLINK_TRUSTED_CLIENT_IP_HEADER
+    )
+
+
+def test_trusted_client_ip_header_bad_value(settings):
+    settings.MAGICLINK_TRUSTED_CLIENT_IP_HEADER = 1
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_antispam_form_max_age(settings):
+    settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE = 60
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert mlsettings.ANTISPAM_FORM_MAX_AGE == settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE
+
+
+def test_antispam_form_max_age_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_FORM_MAX_AGE = "Test"
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_antispam_honeypot_field(settings):
+    settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "website"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert (
+        mlsettings.ANTISPAM_HONEYPOT_FIELD == settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD
+    )
+
+
+def test_antispam_honeypot_field_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = ""
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_antispam_quiet_reject(settings):
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert mlsettings.ANTISPAM_QUIET_REJECT == settings.MAGICLINK_ANTISPAM_QUIET_REJECT
+
+
+def test_antispam_quiet_reject_bad_value(settings):
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = "Test"
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_site_url(settings):
+    settings.MAGICLINK_SITE_URL = "https://example.com"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    assert mlsettings.SITE_URL == settings.MAGICLINK_SITE_URL
+
+
+def test_site_url_bad_value(settings):
+    settings.MAGICLINK_SITE_URL = 1
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
+def test_site_url_no_scheme(settings):
+    settings.MAGICLINK_SITE_URL = "example.com"
+
+    with pytest.raises(ImproperlyConfigured):
+        from magiclink import settings
+
+        reload(settings)
+
+
 def test_login_verify_url(settings):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
     from magiclink import settings as mlsettings

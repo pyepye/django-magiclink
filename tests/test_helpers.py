@@ -41,6 +41,14 @@ def test_create_magiclink(settings, time_machine):
 
 
 @pytest.mark.django_db
+def test_create_magiclink_ipv6():
+    request = HttpRequest()
+    request.META["REMOTE_ADDR"] = "2001:db8:abcd:12:1:2:3:4"
+    magic_link = create_magiclink("test@example.com", request)
+    assert magic_link.ip_address == "2001:db8:abcd:12::"
+
+
+@pytest.mark.django_db
 def test_create_magiclink_require_same_ip_off_no_ip(settings):
     settings.MAGICLINK_REQUIRE_SAME_IP = False
     from magiclink import settings as mlsettings

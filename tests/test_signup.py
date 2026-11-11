@@ -5,6 +5,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from magiclink.forms import sign_load_time
 from magiclink.models import MagicLink, MagicLinkUnsubscribe
 
 User = get_user_model()
@@ -79,7 +80,11 @@ def test_signup_post(mocker, client, settings):
     assert magiclink
     if mlsettings.REQUIRE_SAME_BROWSER:
         cookie_name = f"magiclink{magiclink.pk}"
-        assert response.cookies[cookie_name].value == magiclink.cookie_value
+        cookie = response.cookies[cookie_name]
+        assert cookie.value == magiclink.cookie_value
+        assert cookie["httponly"] is True
+        assert cookie["samesite"] == "Lax"
+        assert cookie["secure"] == ""
 
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
@@ -273,7 +278,7 @@ def test_signup_antispam(settings, client, time_machine):
         "email": email,
         "username": "uname",
         "name": "Fake name",
-        "load_time": time() - (submit_time * 3),
+        "load_time": sign_load_time(time() - (submit_time * 3)),
     }
     response = client.post(url, data)
     assert response.status_code == 302
@@ -291,7 +296,11 @@ def test_signup_antispam_submit_too_fast(settings, client, time_machine):
 
     url = reverse("magiclink:signup")
     signup_form = "SignupFormEmailOnly"
-    data = {"form_name": signup_form, "email": "test@example.com", "load_time": time()}
+    data = {
+        "form_name": signup_form,
+        "email": "test@example.com",
+        "load_time": sign_load_time(time()),
+    }
 
     response = client.post(url, data)
     assert response.status_code == 200
@@ -350,7 +359,31 @@ def test_signup_antispam_url_value(settings, client):
     response = client.post(url, data)
     assert response.status_code == 200
     form_errors = response.context[signup_form].errors
-    assert form_errors["url"] == ["url should be empty"]
+    assert form_errors["url"] == ["This field should be empty"]
+
+
+@pytest.mark.django_db
+def test_signup_antispam_quiet_reject(mocker, settings, client):
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    send_mail = mocker.patch("magiclink.models.send_mail")
+
+    url = reverse("magiclink:signup")
+    data = {
+        "form_name": "SignupFormEmailOnly",
+        "email": "test@example.com",
+        "url": "test",
+        "load_time": sign_load_time(time() - 10),
+    }
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:login_sent")
+    assert not User.objects.filter(email="test@example.com").exists()
+    send_mail.assert_not_called()
 
 
 @pytest.mark.django_db

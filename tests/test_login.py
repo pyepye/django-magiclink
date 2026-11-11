@@ -1,3 +1,4 @@
+import re
 from importlib import reload
 from time import time
 
@@ -6,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.urls import reverse
 
+from magiclink.forms import FORM_EXPIRED, sign_load_time
 from magiclink.models import MagicLink, MagicLinkUnsubscribe
 
 User = get_user_model()
@@ -68,7 +70,11 @@ def test_login_post(mocker, client, user, settings):
     assert magiclink
     if mlsettings.REQUIRE_SAME_BROWSER:
         cookie_name = f"magiclink{magiclink.pk}"
-        assert response.cookies[cookie_name].value == magiclink.cookie_value
+        cookie = response.cookies[cookie_name]
+        assert cookie.value == magiclink.cookie_value
+        assert cookie["httponly"] is True
+        assert cookie["samesite"] == "Lax"
+        assert cookie["secure"] == ""
 
     send_mail.assert_called_once_with(
         subject=mlsettings.EMAIL_SUBJECT,
@@ -150,9 +156,25 @@ def test_login_post_invalid(client, user):
 
 
 @pytest.mark.django_db
+def test_login_too_many_tokens_live_link(mocker, client, user, magic_link):
+    send_mail = mocker.patch("magiclink.models.send_mail")
+    request = HttpRequest()
+    ml = magic_link(request)
+
+    url = reverse("magiclink:login")
+    data = {"email": ml.email}
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:login_sent")
+    assert MagicLink.objects.filter(email=ml.email).count() == 1
+    send_mail.assert_not_called()
+
+
+@pytest.mark.django_db
 def test_login_too_many_tokens(client, user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
+    ml.disable()
 
     url = reverse("magiclink:login")
     data = {"email": ml.email}
@@ -160,6 +182,16 @@ def test_login_too_many_tokens(client, user, magic_link):
     assert response.status_code == 200
     error = ["Too many magic login requests"]
     assert response.context_data["login_form"].errors["email"] == error
+
+
+@pytest.mark.django_db
+def test_login_post_secure_cookie(mocker, client, user):
+    mocker.patch("magiclink.models.send_mail")
+
+    url = reverse("magiclink:login")
+    response = client.post(url, {"email": user.email}, secure=True)
+    magiclink = MagicLink.objects.get(email=user.email)
+    assert response.cookies[f"magiclink{magiclink.pk}"]["secure"] is True
 
 
 @pytest.mark.django_db
@@ -174,7 +206,7 @@ def test_login_antispam(settings, client, user, time_machine):
     reload(mlsettings)
 
     url = reverse("magiclink:login")
-    data = {"email": user.email, "load_time": time() - submit_time}
+    data = {"email": user.email, "load_time": sign_load_time(time() - submit_time)}
 
     response = client.post(url, data)
     magiclink = MagicLink.objects.get(email=user.email)
@@ -227,7 +259,7 @@ def test_login_antispam_submit_too_fast(settings, client, user, time_machine):
     reload(mlsettings)
 
     url = reverse("magiclink:login")
-    data = {"email": user.email, "load_time": time()}
+    data = {"email": user.email, "load_time": sign_load_time(time())}
 
     response = client.post(url, data)
     assert response.status_code == 200
@@ -280,7 +312,118 @@ def test_login_antispam_url_value(settings, client, user):
     response = client.post(url, data)
     assert response.status_code == 200
     form_errors = response.context["login_form"].errors
-    assert form_errors["url"] == ["url should be empty"]
+    assert form_errors["url"] == ["This field should be empty"]
+
+
+@pytest.mark.django_db
+def test_login_antispam_expired_load_time(settings, client, user, time_machine):
+    time_machine.move_to("2000-01-01T00:00:00", tick=False)
+
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    url = reverse("magiclink:login")
+    data = {"email": user.email, "load_time": sign_load_time(time())}
+    time_machine.shift(mlsettings.ANTISPAM_FORM_MAX_AGE + 1)
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form = response.context["login_form"]
+    assert form.non_field_errors() == [FORM_EXPIRED]
+    assert not form.is_spam()
+
+
+@pytest.mark.django_db
+def test_login_antispam_expired_form_is_not_quietly_rejected(
+    mocker, settings, client, user, time_machine
+):
+    time_machine.move_to("2000-01-01T00:00:00", tick=False)
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+    send_mail = mocker.patch("magiclink.models.send_mail")
+
+    url = reverse("magiclink:login")
+    data = {"email": user.email, "load_time": sign_load_time(time())}
+    time_machine.shift(mlsettings.ANTISPAM_FORM_MAX_AGE + 1)
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    assert FORM_EXPIRED in response.content.decode()
+    send_mail.assert_not_called()
+
+    new_load_time = re.search(
+        r'name="load_time" value="([^"]+)"', response.content.decode()
+    ).group(1)
+    assert new_load_time != data["load_time"]
+
+    time_machine.shift(10)
+    response = client.post(url, {"email": user.email, "load_time": new_load_time})
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:login_sent")
+    send_mail.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_login_antispam_custom_honeypot_field(settings, client, user):
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_HONEYPOT_FIELD = "website"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    url = reverse("magiclink:login")
+    response = client.get(url)
+    assert "website" in response.context["login_form"].fields
+    assert "url" not in response.context["login_form"].fields
+
+    data = {"email": user.email, "website": "test"}
+    response = client.post(url, data)
+    assert response.status_code == 200
+    form_errors = response.context["login_form"].errors
+    assert form_errors["website"] == ["This field should be empty"]
+
+
+@pytest.mark.django_db
+def test_login_antispam_quiet_reject(mocker, settings, client, user, time_machine):
+    time_machine.move_to("2000-01-01T00:00:00", tick=False)
+
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    send_mail = mocker.patch("magiclink.models.send_mail")
+
+    url = reverse("magiclink:login")
+    data = {"email": user.email, "load_time": sign_load_time(time())}
+
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse("magiclink:login_sent")
+    assert not MagicLink.objects.filter(email=user.email).exists()
+    send_mail.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_login_antispam_quiet_reject_other_errors(settings, client):
+    settings.MAGICLINK_ANTISPAM_FORMS = True
+    settings.MAGICLINK_ANTISPAM_QUIET_REJECT = True
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    url = reverse("magiclink:login")
+    data = {"email": "not-an-email", "load_time": sign_load_time(time() - 10)}
+
+    response = client.post(url, data)
+    assert response.status_code == 200
+    assert "email" in response.context["login_form"].errors
 
 
 @pytest.mark.django_db

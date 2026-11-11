@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from magiclink import settings
+from magiclink.helpers import create_magiclink
 from magiclink.models import MagicLink, MagicLinkError, MagicLinkUnsubscribe
 
 User = get_user_model()
@@ -64,6 +65,21 @@ def test_generate_url_custom_verify(settings, magic_link):
     from magiclink import settings
 
     reload(settings)
+
+
+@pytest.mark.django_db
+def test_generate_url_site_url(settings, magic_link):
+    settings.MAGICLINK_SITE_URL = "https://example.com"
+    from magiclink import settings as mlsettings
+
+    reload(mlsettings)
+
+    request = HttpRequest()
+    request.META["HTTP_HOST"] = "evil.example"
+    login_url = reverse("magiclink:login_verify")
+    ml = magic_link(request)
+    url = f"https://example.com{login_url}?token={ml.token}&email={quote(ml.email)}"
+    assert ml.generate_url(request) == url
 
 
 @pytest.mark.django_db
@@ -214,6 +230,31 @@ def test_validate_wrong_ip(user, magic_link):
 
 
 @pytest.mark.django_db
+def test_validate_wrong_ipv6_network(user):
+    request = HttpRequest()
+    request.META["REMOTE_ADDR"] = "2001:db8:1::1"
+    ml = create_magiclink(user.email, request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    request.META["REMOTE_ADDR"] = "2001:db8:2::1"
+    with pytest.raises(MagicLinkError) as error:
+        ml.validate(request=request, email=user.email)
+
+    error.match(
+        "IP address is different from the IP address used to request the magic link"
+    )
+
+
+@pytest.mark.django_db
+def test_validate_same_ipv6_network(user):
+    request = HttpRequest()
+    request.META["REMOTE_ADDR"] = "2001:db8:1::1"
+    ml = create_magiclink(user.email, request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    request.META["REMOTE_ADDR"] = "2001:db8:1::2"
+    assert ml.validate(request=request, email=user.email) == user
+
+
+@pytest.mark.django_db
 def test_validate_different_browser(user, magic_link):
     request = HttpRequest()
     ml = magic_link(request)
@@ -287,6 +328,38 @@ def test_validate_staff(settings, user, magic_link):
     ml = MagicLink.objects.get(token=ml.token)
     assert ml.times_used == 1
     assert ml.disabled is True
+
+
+@pytest.mark.django_db
+def test_validate_inactive(user, magic_link):
+    request = HttpRequest()
+    ml = magic_link(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    user.is_active = False
+    user.save()
+    with pytest.raises(MagicLinkError) as error:
+        ml.validate(request=request, email=user.email)
+
+    error.match("This user has been deactivated")
+
+    ml = MagicLink.objects.get(token=ml.token)
+    assert ml.times_used == 1
+    assert ml.disabled is True
+
+
+@pytest.mark.django_db
+def test_validate_inactive_ignore_flag(settings, user, magic_link):
+    settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
+    from magiclink import settings
+
+    reload(settings)
+
+    request = HttpRequest()
+    ml = magic_link(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    user.is_active = False
+    user.save()
+    assert ml.validate(request=request, email=user.email) == user
 
 
 @pytest.mark.django_db
@@ -364,6 +437,21 @@ async def test_avalidate_superuser(settings, user, magic_link):
     ml = await MagicLink.objects.aget(token=ml.token)
     assert ml.times_used == 1
     assert ml.disabled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_avalidate_inactive(user, magic_link):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    user.is_active = False
+    await user.asave()
+
+    with pytest.raises(MagicLinkError) as error:
+        await ml.avalidate(request=request, email=user.email)
+
+    error.match("This user has been deactivated")
 
 
 @pytest.mark.asyncio

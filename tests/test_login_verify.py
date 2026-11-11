@@ -31,6 +31,7 @@ def test_login_verify(client, settings, magic_link):
     assert client.cookies[cookie_name].value == ""
     assert client.cookies[cookie_name]["expires"].startswith("Thu, 01 Jan 1970")
     assert client.cookies[cookie_name]["path"] == "/"
+    assert response["Referrer-Policy"] == "no-referrer"
 
     needs_login_url = reverse("needs_login")
     needs_login_response = client.get(needs_login_url)
@@ -159,3 +160,11 @@ def test_login_verify_custom_verify(client, settings, magic_link):
     from magiclink import settings
 
     reload(settings)
+
+
+@pytest.mark.django_db
+def test_login_verify_failed_no_referrer(client):
+    url = reverse("magiclink:login_verify")
+    response = client.get(f"{url}?token=fake&email=test@example.com")
+    assert response.status_code == 200
+    assert response["Referrer-Policy"] == "no-referrer"
