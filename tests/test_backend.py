@@ -6,8 +6,9 @@ from django.contrib.auth import aauthenticate, aget_user, alogin
 from django.contrib.sessions.backends.db import SessionStore
 from django.http import HttpRequest
 
-from magiclink.backends import MagicLinkBackend
+from magiclink.backends import ALREADY_USED, MagicLinkBackend
 from magiclink.models import MagicLink
+from magiclink.signals import login_failed
 
 
 @pytest.mark.django_db
@@ -206,3 +207,66 @@ async def test_aauthenticate_does_not_log_token(caplog, user):
         request=HttpRequest(), token="secret-token", email=user.email
     )
     assert "secret-token" not in caplog.text
+
+
+def link_used_by_other_request_during(method):
+    def validate_then_other_request_uses_link(self, *args, **kwargs):
+        user = method(self, *args, **kwargs)
+        assert MagicLink.objects.get(pk=self.pk).used()
+        return user
+
+    return validate_then_other_request_uses_link
+
+
+@pytest.mark.django_db
+def test_auth_backend_fails_if_link_used_by_another_request(mocker, user, magic_link):
+    request = HttpRequest()
+    ml = magic_link(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    mocker.patch.object(
+        MagicLink, "validate", link_used_by_other_request_during(MagicLink.validate)
+    )
+    receiver = mocker.Mock()
+    login_failed.connect(receiver)
+    try:
+        authed = MagicLinkBackend().authenticate(
+            request=request, token=ml.token, email=user.email
+        )
+    finally:
+        login_failed.disconnect(receiver)
+
+    assert authed is None
+    assert receiver.call_args.kwargs["reason"] == ALREADY_USED
+    ml.refresh_from_db()
+    assert ml.times_used == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_aauthenticate_fails_if_link_used_by_another_request(
+    mocker, user, magic_link
+):
+    request = HttpRequest()
+    ml = await sync_to_async(magic_link)(request)
+    request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
+    avalidate = MagicLink.avalidate
+
+    async def avalidate_then_other_request_uses_link(self, *args, **kwargs):
+        user = await avalidate(self, *args, **kwargs)
+        assert await (await MagicLink.objects.aget(pk=self.pk)).aused()
+        return user
+
+    mocker.patch.object(MagicLink, "avalidate", avalidate_then_other_request_uses_link)
+    receiver = mocker.Mock()
+    login_failed.connect(receiver)
+    try:
+        authed = await MagicLinkBackend().aauthenticate(
+            request=request, token=ml.token, email=user.email
+        )
+    finally:
+        login_failed.disconnect(receiver)
+
+    assert authed is None
+    assert receiver.call_args.kwargs["reason"] == ALREADY_USED
+    await ml.arefresh_from_db()
+    assert ml.times_used == 1

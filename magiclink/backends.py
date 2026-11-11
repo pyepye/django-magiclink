@@ -10,6 +10,8 @@ from .signals import login_failed, login_succeeded
 User = get_user_model()
 log = logging.getLogger(__name__)
 
+ALREADY_USED = "Magic link has already been used"
+
 
 class MagicLinkBackend:
     def authenticate(
@@ -55,7 +57,16 @@ class MagicLinkBackend:
             )
             return
 
-        magiclink.used()
+        if not magiclink.used():
+            log.warning(f'MagicLink "{magiclink.pk}" was used by another request')
+            login_failed.send(
+                sender=self.__class__,
+                request=request,
+                magiclink=magiclink,
+                reason=ALREADY_USED,
+            )
+            return
+
         log.info(f"{user} authenticated via MagicLink")
         login_succeeded.send(
             sender=self.__class__, request=request, user=user, magiclink=magiclink
@@ -105,7 +116,16 @@ class MagicLinkBackend:
             )
             return
 
-        await magiclink.aused()
+        if not await magiclink.aused():
+            log.warning(f'MagicLink "{magiclink.pk}" was used by another request')
+            await login_failed.asend(
+                sender=self.__class__,
+                request=request,
+                magiclink=magiclink,
+                reason=ALREADY_USED,
+            )
+            return
+
         log.info(f"{user} authenticated via MagicLink")
         await login_succeeded.asend(
             sender=self.__class__, request=request, user=user, magiclink=magiclink
