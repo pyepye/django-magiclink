@@ -754,6 +754,16 @@ def log_failed_login(sender, request, magiclink, reason, **kwargs):
 
 ## Upgrading
 
+### Upgrading to 2.1.0
+
+Version `2.1.0` does not add any new migrations. The new settings are off by default. If you upgrade from a previous version please note the following changes:
+
+* `X-Forwarded-For` is ignored by default. If Django runs behind a proxy or load balancer, set `MAGICLINK_TRUSTED_PROXY_COUNT` or `MAGICLINK_TRUSTED_CLIENT_IP_HEADER`. Without one of these, logins can fail behind a load balancer or CDN with more than one node. See 'Proxies'
+* A user whose `is_active` flag is False can not use a magic link and is logged out of any existing session, unless `MAGICLINK_IGNORE_IS_ACTIVE_FLAG` is True
+* `MagicLink` and `MagicLinkUnsubscribe` are registered in the admin. If your project registers them in its own `admin.py`, Django raises `AlreadyRegistered` at startup. Remove your registration, or call `admin.site.unregister()` first
+* If you override the email templates and turn on `MAGICLINK_UNSUBSCRIBE_LINK`, add `{{ unsubscribe_url }}`
+* `MagicLink.used()` and `aused()` return False if another request used the link first. If you call them in your own code, check the result
+
 ### Upgrading to 2.0.0
 
 Version `2.0.0` does not add any new migrations or settings. If you upgrade from a previous version please note the following changes:
