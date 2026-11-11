@@ -62,7 +62,7 @@ def get_client_ip(request: HttpRequest) -> str | None:
     return ip
 
 
-def anonymize_ip(ip: str) -> str:
+def anonymize_ip(ip: str, ipv4_prefix: int = 24) -> str:
     try:
         address = ipaddress.ip_address(ip)
     except ValueError:
@@ -70,9 +70,22 @@ def anonymize_ip(ip: str) -> str:
 
     if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
         address = address.ipv4_mapped
-    prefix = 24 if address.version == 4 else 64
+    prefix = ipv4_prefix if address.version == 4 else 64
     network = ipaddress.ip_network(f"{address}/{prefix}", strict=False)
     return str(network.network_address)
+
+
+def email_domain_allowed(email: str) -> bool:
+    """
+    Check the domain of an email address and its parent domains against the
+    allowed and blocked lists
+    """
+    parts = email.rpartition("@")[2].lower().split(".")
+    domains = {".".join(parts[index:]) for index in range(len(parts))}
+    if domains.intersection(settings.BLOCKED_EMAIL_DOMAINS):
+        return False
+    allowed = settings.ALLOWED_EMAIL_DOMAINS
+    return not allowed or bool(domains.intersection(allowed))
 
 
 def get_url_path(url: str) -> str:

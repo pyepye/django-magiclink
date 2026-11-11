@@ -1,5 +1,4 @@
 from datetime import timedelta
-from importlib import reload
 from urllib.parse import quote
 
 import pytest
@@ -33,8 +32,6 @@ def test_generate_url(settings, magic_link):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
     from magiclink import settings
 
-    reload(settings)
-
     request = HttpRequest()
     host = "127.0.0.1"
     login_url = reverse("magiclink:login_verify")
@@ -50,8 +47,6 @@ def test_generate_url_custom_verify(settings, magic_link):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
     from magiclink import settings
 
-    reload(settings)
-
     request = HttpRequest()
     host = "127.0.0.1"
     login_url = reverse("custom_login_verify")
@@ -64,15 +59,10 @@ def test_generate_url_custom_verify(settings, magic_link):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
     from magiclink import settings
 
-    reload(settings)
-
 
 @pytest.mark.django_db
 def test_generate_url_site_url(settings, magic_link):
     settings.MAGICLINK_SITE_URL = "https://example.com"
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     request.META["HTTP_HOST"] = "evil.example"
@@ -101,6 +91,7 @@ def test_send_email(mocker, settings, magic_link):
         "subject": mlsettings.EMAIL_SUBJECT,
         "user": usr,
         "magiclink": ml.generate_url(request),
+        "unsubscribe_url": "",
         "expiry": ml.expiry,
         "ip_address": ml.ip_address,
         "created": ml.created,
@@ -140,8 +131,6 @@ def test_send_email_error_email_in_unsubscribe(magic_link):
 def test_send_email_pass_email_in_unsubscribe(mocker, settings, magic_link):
     settings.MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = True
     from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     send_mail = mocker.patch("magiclink.models.send_mail")
 
@@ -291,8 +280,6 @@ def test_validate_superuser(settings, user, magic_link):
     settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
     from magiclink import settings
 
-    reload(settings)
-
     request = HttpRequest()
     ml = magic_link(request)
     request.COOKIES[f"magiclink{ml.pk}"] = ml.cookie_value
@@ -312,8 +299,6 @@ def test_validate_superuser(settings, user, magic_link):
 def test_validate_staff(settings, user, magic_link):
     settings.MAGICLINK_ALLOW_STAFF_LOGIN = False
     from magiclink import settings
-
-    reload(settings)
 
     request = HttpRequest()
     ml = magic_link(request)
@@ -351,8 +336,6 @@ def test_validate_inactive(user, magic_link):
 def test_validate_inactive_ignore_flag(settings, user, magic_link):
     settings.MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
     from magiclink import settings
-
-    reload(settings)
 
     request = HttpRequest()
     ml = magic_link(request)
@@ -419,9 +402,6 @@ async def test_avalidate_expired(user, magic_link):
 @pytest.mark.django_db(transaction=True)
 async def test_avalidate_superuser(settings, user, magic_link):
     settings.MAGICLINK_ALLOW_SUPERUSER_LOGIN = False
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     request = HttpRequest()
     ml = await sync_to_async(magic_link)(request)

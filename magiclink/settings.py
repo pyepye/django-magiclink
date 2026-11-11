@@ -1,190 +1,228 @@
-import warnings
+import re
+from collections.abc import Callable
+from typing import Any, NamedTuple
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-LOGIN_SENT_REDIRECT = getattr(
-    settings, "MAGICLINK_LOGIN_SENT_REDIRECT", "magiclink:login_sent"
-)
-
-LOGIN_TEMPLATE_NAME = getattr(
-    settings, "MAGICLINK_LOGIN_TEMPLATE_NAME", "magiclink/login.html"
-)
-LOGIN_SENT_TEMPLATE_NAME = getattr(
-    settings, "MAGICLINK_LOGIN_SENT_TEMPLATE_NAME", "magiclink/login_sent.html"
-)
-LOGIN_FAILED_TEMPLATE_NAME = getattr(
-    settings, "MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME", "magiclink/login_failed.html"
-)
-# If LOGIN_FAILED_REDIRECT has a value the user will be redirected to this
-# URL instead of being shown the LOGIN_FAILED_TEMPLATE
-LOGIN_FAILED_REDIRECT = getattr(settings, "MAGICLINK_LOGIN_FAILED_REDIRECT", "")
-
-# If this setting is set to False a user account will be created the first time
-# a user requests a login link.
-REQUIRE_SIGNUP = getattr(settings, "MAGICLINK_REQUIRE_SIGNUP", True)
-if not isinstance(REQUIRE_SIGNUP, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SIGNUP" must be a boolean')
-SIGNUP_LOGIN_REDIRECT = getattr(settings, "MAGICLINK_SIGNUP_LOGIN_REDIRECT", "")
-
-SIGNUP_TEMPLATE_NAME = getattr(
-    settings, "MAGICLINK_SIGNUP_TEMPLATE_NAME", "magiclink/signup.html"
-)
-
-try:
-    TOKEN_LENGTH = int(getattr(settings, "MAGICLINK_TOKEN_LENGTH", 50))
-except ValueError:
-    raise ImproperlyConfigured('"MAGICLINK_TOKEN_LENGTH" must be an integer') from None
-else:
-    if TOKEN_LENGTH < 20:
-        warning = (
-            "Shorter MAGICLINK_TOKEN_LENGTH values make your login more "
-            "susceptible to brute force attacks"
-        )
-        warnings.warn(warning, RuntimeWarning, stacklevel=2)
-
-try:
-    # In seconds
-    AUTH_TIMEOUT = int(getattr(settings, "MAGICLINK_AUTH_TIMEOUT", 300))
-except ValueError:
-    raise ImproperlyConfigured('"MAGICLINK_AUTH_TIMEOUT" must be an integer') from None
-
-try:
-    TOKEN_USES = int(getattr(settings, "MAGICLINK_TOKEN_USES", 1))
-except ValueError:
-    raise ImproperlyConfigured('"MAGICLINK_TOKEN_USES" must be an integer') from None
-
-EMAIL_IGNORE_CASE = getattr(settings, "MAGICLINK_EMAIL_IGNORE_CASE", True)
-if not isinstance(EMAIL_IGNORE_CASE, bool):
-    raise ImproperlyConfigured('"MAGICLINK_EMAIL_IGNORE_CASE" must be a boolean')
-
-EMAIL_AS_USERNAME = getattr(settings, "MAGICLINK_EMAIL_AS_USERNAME", True)
-if not isinstance(EMAIL_AS_USERNAME, bool):
-    raise ImproperlyConfigured('"MAGICLINK_EMAIL_AS_USERNAME" must be a boolean')
-
-ALLOW_SUPERUSER_LOGIN = getattr(settings, "MAGICLINK_ALLOW_SUPERUSER_LOGIN", True)
-if not isinstance(ALLOW_SUPERUSER_LOGIN, bool):
-    raise ImproperlyConfigured('"MAGICLINK_ALLOW_SUPERUSER_LOGIN" must be a boolean')
-
-ALLOW_STAFF_LOGIN = getattr(settings, "MAGICLINK_ALLOW_STAFF_LOGIN", True)
-if not isinstance(ALLOW_STAFF_LOGIN, bool):
-    raise ImproperlyConfigured('"MAGICLINK_ALLOW_STAFF_LOGIN" must be a boolean')
-
-IGNORE_IS_ACTIVE_FLAG = getattr(settings, "MAGICLINK_IGNORE_IS_ACTIVE_FLAG", False)
-if not isinstance(IGNORE_IS_ACTIVE_FLAG, bool):
-    raise ImproperlyConfigured('"MAGICLINK_IGNORE_IS_ACTIVE_FLAG" must be a boolean')
-
-VERIFY_INCLUDE_EMAIL = getattr(settings, "MAGICLINK_VERIFY_INCLUDE_EMAIL", True)
-if not isinstance(VERIFY_INCLUDE_EMAIL, bool):
-    raise ImproperlyConfigured('"MAGICLINK_VERIFY_INCLUDE_EMAIL" must be a boolean')
-
-REQUIRE_SAME_BROWSER = getattr(settings, "MAGICLINK_REQUIRE_SAME_BROWSER", True)
-if not isinstance(REQUIRE_SAME_BROWSER, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SAME_BROWSER" must be a boolean')
-
-REQUIRE_SAME_IP = getattr(settings, "MAGICLINK_REQUIRE_SAME_IP", True)
-if not isinstance(REQUIRE_SAME_IP, bool):
-    raise ImproperlyConfigured('"MAGICLINK_REQUIRE_SAME_IP" must be a boolean')
-
-ANONYMIZE_IP = getattr(settings, "MAGICLINK_ANONYMIZE_IP", True)
-if not isinstance(ANONYMIZE_IP, bool):
-    raise ImproperlyConfigured('"MAGICLINK_ANONYMIZE_IP" must be a boolean')
-
-try:
-    TRUSTED_PROXY_COUNT = int(getattr(settings, "MAGICLINK_TRUSTED_PROXY_COUNT", 0))
-except ValueError:
-    raise ImproperlyConfigured(
-        '"MAGICLINK_TRUSTED_PROXY_COUNT" must be an integer'
-    ) from None
-if TRUSTED_PROXY_COUNT < 0:
-    raise ImproperlyConfigured('"MAGICLINK_TRUSTED_PROXY_COUNT" must be 0 or more')
-
-TRUSTED_CLIENT_IP_HEADER = getattr(settings, "MAGICLINK_TRUSTED_CLIENT_IP_HEADER", "")
-if not isinstance(TRUSTED_CLIENT_IP_HEADER, str):
-    raise ImproperlyConfigured('"MAGICLINK_TRUSTED_CLIENT_IP_HEADER" must be a string')
-
-ONE_TOKEN_PER_USER = getattr(settings, "MAGICLINK_ONE_TOKEN_PER_USER", True)
-if not isinstance(ONE_TOKEN_PER_USER, bool):
-    raise ImproperlyConfigured('"MAGICLINK_ONE_TOKEN_PER_USER" must be a boolean')
-
-try:
-    LOGIN_REQUEST_TIME_LIMIT = int(
-        getattr(settings, "MAGICLINK_LOGIN_REQUEST_TIME_LIMIT", 30)
-    )  # In seconds
-except ValueError:
-    raise ImproperlyConfigured(
-        '"MAGICLINK_LOGIN_REQUEST_TIME_LIMIT" must be an integer'
-    ) from None
+FORM_NAMES = ("login", "signup")
+RATE_LIMIT_NAMES = ("request", "request_site", "verify_failed")
+RATE_LIMIT_PERIODS = {"s": 1, "m": 60, "h": 60 * 60, "d": 24 * 60 * 60}
+RATE_LIMIT_RULE = re.compile(r"(\d+)/(\d*)([smhd])(?:/(ip|email))?")
 
 
-EMAIL_STYLES = {
-    "logo_url": "",
-    "background_color": "#ffffff",
-    "main_text_color": "#000000",
-    "button_background_color": "#0078be",
-    "button_text_color": "#ffffff",
-}
-EMAIL_STYLES = getattr(settings, "MAGICLINK_EMAIL_STYLES", EMAIL_STYLES)
-if EMAIL_STYLES and not isinstance(EMAIL_STYLES, dict):
-    raise ImproperlyConfigured('"MAGICLINK_EMAIL_STYLES" must be a dict')
-
-EMAIL_SUBJECT = getattr(settings, "MAGICLINK_EMAIL_SUBJECT", "Your login magic link")
-EMAIL_TEMPLATE_NAME_TEXT = getattr(
-    settings, "MAGICLINK_EMAIL_TEMPLATE_NAME_TEXT", "magiclink/login_email.txt"
-)
-EMAIL_TEMPLATE_NAME_HTML = getattr(
-    settings, "MAGICLINK_EMAIL_TEMPLATE_NAME_HTML", "magiclink/login_email.html"
-)
+class RateLimitRule(NamedTuple):
+    limit: int
+    seconds: int
+    key: str | None
 
 
-ANTISPAM_FORMS = getattr(settings, "MAGICLINK_ANTISPAM_FORMS", False)
-if not isinstance(ANTISPAM_FORMS, bool):
-    raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_FORMS" must be a boolean')
-ANTISPAM_FIELD_TIME = getattr(settings, "MAGICLINK_ANTISPAM_FIELD_TIME", 1)
-if ANTISPAM_FIELD_TIME is not None:
+def parse_rate_limit_rules(rules: str) -> list[RateLimitRule]:
+    parsed = []
+    for rule in filter(None, (part.strip() for part in rules.split(","))):
+        match = RATE_LIMIT_RULE.fullmatch(rule)
+        seconds = 0
+        if match:
+            seconds = int(match[2] or 1) * RATE_LIMIT_PERIODS[match[3]]
+        if not match or not seconds:
+            raise ImproperlyConfigured(
+                f'"MAGICLINK_RATE_LIMITS" has an invalid rule: "{rule}"'
+            )
+        parsed.append(RateLimitRule(int(match[1]), seconds, match[4]))
+    return parsed
+
+
+def _value(name: str, default: object) -> Any:
+    return getattr(settings, f"MAGICLINK_{name}", default)
+
+
+def _boolean(name: str, default: object) -> bool:
+    value = _value(name, default)
+    if not isinstance(value, bool):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a boolean')
+    return value
+
+
+def _integer(name: str, default: object) -> int:
     try:
-        ANTISPAM_FIELD_TIME = float(ANTISPAM_FIELD_TIME)
-    except ValueError:
+        return int(_value(name, default))
+    except (TypeError, ValueError):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be an integer') from None
+
+
+def _string(name: str, default: object) -> str:
+    value = _value(name, default)
+    if not isinstance(value, str):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a string')
+    return value
+
+
+def _non_negative_integer(name: str, default: object) -> int:
+    value = _integer(name, default)
+    if value < 0:
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be 0 or more')
+    return value
+
+
+def _email_styles(name: str, default: object) -> dict[str, str]:
+    value = _value(name, default)
+    if value and not isinstance(value, dict):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a dict')
+    return value
+
+
+def _antispam_field_time(name: str, default: object) -> float | None:
+    value = _value(name, default)
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a float') from None
+
+
+def _honeypot_field(name: str, default: object) -> str:
+    value = _value(name, default)
+    if not isinstance(value, str) or not value:
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a non-empty string')
+    return value
+
+
+def _spam_checks(name: str, default: object) -> list[str]:
+    value = _value(name, default)
+    if not isinstance(value, list | tuple) or not all(
+        isinstance(check, str) for check in value
+    ):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a list of strings')
+    return list(value)
+
+
+def _email_domains(name: str, default: object) -> list[str]:
+    value = _value(name, default)
+    if not isinstance(value, list | tuple) or not all(
+        isinstance(domain, str) for domain in value
+    ):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a list of strings')
+    return [domain.lower() for domain in value]
+
+
+def _rate_limits(name: str, default: object) -> dict[str, list[RateLimitRule]]:
+    value = _value(name, default)
+    if not isinstance(value, dict):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a dict')
+    for limit_name, rules in value.items():
+        if limit_name not in RATE_LIMIT_NAMES or not isinstance(rules, str):
+            raise ImproperlyConfigured(
+                f'"MAGICLINK_{name}" has an invalid entry: "{limit_name}"'
+            )
+    return {
+        limit_name: parse_rate_limit_rules(rules) for limit_name, rules in value.items()
+    }
+
+
+def _forms(name: str, default: object) -> dict[str, str]:
+    value = _value(name, default)
+    if not isinstance(value, dict):
+        raise ImproperlyConfigured(f'"MAGICLINK_{name}" must be a dict')
+    for form_name, path in value.items():
+        if form_name not in FORM_NAMES or not isinstance(path, str):
+            raise ImproperlyConfigured(
+                f'"MAGICLINK_{name}" has an invalid entry: "{form_name}"'
+            )
+    return value
+
+
+def _site_url(name: str, default: object) -> str:
+    value = _string(name, default)
+    if value and not value.startswith(("http://", "https://")):
         raise ImproperlyConfigured(
-            '"MAGICLINK_ANTISPAM_FIELD_TIME" must be a float'
-        ) from None
+            f'"MAGICLINK_{name}" must start with "http://" or "https://"'
+        )
+    return value
 
-try:
+
+_SETTINGS: dict[str, tuple[Callable[[str, object], object], object]] = {
+    "LOGIN_SENT_REDIRECT": (_value, "magiclink:login_sent"),
+    "LOGIN_TEMPLATE_NAME": (_value, "magiclink/login.html"),
+    "LOGIN_SENT_TEMPLATE_NAME": (_value, "magiclink/login_sent.html"),
+    "LOGIN_FAILED_TEMPLATE_NAME": (_value, "magiclink/login_failed.html"),
+    "LOGIN_CONFIRM_TEMPLATE_NAME": (_value, "magiclink/login_confirm.html"),
+    # If this has a value the user is redirected to this URL and is not shown
+    # LOGIN_FAILED_TEMPLATE_NAME
+    "LOGIN_FAILED_REDIRECT": (_value, ""),
+    # If this is False a user account is created the first time a user requests
+    # a login link
+    "REQUIRE_SIGNUP": (_boolean, True),
+    "SIGNUP_LOGIN_REDIRECT": (_value, ""),
+    "SIGNUP_TEMPLATE_NAME": (_value, "magiclink/signup.html"),
+    "TOKEN_LENGTH": (_integer, 50),
     # In seconds
-    ANTISPAM_FORM_MAX_AGE = int(
-        getattr(settings, "MAGICLINK_ANTISPAM_FORM_MAX_AGE", 6 * 60 * 60)
-    )
-except ValueError:
-    raise ImproperlyConfigured(
-        '"MAGICLINK_ANTISPAM_FORM_MAX_AGE" must be an integer'
-    ) from None
+    "AUTH_TIMEOUT": (_integer, 300),
+    "TOKEN_USES": (_integer, 1),
+    "EMAIL_IGNORE_CASE": (_boolean, True),
+    "EMAIL_AS_USERNAME": (_boolean, True),
+    "ALLOW_SUPERUSER_LOGIN": (_boolean, True),
+    "ALLOW_STAFF_LOGIN": (_boolean, True),
+    "IGNORE_IS_ACTIVE_FLAG": (_boolean, False),
+    "VERIFY_INCLUDE_EMAIL": (_boolean, True),
+    "LOGIN_CONFIRM": (_boolean, False),
+    "REQUIRE_SAME_BROWSER": (_boolean, True),
+    "REQUIRE_SAME_IP": (_boolean, True),
+    "ANONYMIZE_IP": (_boolean, True),
+    "TRUSTED_PROXY_COUNT": (_non_negative_integer, 0),
+    "TRUSTED_CLIENT_IP_HEADER": (_string, ""),
+    "ONE_TOKEN_PER_USER": (_boolean, True),
+    # In seconds
+    "LOGIN_REQUEST_TIME_LIMIT": (_integer, 30),
+    "EMAIL_STYLES": (
+        _email_styles,
+        {
+            "logo_url": "",
+            "background_color": "#ffffff",
+            "main_text_color": "#000000",
+            "button_background_color": "#0078be",
+            "button_text_color": "#ffffff",
+        },
+    ),
+    "EMAIL_SUBJECT": (_value, "Your login magic link"),
+    "EMAIL_TEMPLATE_NAME_TEXT": (_value, "magiclink/login_email.txt"),
+    "EMAIL_TEMPLATE_NAME_HTML": (_value, "magiclink/login_email.html"),
+    "PREVENT_ENUMERATION": (_boolean, False),
+    "ANTISPAM_FORMS": (_boolean, False),
+    "ANTISPAM_FIELD_TIME": (_antispam_field_time, 1),
+    # In seconds
+    "ANTISPAM_FORM_MAX_AGE": (_integer, 6 * 60 * 60),
+    "ANTISPAM_HONEYPOT_FIELD": (_honeypot_field, "url"),
+    "ANTISPAM_QUIET_REJECT": (_boolean, False),
+    "ADAPTER": (_string, "magiclink.adapter.MagicLinkAdapter"),
+    "SPAM_CHECKS": (_spam_checks, []),
+    "FORMS": (_forms, {}),
+    "ALLOWED_EMAIL_DOMAINS": (_email_domains, []),
+    "BLOCKED_EMAIL_DOMAINS": (_email_domains, []),
+    "RATE_LIMITS": (_rate_limits, {}),
+    "SITE_URL": (_site_url, ""),
+    "LOGIN_VERIFY_URL": (_value, "magiclink:login_verify"),
+    "UNSUBSCRIBE_LINK": (_boolean, False),
+    "UNSUBSCRIBE_TEMPLATE_NAME": (_value, "magiclink/unsubscribe.html"),
+    "IGNORE_UNSUBSCRIBE_IF_USER": (_boolean, False),
+}
 
-ANTISPAM_HONEYPOT_FIELD = getattr(settings, "MAGICLINK_ANTISPAM_HONEYPOT_FIELD", "url")
-if not isinstance(ANTISPAM_HONEYPOT_FIELD, str) or not ANTISPAM_HONEYPOT_FIELD:
-    raise ImproperlyConfigured(
-        '"MAGICLINK_ANTISPAM_HONEYPOT_FIELD" must be a non-empty string'
-    )
 
-ANTISPAM_QUIET_REJECT = getattr(settings, "MAGICLINK_ANTISPAM_QUIET_REJECT", False)
-if not isinstance(ANTISPAM_QUIET_REJECT, bool):
-    raise ImproperlyConfigured('"MAGICLINK_ANTISPAM_QUIET_REJECT" must be a boolean')
+def __getattr__(name: str) -> Any:
+    try:
+        reader, default = _SETTINGS[name]
+    except KeyError:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
+    return reader(name, default)
 
-SITE_URL = getattr(settings, "MAGICLINK_SITE_URL", "")
-if not isinstance(SITE_URL, str):
-    raise ImproperlyConfigured('"MAGICLINK_SITE_URL" must be a string')
-if SITE_URL and not SITE_URL.startswith(("http://", "https://")):
-    raise ImproperlyConfigured(
-        '"MAGICLINK_SITE_URL" must start with "http://" or "https://"'
-    )
 
-LOGIN_VERIFY_URL = getattr(
-    settings, "MAGICLINK_LOGIN_VERIFY_URL", "magiclink:login_verify"
-)
+def __dir__() -> list[str]:
+    return [*globals(), *_SETTINGS]
 
-IGNORE_UNSUBSCRIBE_IF_USER = getattr(
-    settings, "MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER", False
-)
-if not isinstance(IGNORE_UNSUBSCRIBE_IF_USER, bool):
-    raise ImproperlyConfigured(
-        '"MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER" must be a boolean'
-    )
+
+def validate() -> None:
+    for name in _SETTINGS:
+        __getattr__(name)
+
+
+validate()

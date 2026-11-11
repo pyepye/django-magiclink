@@ -1,4 +1,3 @@
-from importlib import reload
 from urllib.parse import urlencode
 
 import pytest
@@ -60,9 +59,6 @@ def test_login_verify_with_redirect(client, magic_link):
 @pytest.mark.django_db
 def test_login_verify_no_token_404(client, settings):
     settings.MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = ""
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login_verify")
     response = client.get(url)
@@ -73,8 +69,6 @@ def test_login_verify_no_token_404(client, settings):
 def test_login_verify_failed(client, settings):
     settings.MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = "magiclink/login_failed.html"
     from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login_verify")
     response = client.get(url)
@@ -92,8 +86,6 @@ def test_login_verify_failed(client, settings):
 def test_login_verify_failed_validation(client, settings, magic_link):
     settings.MAGICLINK_LOGIN_FAILED_TEMPLATE_NAME = "magiclink/login_failed.html"
     from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login_verify")
     request = HttpRequest()
@@ -121,9 +113,6 @@ def test_login_verify_failed_validation(client, settings, magic_link):
 def test_login_verify_failed_redirect(client, settings):
     fail_redirect_url = "/failedredirect"
     settings.MAGICLINK_LOGIN_FAILED_REDIRECT = fail_redirect_url
-    from magiclink import settings as mlsettings
-
-    reload(mlsettings)
 
     url = reverse("magiclink:login_verify")
     response = client.get(url)
@@ -134,8 +123,6 @@ def test_login_verify_failed_redirect(client, settings):
 def test_login_verify_custom_verify(client, settings, magic_link):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "custom_login_verify"
     from magiclink import settings
-
-    reload(settings)
 
     url = reverse(settings.LOGIN_VERIFY_URL)
     request = HttpRequest()
@@ -159,8 +146,6 @@ def test_login_verify_custom_verify(client, settings, magic_link):
     settings.MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
     from magiclink import settings
 
-    reload(settings)
-
 
 @pytest.mark.django_db
 def test_login_verify_failed_no_referrer(client):
@@ -168,3 +153,19 @@ def test_login_verify_failed_no_referrer(client):
     response = client.get(f"{url}?token=fake&email=test@example.com")
     assert response.status_code == 200
     assert response["Referrer-Policy"] == "no-referrer"
+
+
+@pytest.mark.django_db
+def test_login_verify_disabled_link_has_no_other_error(client, magic_link):
+    request = HttpRequest()
+    ml = magic_link(request)
+    ml.ip_address = "127.0.0.0"
+    ml.disabled = True
+    ml.save()
+    client.cookies = SimpleCookie({f"magiclink{ml.pk}": ml.cookie_value})
+
+    query = urlencode({"token": ml.token, "email": ml.email})
+    response = client.get(f"{reverse('magiclink:login_verify')}?{query}")
+
+    assert response.status_code == 200
+    assert response.context["login_error"] == ""

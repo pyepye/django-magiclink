@@ -136,6 +136,14 @@ module = "magiclink.migrations.*"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
+module = "magiclink.admin"
+disallow_any_generics = false
+
+[[tool.mypy.overrides]]
+module = "magiclink.settings"
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
 module = "magiclink.views"
 disallow_untyped_calls = false
 

@@ -178,6 +178,7 @@ If this email template is not to your liking you can override the email template
 * `{{ require_same_ip }}` - The value of `MAGICLINK_REQUIRE_SAME_IP`
 * `{{ require_same_browser }}` - The value of `MAGICLINK_REQUIRE_SAME_BROWSER`
 * `{{ token_uses }}` - The value of `MAGICLINK_TOKEN_USES`
+* `{{ unsubscribe_url }}` - The link to stop these emails, or an empty string. See 'Unsubscribe / stopping email spam'
 
 
 #### Signup page
@@ -210,6 +211,8 @@ Like the login for the sign up flow can be overridden if you require more inform
 Below are the different settings that can be overridden. To do so place the setting into your `settings.py`.
 
 *Note: Each of the url / redirect settings can either be a URL or url name*
+
+*Note: Settings are read when they are used, so `override_settings` works in your tests. A bad value in `settings.py` raises `ImproperlyConfigured` when Django starts*
 
 ```python
 # Override the login page template. See 'Login page' in the Setup section
@@ -279,6 +282,10 @@ MAGICLINK_ALLOW_STAFF_LOGIN = True
 # Ignore the Django user model's is_active flag for login requests
 MAGICLINK_IGNORE_IS_ACTIVE_FLAG = True
 
+# Do not show if an email address has an account on the login and signup pages.
+# See 'Account enumeration' in the Security section
+MAGICLINK_PREVENT_ENUMERATION = False
+
 # Override the default magic link length
 # Warning: Overriding this setting has security implications, shorter tokens
 # are much more susceptible to brute force attacks*
@@ -287,6 +294,11 @@ MAGICLINK_TOKEN_LENGTH = 50
 # Require the user email to be included in the verification link
 # Warning: If this is set to false tokens are more vulnerable to brute force
 MAGICLINK_VERIFY_INCLUDE_EMAIL = True
+
+# Show a page with a "Log in" button when the magic link is opened, and only log
+# in when the button is pressed. See 'Email scanners' in the Security section
+MAGICLINK_LOGIN_CONFIRM = False
+MAGICLINK_LOGIN_CONFIRM_TEMPLATE_NAME = "magiclink/login_confirm.html"
 
 # Ensure the user who clicked magic link used the same browser as the
 # initial login request.
@@ -355,6 +367,34 @@ MAGICLINK_ANTISPAM_QUIET_REJECT = False
 # Security section
 MAGICLINK_SITE_URL = ""
 
+# Limit requests by IP, by email and for the whole site. See 'Rate limits' in
+# the Security section. There are no limits by default
+MAGICLINK_RATE_LIMITS = {
+    "request": "20/h/ip,3/10m/email",
+    "request_site": "100/m",
+    "verify_failed": "10/m/ip",
+}
+
+# Only allow email addresses from these domains, for example for an internal
+# tool. Subdomains are included. An empty list allows all domains
+MAGICLINK_ALLOWED_EMAIL_DOMAINS = []
+# Do not allow email addresses from these domains, for example disposable mail
+# domains. Subdomains are included. This is checked before the allowed list
+MAGICLINK_BLOCKED_EMAIL_DOMAINS = []
+
+# Use your own login and signup forms. See 'Custom forms'
+MAGICLINK_FORMS = {
+    "login": "myapp.forms.MyLoginForm",
+    "signup": "myapp.forms.MySignupForm",
+}
+
+# Functions that can reject a request for a magic link. See 'Spam checks'
+MAGICLINK_SPAM_CHECKS = ["myproject.checks.no_tor"]
+
+# The class used to get the client IP, check login requests and send the login
+# email. See 'Adapter'
+MAGICLINK_ADAPTER = "magiclink.adapter.MagicLinkAdapter"
+
 # Override the login verify address. You must inherit from Magiclink LoginVerify
 # view. See Manual usage for more details
 MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
@@ -362,6 +402,11 @@ MAGICLINK_LOGIN_VERIFY_URL = "magiclink:login_verify"
 # If an email address has been added to the unsubscribe table but is also
 # assocaited with a Django user, should a login email be sent
 MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER = False
+
+# Add a link to the login email that adds the email address to the unsubscribe
+# table. See 'Unsubscribe / stopping email spam'
+MAGICLINK_UNSUBSCRIBE_LINK = False
+MAGICLINK_UNSUBSCRIBE_TEMPLATE_NAME = "magiclink/unsubscribe.html"
 ```
 
 ## Magic Link cleanup
@@ -411,9 +456,81 @@ If `MAGICLINK_SITE_URL` is not set and `django.contrib.sites` is not installed, 
 
 Set `MAGICLINK_SITE_URL`, or set `ALLOWED_HOSTS` to only the domains your site uses.
 
+### Account enumeration
+
+By default the login page shows "We could not find a user with that email address" and the signup page shows "Email address is already linked to an account". Bots use these messages to build lists of real accounts.
+
+Set `MAGICLINK_PREVENT_ENUMERATION = True` to hide this:
+
+* The login and signup pages always redirect to the login sent page if the account is the reason a link can not be sent. This covers an unknown email address, a deactivated user and an email address on the unsubscribe list
+* If someone signs up with the email address of an existing account, that account gets a login link. The account is not changed
+* The same cookie is set and a `MagicLink` row is created in every case, so the response does not show which case it is. If no email is sent, the token in the row is never shown to anyone
+
+If you use this setting, change your login sent page so it says "If there is an account for this email address we have sent you a magic link". The default template does this using the `{{ prevent_enumeration }}` context variable.
+
+Sending an email takes time, so a slow response can still show that an email was sent. To stop this, send the email in the background (see 'Sending email in the background'). The `SignupFormWithUsername` and `SignupFormFull` forms still show if a username is in use.
+
+### Email scanners
+
+Outlook Safe Links, Proofpoint, Mimecast and similar tools open the links in an email before the user does. A scanner has a different IP address and does not have the same browser cookie, so the link is disabled and the user sees an error when they click it.
+
+To stop this, set `MAGICLINK_LOGIN_CONFIRM = True`. Opening the link then shows a page with a "Log in" button and does not check or use the token. Only the POST from the button logs the user in, and scanners do not submit forms. This also stops a crafted link from logging a person in to an attacker's account without them pressing a button.
+
+If you override `MAGICLINK_LOGIN_CONFIRM_TEMPLATE_NAME`, include the form below. It has no `action` so that it posts to the URL with the token. Do not load scripts or other files from other sites on this page.
+
+```html
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Log in</button>
+</form>
+```
+
+### Rate limits
+
+`MAGICLINK_LOGIN_REQUEST_TIME_LIMIT` limits how often one email address can ask for a link. It does not stop bots that enter many other people's addresses into your forms, so you should also set `MAGICLINK_RATE_LIMITS`. It is a dict of these rule sets:
+
+| Name | What it counts | What happens over the limit |
+|---|---|---|
+| `request` | Every POST to the login and signup pages, including invalid forms | The form shows an error, or if `MAGICLINK_ANTISPAM_QUIET_REJECT` is on, the user is redirected to the login sent page. `spam_detected` is sent. No email is sent |
+| `request_site` | Requests that pass the form and spam checks. This protects your email sending reputation | The same as `request` |
+| `verify_failed` | Failed logins with a magic link | The login failed page is shown and the token is not checked. `login_failed` is sent with no `magiclink` |
+
+Each rule set is a comma separated string of `count/period` or `count/period/key` rules:
+
+* The period is a number and a unit, or only a unit: `s`, `m`, `h` or `d`. For example `h`, `10m`
+* `ip` counts per IP address, using the adapter's `get_client_ip`. Each IPv4 address counts on its own. IPv6 addresses are grouped by /64, because one person can often use a whole /64. If no IP address is found, the rule is not used. Many people can share one IPv4 address, for example in an office, a university or on a mobile network, so do not set `ip` limits too low
+* `email` counts per email address. The address is converted to lowercase and any `+tag` is removed, so `name+1@example.com` counts as `name@example.com`
+* With no key, the rule counts for the whole site
+
+Rate limits use Django's cache, with a fixed time window. All your workers must share the cache, so `LocMemCache` and `DummyCache` do not work in production.
+
+Anyone can use up the limit for an email address, which stops the real owner getting a link until the window ends. Keep `email` limits low enough to stop abuse, but not so low that this is easy to do.
+
+If you write your own views, use `hit`, `is_limited`, `ahit` and `ais_limited` from `magiclink.ratelimit`.
+
+### System checks
+
+django-magiclink adds these warnings to Django's system checks, which run with commands such as `migrate` and `runserver`. To turn one off, add its ID to `SILENCED_SYSTEM_CHECKS`.
+
+| ID | Warning | Fix |
+|---|---|---|
+| `magiclink.W001` | `ALLOWED_HOSTS` is `["*"]` with no `MAGICLINK_SITE_URL` and no `django.contrib.sites` | See 'Host header' |
+| `magiclink.W002` | `MAGICLINK_RATE_LIMITS` is set and the default cache is `LocMemCache` or `DummyCache` | Use a cache that all workers share |
+| `magiclink.W003` | `SECURE_PROXY_SSL_HEADER`, `USE_X_FORWARDED_HOST` or `USE_X_FORWARDED_PORT` is set, the client IP address is used, and no proxy settings are set | See 'Proxies' |
+| `magiclink.W004` | `MAGICLINK_TOKEN_LENGTH` is below 20 | Use a longer token |
+
 ### Redirects
 
 The `?next` parameter on the login and signup pages and the logout URL is only used if it points to an allowed host (see Django's `ALLOWED_HOSTS` setting). This stops these URLs from being used to send users to another site.
+
+
+## Admin
+
+If `django.contrib.admin` is installed, `MagicLink` and `MagicLinkUnsubscribe` appear in the admin. This is the easiest way to see a pattern of bot requests.
+
+* Search magic links by email address or IP address, and filter them by date and status (live, expired or disabled)
+* Use the "Unsubscribe the selected email addresses" action to add the selected addresses to `MagicLinkUnsubscribe`. This action needs the permission to add `MagicLinkUnsubscribe` rows
+* Magic links are read-only in the admin, and the token and cookie value are not shown, because anyone who can read them could log in as that user
 
 
 ## Unsubscribe / stopping email spam
@@ -429,6 +546,12 @@ MagicLinkUnsubscribe.objects.create(email="test@example.com")
 ```
 
 If you are using the Django Magiclink login or signup functionality, the unsubscribe check happens during form validation. This means a new user will never be created if their email address has already been added to the `MagicLinkUnsubscribe` list.
+
+People whose address a bot enters can stop the emails themselves if you set `MAGICLINK_UNSUBSCRIBE_LINK = True`. The login email then includes "Did not request this? Stop these emails." with a signed link. The link opens a page with a button, and only the POST from the button adds the address to `MagicLinkUnsubscribe` and disables its magic links, so email scanners that open links do not unsubscribe anyone.
+
+Before you turn this on, note that a user who presses the button can not log in with a magic link until you remove their address from `MagicLinkUnsubscribe`. The link is not added to the email if `MAGICLINK_IGNORE_UNSUBSCRIBE_IF_USER` is `True`, because it would have no effect.
+
+If you override `MAGICLINK_UNSUBSCRIBE_TEMPLATE_NAME` the context variables are `{{ email }}`, `{{ invalid_link }}` and `{{ unsubscribed }}`. See the [default unsubscribe template](https://github.com/pyepye/django-magiclink/blob/master/magiclink/templates/magiclink/unsubscribe.html) for the form to include. If you override the email templates, add `{{ unsubscribe_url }}`.
 
 
 ## Manual usage
@@ -450,6 +573,33 @@ magiclink.send(request)
 #  send the email you can you can use:
 magic_link_url = magiclink.generate_url(request)
 ```
+
+### Custom forms
+
+To add a field to the login or signup form, such as a captcha, subclass the form and set `MAGICLINK_FORMS`. You can also set `form_class` on a subclass of the `Login` or `Signup` view, or pass it to `as_view()`.
+
+```python
+from magiclink.forms import LoginForm, SignupForm
+
+from myapp.fields import CaptchaField
+
+
+class MyLoginForm(LoginForm):
+    captcha = CaptchaField()
+
+
+class MySignupForm(SignupForm):
+    captcha = CaptchaField()
+```
+
+```python
+MAGICLINK_FORMS = {
+    "login": "myapp.forms.MyLoginForm",
+    "signup": "myapp.forms.MySignupForm",
+}
+```
+
+Your form must subclass one of the forms in `magiclink.forms`. If you set a custom signup form, the view uses it for every signup POST, whatever `form_name` is sent, and it is the value of all four signup form names in the template context.
 
 ### Custom Login verify flow
 
@@ -516,7 +666,68 @@ magiclink = await acreate_magiclink(email, request, redirect_url="")
 await magiclink.asend(request)
 ```
 
-There is also `aget_or_create_user()` in `magiclink.helpers`, and `avalidate()`, `aused()` and `adisable()` on `MagicLink`. Django does not have an async email API so `asend()` runs `send()` in a thread.
+There is also `aget_or_create_user()` in `magiclink.helpers`, and `avalidate()`, `aused()` and `adisable()` on `MagicLink`. `asend()` calls the adapter's `asend_email()`. Django does not have an async email API, so by default this runs `send_email()` in a thread.
+
+
+## Adapter
+
+The adapter is one class that you can override to change how django-magiclink behaves. Subclass `magiclink.adapter.MagicLinkAdapter` and set `MAGICLINK_ADAPTER` to its path.
+
+| Method | Default | Purpose |
+|---|---|---|
+| `get_client_ip(request)` | Uses `MAGICLINK_TRUSTED_PROXY_COUNT` and `MAGICLINK_TRUSTED_CLIENT_IP_HEADER` | Returns the client IP address |
+| `check_request(request, email, form)` | Runs `MAGICLINK_SPAM_CHECKS` | Returns a reason to reject a request for a magic link, or `None`. The login and signup views call this after the form is valid |
+| `send_email(magiclink, request)` | Sends the email with `send_mail` | Sends the login email |
+
+`check_request` and `send_email` can do I/O, so they have async versions (`acheck_request` and `asend_email`). By default these call the sync method in a thread. The django-magiclink views are synchronous and call `check_request`. If you write your own async view, call `await get_adapter().acheck_request(request, email, form)` before `acreate_magiclink`.
+
+If `check_request` returns a reason, `spam_detected` is sent and no email is sent. The form shows the reason as an error, or if `MAGICLINK_ANTISPAM_QUIET_REJECT` is on, the user is redirected to the login sent page.
+
+Use the adapter for anything that changes behaviour or returns a value. Use [signals](#signals) for anything that only observes.
+
+### Spam checks
+
+`MAGICLINK_SPAM_CHECKS` is a list of paths to functions. Each function gets `(request, email, form)` and returns a reason string to reject the request, or `None`. The checks run in order and the first reason stops the request. This lets you add captcha checks, IP reputation services or anything else without a subclass of the adapter.
+
+```python
+# myproject/checks.py
+from myproject.tor import is_tor_exit_node
+
+
+def no_tor(request, email, form):
+    if is_tor_exit_node(request.META["REMOTE_ADDR"]):
+        return "Requests from Tor are not allowed"
+    return None
+```
+
+If you override `check_request`, call `super().check_request(request, email, form)` to keep these checks.
+
+### Sending email in the background
+
+Override `send_email` to send the email with Django 6.0 Tasks, Celery, RQ or similar. Create the URL in `send_email`, because the task does not have the request:
+
+```python
+from magiclink.adapter import MagicLinkAdapter
+from myapp.tasks import send_login_email
+
+
+class MyAdapter(MagicLinkAdapter):
+    def send_email(self, magiclink, request):
+        send_login_email.delay(
+            magiclink.pk,
+            magiclink.generate_url(request),
+            magiclink.generate_unsubscribe_url(request),
+        )
+```
+
+```python
+from magiclink.models import MagicLink
+
+
+@shared_task
+def send_login_email(magiclink_id, url, unsubscribe_url):
+    MagicLink.objects.get(pk=magiclink_id).deliver_email(url, unsubscribe_url)
+```
 
 
 ## Signals
@@ -526,10 +737,10 @@ django-magiclink sends these signals from `magiclink.signals`. Use them to log, 
 | Signal | Sender | Other arguments | Sent when |
 |---|---|---|---|
 | `magiclink_requested` | `MagicLink` | `magiclink` | A magic link is created |
-| `magiclink_sent` | `MagicLink` | `magiclink` | The login email is sent |
+| `magiclink_sent` | `MagicLink` | `magiclink` | The login email is sent, or passed to the task that sends it |
 | `login_succeeded` | `MagicLinkBackend` | `user`, `magiclink` | A magic link is used to log in |
-| `login_failed` | `MagicLinkBackend` | `magiclink`, `reason` | A magic link can not be used to log in. `magiclink` is `None` if no magic link has the token |
-| `spam_detected` | The login or signup view | `form` | A form fails the anti spam checks |
+| `login_failed` | `MagicLinkBackend`, or `LoginVerify` over a rate limit | `magiclink`, `reason` | A magic link can not be used to log in. `magiclink` is `None` if no magic link has the token or the rate limit stopped the check |
+| `spam_detected` | The login or signup view | `form`, `reason` | A form fails the anti spam checks, the adapter rejects the request or a rate limit is reached |
 
 ```python
 from django.dispatch import receiver

@@ -16,6 +16,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ROOT_URLCONF = "tests.urls"
 
+STATIC_URL = "/static/"
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
